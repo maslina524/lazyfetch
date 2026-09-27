@@ -1,27 +1,29 @@
+use core::fmt::Write;
+
 use crate::{
-    base64,
-    format,
-    image::Image,
-    imp::io::{stdout, write},
+    base64, 
+    format, 
+    image::Image, 
+    print::Stdout
 };
 
 const CHUNK: usize = 4096;
 
-pub fn print_image(image: &Image, cols: Option<usize>, rows: Option<usize>, image_id: u32) {
+pub fn print_image(image: &Image, cols: Option<usize>, rows: Option<usize>, image_id: u32) -> core::fmt::Result {
     let (w, h) = image.get_size();
 
     let raw = image.as_rgba_bytes();
     let b64 = base64::encode(&raw);
 
-    let mut ctrl = format!("a=T,f=32,s={},v={},C=1", w, h);
+    let mut ctrl = format!("a=T,f=32,s={w},v={h},C=1");
     if image_id != 0 {
-        ctrl.push_str(&format!(",i={}", image_id));
+        ctrl.push_str(&format!(",i={image_id}"));
     }
     if let Some(c) = cols {
-        ctrl.push_str(&format!(",c={}", c));
+        ctrl.push_str(&format!(",c={c}"));
     }
     if let Some(r) = rows {
-        ctrl.push_str(&format!(",r={}", r));
+        ctrl.push_str(&format!(",r={r}"));
     }
 
     let bytes = b64.as_bytes();
@@ -34,16 +36,18 @@ pub fn print_image(image: &Image, cols: Option<usize>, rows: Option<usize>, imag
         let m = i32::from(more);
 
         if first {
-            let ctrl_with_m = format!("{},m={}", ctrl, m);
-            write(stdout(), format!("\x1b_G{};", ctrl_with_m).as_bytes());
+            let ctrl_with_m = format_args!("{ctrl},m={m}");
+            Stdout::get().write_fmt(format_args!("\x1b_G{ctrl_with_m};"))?;
             first = false;
         } else {
-            write(stdout(), format!("\x1b_Gm={};", m).as_bytes());
+            Stdout::get().write_fmt(format_args!("\x1b_Gm={m};"))?;
         }
 
-        write(stdout(), &bytes[offset..end]);
-        write(stdout(), b"\x1b\\");
+        Stdout::get().write_bytes(&bytes[offset..end]);
+        Stdout::get().write_bytes(b"\x1b\\");
 
         offset = end;
     }
+
+    Ok(())
 }

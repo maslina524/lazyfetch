@@ -64,7 +64,7 @@ pub fn write_stderr(args: Arguments<'_>) {
 pub fn flush() -> core::fmt::Result {
     let guard = BUFFER.lock();
 
-    Stdout::get().write_fmt(format_args!("{:?}", *guard))?;
+    // Stdout::get().write_fmt(format_args!("{:#?}", *guard))?;
 
     for o in &*guard {
         match o.typ {
@@ -114,4 +114,44 @@ impl Write for Stderr {
         write(self.0, s.as_bytes());
         Ok(())
     }
+}
+
+#[macro_export]
+macro_rules! print {
+    () => {{}};
+    ($($tt:tt)*) => {{
+        let s = format_args!($($tt)*);
+        $crate::print::write_stdout(s);
+    }}
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {{
+        $crate::print::write_stdout(format_args!("\n"))
+    }};
+    ($($tt:tt)*) => {{
+        let s = format_args!($($tt)*);
+        $crate::print::write_stdout(format_args!("{s}\n"));
+    }}
+}
+
+#[macro_export]
+macro_rules! eprint {
+    () => {{}};
+    ($($tt:tt)*) => {{
+        let s = format_args!($($tt)*);
+        $crate::print::write_stderr(s);
+    }}
+}
+
+#[macro_export]
+macro_rules! eprintln {
+    () => {{
+        $crate::print::write_stderr(format_args!("\n"))
+    }};
+    ($($tt:tt)*) => {{
+        let s = format_args!($($tt)*);
+        $crate::print::write_stderr(format_args!("{s}\n"));
+    }}
 }

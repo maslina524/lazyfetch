@@ -759,17 +759,6 @@ macro_rules! format {
     }};
 }
 
-#[macro_export]
-macro_rules! formatln {
-    ($($tt:tt)*) => {{
-        let mut string = alloc::string::String::with_capacity(16);
-        let mut formatter = $crate::formats::StringFormatter::new(&mut string);
-        let _ = formatter.write_fmt(format_args!($($tt)*));
-        let _ = formatter.write_nl();
-        string
-    }};
-}
-
 #[cfg(test)]
 mod tests {
     use crate::formats::{MemorySize, SplittedAnsiIter, expand_rust_unicode, expand_unicode};

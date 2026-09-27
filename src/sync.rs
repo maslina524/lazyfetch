@@ -143,12 +143,14 @@ impl<'mtx, T> MutexGuard<'mtx, T> {
 impl<T> Deref for MutexGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &Self::Target {
+        // SAFETY: UnsafeCell<T> == T
         unsafe { &*self.mutex.data.get() }
     }
 }
 
 impl<T> DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
+        // SAFETY: UnsafeCell<T> == T
         unsafe { &mut *self.mutex.data.get() }
     }
 }

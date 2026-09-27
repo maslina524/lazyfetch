@@ -117,58 +117,6 @@ macro_rules! cfg_if {
     };
 }
 
-// ------------- PRINTS -------------
-#[macro_export]
-macro_rules! print {
-    () => {{}};
-    ($($tt:tt)*) => {{
-        let handle = $crate::imp::io::stdout();
-        let s = $crate::format!($($tt)*);
-        $crate::imp::io::write(handle, s.as_bytes());
-    }}
-}
-
-#[macro_export]
-macro_rules! println {
-    () => {{
-        let handle = $crate::imp::io::stdout();
-        $crate::imp::io::write(handle, b"\n");
-    }};
-    ($($tt:tt)*) => {{
-        let handle = $crate::imp::io::stdout();
-        let s = $crate::formatln!($($tt)*);
-        $crate::imp::io::write(handle, s.as_bytes());
-    }}
-}
-
-#[macro_export]
-macro_rules! eprint {
-    () => {{}};
-    ($expr:expr) => {{
-        let handle = $crate::imp::io::stderr();
-        let s = $crate::format!("{}", $expr);
-        $crate::imp::io::write(handle, s.as_bytes());
-    }};
-    ($($tt:tt)*) => {{
-        let handle = $crate::imp::io::stderr();
-        let s = $crate::format!($($tt)*);
-        $crate::imp::io::write(handle, s.as_bytes());
-    }}
-}
-
-#[macro_export]
-macro_rules! eprintln {
-    () => {{
-        let handle = $crate::imp::io::stderr();
-        $crate::imp::io::write(handle, b"\n");
-    }};
-    ($($tt:tt)*) => {{
-        let handle = $crate::imp::io::stderr();
-        let s = $crate::formatln!($($tt)*);
-        $crate::imp::io::write(handle, s.as_bytes());
-    }}
-}
-
 #[macro_export]
 #[cfg(debug_assertions)]
 macro_rules! dbg {

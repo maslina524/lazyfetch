@@ -37,6 +37,7 @@ mod png;
 mod sync;
 mod url;
 mod zlib;
+mod print;
 
 mod detect;
 mod json;
@@ -90,6 +91,7 @@ use crate::{
     png::Png, 
     sync::OnceLock, 
     url::Url,
+    print::flush
 };
 
 #[global_allocator]
@@ -511,7 +513,7 @@ fn print_image(image: &Image) {
 
     print!("\x1b7\x1b[{lines_printed}A\x1b[{}C", padding.left);
 
-    crate::kitty::print_image(image, Some(cols), Some(height), 0);
+    let _ = kitty::print_image(image, Some(cols), Some(height), 0);
     print!("\x1b8");
 }
 
@@ -604,7 +606,9 @@ cargo build --release
 #[unsafe(no_mangle)]
 extern "C" fn main(argc: c_int, argv: *const *const c_char) -> c_int {
     let _ = ARGS.set(imp::env::args_init(argc as usize, argv.cast()));
-    lazyfetch_main() as c_int
+    let ret = lazyfetch_main() as c_int;
+    let _ = flush();
+    ret
 }
 
 // #[cfg(not(test))]
@@ -612,7 +616,9 @@ extern "C" fn main(argc: c_int, argv: *const *const c_char) -> c_int {
 #[unsafe(no_mangle)]
 extern "C" fn main() -> c_int {
     let _ = ARGS.set(imp::env::args_init());
-    lazyfetch_main() as c_int
+    let ret = lazyfetch_main() as c_int;
+    let _ = flush();
+    ret
 }
 
 fn lazyfetch_main() -> i32 {
