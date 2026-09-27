@@ -39,6 +39,7 @@ Developed only for Linux, Windows, and Android.
 
 | Feature     | Fastfetch | Lazyfetch         |
 | ----------- | --------- | ----------------- |
+| Language    | C         | Rust              |
 | Target deps | Yes       | No                |
 | Binary size | ~10Mb     | ~800Kb (with lua) |
 | Android     | Hard      | Ready binary      |
@@ -47,7 +48,7 @@ Lazyfetch is also compatible with Fastfetch configs.
 
 ## Install
 
-Lazyfetch is available on x86_64-pc-windows-msvc, x86_64-unknown-linux-gnu, and aarch64-linux-android, if your OS or architecture is not listed here, leave a request in the Issue.
+Lazyfetch is available on `x86_64-pc-windows-msvc`, `x86_64-unknown-linux-gnu`, and `aarch64-linux-android`, if your OS or architecture is not listed here, leave a request in the Issue.
 
 ### Ready binary
 

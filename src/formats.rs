@@ -621,6 +621,7 @@ impl SplittedAnsiIter {
         let mut build_len = 0;
         let mut chunk_start = 0;
         let mut current_ansi = String::from("\x1b[0m");
+        let mut ansi_is_default = true;
 
         let mut it = s.chars();
         while let Some(ch) = it.next() {
@@ -631,17 +632,15 @@ impl SplittedAnsiIter {
                 for c in it.by_ref() {
                     current_ansi.push(c);
                     buf.push(c);
-                    if c == 'm' {
-                        break;
-                    }
+                    if c == 'm' { break; }
                 }
+                ansi_is_default = current_ansi == "\x1b[0m";
                 continue;
             }
 
             if ch == '\n' {
-                if current_ansi != "\x1b[0m" {
-                    buf.push_str("\x1b[0m");
-                }
+                if !ansi_is_default { buf.push_str("\x1b[0m"); }
+
                 if build_len > 0 {
                     ranges.push(chunk_start..buf.len());
                 } else {
@@ -649,9 +648,8 @@ impl SplittedAnsiIter {
                 }
                 build_len = 0;
                 chunk_start = buf.len();
-                if current_ansi != "\x1b[0m" {
-                    buf.push_str(&current_ansi);
-                }
+
+                if !ansi_is_default { buf.push_str(&current_ansi); }
                 continue;
             }
 
@@ -659,15 +657,13 @@ impl SplittedAnsiIter {
             build_len += 1;
 
             if build_len >= len {
-                if current_ansi != "\x1b[0m" {
-                    buf.push_str("\x1b[0m");
-                }
+                if !ansi_is_default { buf.push_str("\x1b[0m"); }
+
                 ranges.push(chunk_start..buf.len());
                 build_len = 0;
                 chunk_start = buf.len();
-                if current_ansi != "\x1b[0m" {
-                    buf.push_str(&current_ansi);
-                }
+
+                if !ansi_is_default { buf.push_str(&current_ansi); }
             }
         }
 
