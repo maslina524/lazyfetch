@@ -67,9 +67,7 @@ pub struct NvidiaLib {
     get_name: nvmlDeviceGetName
 }
 
-// SAFETY: THE STRUCTURE IS NOT THREAD-SAFE;
-// We are not going to modify non-thread-safe fields,
-// using the structure from different threads will not cause problems.
+// SAFETY: Fields are never mutated after initialization
 unsafe impl Sync for NvidiaLib {}
 
 impl NvidiaLib {
@@ -78,31 +76,30 @@ impl NvidiaLib {
             // Load library
             let lib = load();
 
-            // Load fns
-            // SAFETY: `transmute` fully complies with the documentation
-            let init = unsafe { get_fn!(lib, c"nvmlInit", nvmlInit) };
-            // SAFETY: `transmute` fully complies with the documentation
+            // SAFETY: `get_fn!` transmutes the resolved symbol to the declared fn type
+            let init = unsafe { get_fn!(lib, c"nvmlInit_v2", nvmlInit) };
+            // SAFETY: See above
             let shutdown = unsafe { get_fn!(lib, c"nvmlShutdown", nvmlShutdown) };
-            // SAFETY: `transmute` fully complies with the documentation
-            let device_get_handle_by_index = unsafe { get_fn!(lib, c"nvmlDeviceGetHandleByIndex", nvmlDeviceGetHandleByIndex) };
-            // SAFETY: `transmute` fully complies with the documentation
+            // SAFETY: See above
+            let device_get_handle_by_index = unsafe { get_fn!(lib, c"nvmlDeviceGetHandleByIndex_v2", nvmlDeviceGetHandleByIndex) };
+            // SAFETY: See above
             let device_get_temperature = unsafe { get_fn!(lib, c"nvmlDeviceGetTemperature", nvmlDeviceGetTemperature) };
-            // SAFETY: `transmute` fully complies with the documentation
+            // SAFETY: See above
             let get_clock_info = unsafe { get_fn!(lib, c"nvmlDeviceGetClockInfo", nvmlDeviceGetClockInfo) };
-            // SAFETY: `transmute` fully complies with the documentation
+            // SAFETY: See above
             let get_name = unsafe { get_fn!(lib, c"nvmlDeviceGetName", nvmlDeviceGetName) };
 
-            // SAFETY: Completely safe
+            // SAFETY: FFI call, valid fn pointer resolved above
             let ret = unsafe { init() };
             if ret != 0 {
                 abort!("Failed to initialize nvml");
             }
 
             let mut device = nvmlDevice::default();
-            // SAFETY: Completely safe
+            // SAFETY: FFI call, valid fn pointer resolved above
             let ret = unsafe { (device_get_handle_by_index)(0, &raw mut device) };
             if ret != 0 {
-                // SAFETY: Completely safe
+                // SAFETY: FFI call, valid fn pointer resolved above
                 unsafe { (shutdown)() };
                 abort!("Failed to get handle by index (nvml)");
             }
@@ -120,18 +117,16 @@ impl NvidiaLib {
     
     pub fn drop_nvidia() {
         if let Some(lib) = NVIDIA.get() {
-            // SAFETY: Completely safe
+            // SAFETY: FFI call, valid fn pointer resolved above
             unsafe { (lib.shutdown)() };
-            // SAFETY: A guaranteed non-null pointer is loaded once and
-            // is not changed until that moment
-            unload(lib.handle);
+            // Intentionally do not unload the library
         }
     }
 
     pub fn gpu_temperature(&self) -> u16 {
         let mut temp = 0u32;
 
-        // SAFETY: Completely safe
+        // SAFETY: FFI call with a valid out pointer
         let ret = unsafe { (self.device_get_temperature)(self.device, 0, &raw mut temp) };
         if ret != 0 {
             return 0;
@@ -142,33 +137,24 @@ impl NvidiaLib {
 
     pub fn device_name(&self) -> String {
         let mut buf = [c_char::default(); NAME_BUFFER_SIZE + 1];
-        // SAFETY: Completely safe
+        // SAFETY: FFI call with a buffer of the declared size
         let ret = unsafe { (self.get_name)(self.device, buf.as_mut_ptr(), NAME_BUFFER_SIZE as u32) };
         if ret != 0 {
             warning!("Failed to get gpu name (nvml)");
             return "Unknown".to_owned();
         }
 
-        // SAFETY: At the end, 1 byte is guaranteed to remain for the null terminator
+        // SAFETY: Иuffer is NUL-terminated by NVML on success
         let c_str = unsafe { CStr::from_ptr(buf.as_ptr()) };
         c_str.to_string_lossy().into_owned()
     }
 
     pub fn get_frequency_ghz(&self) -> f64 {
         let mut clock = 0;
-        let dev = self.device;
 
-        // Warm-up
-        for _ in 0..5 {
-            // SAFETY: Completely safe
-            unsafe {
-                (self.get_clock_info)(dev, NVML_CLOCK_SM, &raw mut clock);
-            }
-        }
-        
-        // SAFETY: Completely safe
+        // SAFETY: FFI call with a valid out pointer
         let ret = unsafe {
-            (self.get_clock_info)(dev, NVML_CLOCK_SM, &raw mut clock)
+            (self.get_clock_info)(self.device, NVML_CLOCK_SM, &raw mut clock)
         };
         
         if ret == 0 {
@@ -183,7 +169,7 @@ impl NvidiaLib {
 cfg_if! {
     if #[cfg(target_os = "windows")] {
         fn load() -> HMODULE {
-            // SAFETY: An ASCII string is always passed, everything is safe
+            // SAFETY: LoadLibraryA with a NUL-terminated ASCII string
             let lib = unsafe {
                 LoadLibraryA(c"nvml.dll".as_ptr().cast())
             };
@@ -204,7 +190,7 @@ cfg_if! {
             let lib_names = [c"libnvidia-ml.so.1", c"libnvidia-ml.so"];
 
             for name in &lib_names {
-                // SAFETY: An ASCII string is always passed, everything is safe
+                // SAFETY: dlopen with a NUL-terminated ASCII string
                 let lib = dlopen(name.as_ptr().cast(), 1);
                 if !lib.is_null() {
                     return lib;
@@ -214,6 +200,7 @@ cfg_if! {
         }
 
         fn unload(lib: LibHandle) {
+            // SAFETY: Completely safe
             dlclose(lib);
         }
     }
