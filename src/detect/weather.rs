@@ -1,8 +1,7 @@
-use core::str::FromStr;
+use core::str::{FromStr, SplitN};
 
 use alloc::{
     string::String,
-    vec::Vec,
     borrow::ToOwned
 };
 
@@ -109,17 +108,25 @@ fn request() -> Option<String> {
         None
     }
 }
+
 fn read_cache() -> Option<(u64, String)> {
+    fn next_item<'iter>(parts: &mut SplitN<'iter, char>) -> Option<&'iter str> {
+        parts.next().map_or_else(|| {
+            warning!("Strange response from ip-api.com");
+            None
+        }, Some)
+    }
+
     let path = Path::cache().join("weather");
     let string = fs::read_to_string(path).ok()?;
-    let parts: Vec<&str> = string.splitn(2, '\n').collect();
-    if parts.len() != 2 {
-        return None
-    }
-    let hours = parts[0].parse::<u64>().ok()?;
-    let data = parts[1].to_owned();
+
+    let mut parts = string.splitn(2, '\n');
+    let hours = next_item(&mut parts)?.parse::<u64>().ok()?;
+    let data = next_item(&mut parts)?.to_owned();
+
     Some((hours, data))
 }
+
 fn set_cache(hour: u64, data: &str) -> Option<()> {
     let path_dir = Path::cache();
     if let Err(e) = fs::create_dirs(&path_dir) {

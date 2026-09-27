@@ -72,7 +72,7 @@ use alloc::{
 
 use crate::{
     config::{Config, ConfigModule}, 
-    formats::SplittedAnsiIter, 
+    formats::{SplittedAnsiIter, MemorySize}, 
     image::Image, 
     detect::os,
     imp::{
@@ -434,24 +434,26 @@ fn print_alloc_report() {
     let dealloc_len = dealloc_len as usize;
 
     println!(
-        "| \x1b[{};1m{}\x1b[{};1m{}\x1b[{};1m{}\x1b[0m |",
-        color::FG_YELLOW,        "=".repeat(alloc_len), 
-        color::FG_CYAN,          "=".repeat(realloc_len), 
-        color::FG_LIGHT_MAGENTA, "=".repeat(dealloc_len),
+        "|\x1b[{};1m{}\x1b[{};1m{}\x1b[{};1m{}\x1b[0m|",
+        color::FG_YELLOW,        "=".repeat(alloc_len),
+        color::FG_CYAN,          "=".repeat(dealloc_len),
+        color::FG_LIGHT_MAGENTA, "=".repeat(realloc_len),
     );
 
     println!(
-        "\x1b[{}mAlloc: {}   \x1b[{}mRealloc: {}   \x1b[{}mDealloc: {}\x1b[0m\n",
-        color::FG_YELLOW,
-        rep.alloc,
-        color::FG_CYAN,
-        rep.realloc,
-        color::FG_LIGHT_MAGENTA,
-        rep.dealloc
+        "\x1b[{}mAlloc: {}   \x1b[{}mDealloc: {}   \x1b[{}mRealloc: {}\x1b[0m\n",
+        color::FG_YELLOW,        rep.alloc,
+        color::FG_CYAN,          rep.dealloc,
+        color::FG_LIGHT_MAGENTA, rep.realloc,
     );
 
     println!("Total Bytes:");
-    println!("Allocated: {} Bytes   Deallocated: {} Bytes   Max In RT: {} Bytes", rep.alloc_total, rep.dealloc_total, rep.max_in_runtime);
+    println!(
+        "Allocated: {}   Deallocated: {}   Max In RT: {}", 
+        MemorySize::from_bytes(rep.alloc_total), 
+        MemorySize::from_bytes(rep.dealloc_total), 
+        MemorySize::from_bytes(rep.max_in_runtime)
+    );
 }
 
 fn print_none() {

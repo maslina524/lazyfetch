@@ -19,6 +19,7 @@ path = "src/main.rs"
 opt-level = "z"
 lto = true
 codegen-units = 1
+# debug = true
 panic = "abort"
 strip = "symbols"
 

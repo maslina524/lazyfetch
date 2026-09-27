@@ -1,7 +1,8 @@
 use core::{
     alloc::{GlobalAlloc, Layout},
     sync::atomic::{
-        AtomicUsize, 
+        AtomicUsize,
+        AtomicU64,
         Ordering::{Release, Relaxed}
     }
 };
@@ -14,15 +15,15 @@ static ALLOC_COUNTER    : AtomicUsize = AtomicUsize::new(0);
 static REALLOC_COUNTER  : AtomicUsize = AtomicUsize::new(0);
 static DEALLOC_COUNTER  : AtomicUsize = AtomicUsize::new(0);
 
-static ALLOCATED_TOTAL  : AtomicUsize = AtomicUsize::new(0);
-static DEALLOCATED_TOTAL: AtomicUsize = AtomicUsize::new(0);
+static ALLOCATED_TOTAL  : AtomicU64   = AtomicU64::new(0);
+static DEALLOCATED_TOTAL: AtomicU64   = AtomicU64::new(0);
 
-static CURRENT_ALLOCATED: AtomicUsize = AtomicUsize::new(0);
-static MAX_IN_RUNTIME   : AtomicUsize = AtomicUsize::new(0);
+static CURRENT_ALLOCATED: AtomicU64   = AtomicU64::new(0);
+static MAX_IN_RUNTIME   : AtomicU64   = AtomicU64::new(0);
 
 fn allocated(size: usize) {
-    ALLOCATED_TOTAL.fetch_add(size, Relaxed);
-    CURRENT_ALLOCATED.fetch_add(size, Relaxed);
+    ALLOCATED_TOTAL.fetch_add(size as u64, Relaxed);
+    CURRENT_ALLOCATED.fetch_add(size as u64, Relaxed);
     let cur = CURRENT_ALLOCATED.load(Relaxed);
     if cur > MAX_IN_RUNTIME.load(Relaxed) {
         MAX_IN_RUNTIME.store(cur, Release);
@@ -30,8 +31,8 @@ fn allocated(size: usize) {
 }
 
 fn deallocated(size: usize) {
-    DEALLOCATED_TOTAL.fetch_add(size, Relaxed);
-    CURRENT_ALLOCATED.fetch_sub(size, Relaxed);
+    DEALLOCATED_TOTAL.fetch_add(size as u64, Relaxed);
+    CURRENT_ALLOCATED.fetch_sub(size as u64, Relaxed);
 }
 
 // SAFETY: All unsafe code has SAFETY comments
@@ -103,9 +104,9 @@ pub struct AllocationReport {
     pub alloc: usize,
     pub realloc: usize,
     pub dealloc: usize,
-    pub alloc_total: usize,
-    pub dealloc_total: usize,
-    pub max_in_runtime: usize
+    pub alloc_total: u64,
+    pub dealloc_total: u64,
+    pub max_in_runtime: u64
 }
 
 impl AllocationReport {

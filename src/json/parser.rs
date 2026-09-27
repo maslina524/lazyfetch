@@ -81,7 +81,7 @@ impl Value {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Map(Vec<(String, Value)>);
 
 impl Map {
@@ -140,7 +140,7 @@ impl Parser {
     }
 
     fn consume(&mut self, expected: &Token) -> Result<Token, String> {
-        let token = self.next().expect("Unexpected end of input");
+        let token = self.next().ok_or("Unexpected end of input")?;
         if token == *expected {
             Ok(token)
         } else {
@@ -167,7 +167,8 @@ impl Parser {
             Some(Token::Number(s)) => {
                 let s = s.clone();
                 self.next();
-                let num = f64::from_str(&s).expect("Invalid number format");
+                let num = f64::from_str(&s)
+                    .map_err(|_| "Invalid number format")?;
                 Ok(Value::Number(num))
             }
             Some(Token::True) => {
@@ -196,7 +197,7 @@ impl Parser {
         }
 
         loop {
-            let key_token = self.next().expect("Expected object key");
+            let key_token = self.next().ok_or("Expected object key")?;
             let Token::String(key) = key_token else { 
                 return Err("Object key must be a string".into()) 
             };
