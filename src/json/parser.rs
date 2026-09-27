@@ -259,6 +259,74 @@ impl Parser {
     }
 }
 
+impl core::fmt::Display for Map {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use core::fmt::Write;
+
+        fn proc_map(f: &mut core::fmt::Formatter<'_>, map: &Map) -> core::fmt::Result {
+            f.write_char('{')?;
+            
+            for (i, (k, v)) in map.0.iter().enumerate() {
+                write!(f, "\"{k}\": ")?;
+
+                match v {
+                    Value::Null => write!(f, "null")?,
+                    Value::Number(n) => proc_num(f, *n)?,
+                    Value::String(s) => proc_string(f, s)?,
+                    Value::Bool(b) => proc_bool(f, *b)?,
+                    Value::Dict(m) => proc_map(f, m)?,
+                    Value::Array(a) => proc_array(f, a)?
+                }
+
+                if i != map.0.len() - 1 {
+                    f.write_str(", ")?;
+                }
+            }
+
+            f.write_char('}')?;
+            Ok(())
+        }
+
+        fn proc_array(f: &mut core::fmt::Formatter<'_>, array: &[Value]) -> core::fmt::Result {
+            f.write_char('[')?;
+            
+            for (i, v) in array.iter().enumerate() {
+                match v {
+                    Value::Null => write!(f, "null")?,
+                    Value::Number(n) => proc_num(f, *n)?,
+                    Value::String(s) => proc_string(f, s)?,
+                    Value::Bool(b) => proc_bool(f, *b)?,
+                    Value::Dict(m) => proc_map(f, m)?,
+                    Value::Array(a) => proc_array(f, a)?
+                }
+
+                if i != array.len() - 1 {
+                    f.write_str(", ")?;
+                }
+            }
+
+            f.write_char(']')?;
+            Ok(())
+        }
+
+        fn proc_num(f: &mut core::fmt::Formatter<'_>, num: f64) -> core::fmt::Result {
+            write!(f, "{num}")
+        }
+
+        fn proc_string(f: &mut core::fmt::Formatter<'_>, string: &str) -> core::fmt::Result {
+            write!(f, "{string:?}")
+        }
+
+        fn proc_bool(f: &mut core::fmt::Formatter<'_>, b: bool) -> core::fmt::Result {
+            write!(f, "{b}")
+        }
+
+        proc_map(f, self)?;
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::json::lexer::TokenStream;

@@ -5,9 +5,7 @@ use lexer::TokenStream;
 use parser::Parser;
 pub use parser::{Map, Value};
 
-use alloc::{
-    string::{String, ToString},
-};
+use alloc::string::{String, ToString};
 
 use crate::{
     imp::path::Path,

@@ -94,16 +94,15 @@ fn read_cache() -> Option<(u64, Map)> {
     }
 }
 
-fn set_cache(hour: u64, _data: &Map) -> Option<()> {
+fn set_cache(hour: u64, map: &Map) -> Option<()> {
     let path_dir = Path::cache();
     if let Err(e) = fs::create_dirs(&path_dir) {
         warning!("Failed to create {path_dir}: {e}");
     }
 
-    let json = "Replace...";
     let path = path_dir.join("publicip");
     let file = File::create_always(path, Access::Write).ok()?;
-    let formatted = format!("{hour}\n{json}");
+    let formatted = format!("{hour}\n{map}");
     file.write(formatted).ok()?;
 
     Some(())
