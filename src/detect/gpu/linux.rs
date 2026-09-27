@@ -23,8 +23,7 @@ impl GpuInfo {
         let vendor_id = Self::vendor_id(&pci_address);
         let device_id = Self::device_id(&pci_address);
         let driver = Self::driver(&pci_address)
-            .map(ToOwned::to_owned)
-            .unwrap_or_else(String::new);
+            .map_or_else(String::new, ToOwned::to_owned);
         let memory_total = Self::memory_total();
 
         Self {
