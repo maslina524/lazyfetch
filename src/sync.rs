@@ -1,7 +1,5 @@
 use core::{
-    cell::UnsafeCell,
-    mem::MaybeUninit,
-    sync::atomic::{AtomicU8, Ordering}
+    cell::UnsafeCell, mem::MaybeUninit, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, AtomicU8, Ordering}
 };
 
 use crate::abort;
@@ -103,3 +101,65 @@ impl<T> OnceLock<T> {
 
 // SAFETY: trait is empty
 unsafe impl<T: Sync> Sync for OnceLock<T> {}
+
+
+#[derive(Debug)]
+pub struct Mutex<T> {
+    active: AtomicBool,
+    data: UnsafeCell<T>
+}
+
+impl<T> Mutex<T> {
+    pub const fn new(data: T) -> Self {
+        Self { 
+            active: AtomicBool::new(false), 
+            data: UnsafeCell::new(data) 
+        }
+    }
+
+    pub fn lock(&self) -> MutexGuard<'_, T> {
+        while self.active.compare_exchange_weak(false, true, Ordering::Acquire, Ordering::Relaxed).is_err() {
+            core::hint::spin_loop();
+        }
+        MutexGuard { mutex: self }
+    }
+
+    pub fn unlock(&self) {
+        self.active.store(false, Ordering::Release);
+    } 
+}
+
+pub struct MutexGuard<'mtx, T> {
+    mutex: &'mtx Mutex<T>
+}
+
+impl<'mtx, T> MutexGuard<'mtx, T> {
+    pub fn new(mutex: &'mtx Mutex<T>) -> Self {
+        mutex.lock();
+        Self { mutex }
+    }
+}
+
+impl<T> Deref for MutexGuard<'_, T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.mutex.data.get() }
+    }
+}
+
+impl<T> DerefMut for MutexGuard<'_, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.mutex.data.get() }
+    }
+}
+
+impl<T> Drop for MutexGuard<'_, T> {
+    fn drop(&mut self) {
+        self.mutex.unlock();
+    }
+}
+
+// SAFETY: trait is empty
+unsafe impl<T: Sync> Sync for Mutex<T> {}
+// SAFETY: trait is empty
+unsafe impl<T: Send> Send for Mutex<T> {}
