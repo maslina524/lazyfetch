@@ -5,10 +5,11 @@ use alloc::{
     string::String
 };
 
-use crate::sync::Mutex;
+use crate::{sync::Mutex, imp::io::{stdout, stderr, write}};
 
 const STRING_BASE_CAP: usize = 64;
 
+#[derive(Debug)]
 enum OutputType {
     Stdout,
     Stderr
@@ -57,5 +58,60 @@ pub fn write_stderr(args: Arguments<'_>) {
             let _ = s.write_fmt(args);
             guard.push(Output::stderr(s));
         }
+    }
+}
+
+pub fn flush() -> core::fmt::Result {
+    let guard = BUFFER.lock();
+
+    Stdout::get().write_fmt(format_args!("{:?}", *guard))?;
+
+    for o in &*guard {
+        match o.typ {
+            OutputType::Stdout => Stdout::get().write_str(&o.inner)?,
+            OutputType::Stderr => Stderr::get().write_str(&o.inner)?,
+        }
+    }
+
+    Ok(())
+}
+
+#[derive(Clone, Copy)]
+pub struct Stdout(isize);
+
+impl Stdout {
+    pub fn get() -> Self {
+        Self(stdout())
+    }
+
+    pub fn write_bytes(self, bytes: &[u8]) {
+        write(self.0, bytes);
+    }
+}
+
+impl Write for Stdout {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        write(self.0, s.as_bytes());
+        Ok(())
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Stderr(isize);
+
+impl Stderr {
+    pub fn get() -> Self {
+        Self(stderr())
+    }
+
+    pub fn write_bytes(self, bytes: &[u8]) {
+        write(self.0, bytes);
+    }
+}
+
+impl Write for Stderr {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        write(self.0, s.as_bytes());
+        Ok(())
     }
 }
