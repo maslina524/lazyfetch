@@ -267,7 +267,7 @@ impl Default for ConfigModuleArray {
             ConfigModule::from_str("datetime"),
             ConfigModule::from_str("processes"),
             ConfigModule::from_str("cpu"),
-            ConfigModule::from_str("gpu"),
+            // ConfigModule::from_str("gpu"),
             ConfigModule::from_str("memory"),
             ConfigModule::from_str("disk"),
             ConfigModule::from_str("weather"),

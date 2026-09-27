@@ -1,18 +1,20 @@
-use alloc::borrow::ToOwned;
+use alloc::{
+    borrow::ToOwned,
+    borrow::Cow
+};
 
 use crate::{
-    format, 
     warning,
     windows::env,
     windows::path::Path,
     detect::initsystem::InitSystemInfo
 };
 
+const NAME: &str = "smss";
+
 impl InitSystemInfo {
     pub fn new() -> Self {
         let path = "C:/Windows/System32/smss.exe".to_owned();
-        let name = "smss".to_owned();
-        let pid = env::find_pid_by_name(&format!("{name}.exe"));
         let version = match env::get_file_product_version(&path) {
             Ok(v) => v,
             Err(e) => {
@@ -22,9 +24,8 @@ impl InitSystemInfo {
         };
 
         Self { 
-            exe: Path::from(path), 
-            pid, 
-            name, 
+            exe: Path::from(path),
+            name: Cow::Borrowed(NAME), 
             version
         }
     }

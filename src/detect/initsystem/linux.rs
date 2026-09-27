@@ -1,6 +1,4 @@
-use alloc::{
-    borrow::ToOwned
-};
+use alloc::borrow::{ToOwned, Cow};
 
 use crate::{
     warning,
@@ -32,9 +30,8 @@ impl InitSystemInfo {
         let version = "0.0.0.0".to_owned();
 
         Self { 
-            exe, 
-            pid: 1, 
-            name, 
+            exe,
+            name: Cow::Owned(name), 
             version
         }
     }

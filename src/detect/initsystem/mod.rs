@@ -1,8 +1,14 @@
-use alloc::string::String;
+use alloc::{
+    borrow::Cow, 
+    string::String
+};
 
-use crate::imp::path::Path;
+use crate::{
+    imp::path::Path,
+    cfg_if
+};
 
-crate::cfg_if! {
+cfg_if! {
     if #[cfg(target_os = "windows")] {
         mod windows;
     } else if #[cfg(target_os = "linux")] {
@@ -14,7 +20,14 @@ crate::cfg_if! {
 
 pub struct InitSystemInfo {
     pub exe: Path,
-    pub pid: u32,
-    pub name: String,
+    pub name: Cow<'static, str>,
     pub version: String
 }
+
+#[cfg(target_os = "windows")]
+pub fn pid() -> u32 {
+    crate::imp::env::find_pid_by_name("smss.exe")
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn pid() -> u32 { 1 }

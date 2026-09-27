@@ -1,11 +1,16 @@
-use alloc::string::String;
+use alloc::{
+    string::String,
+    boxed::Box,
+    borrow::Cow
+};
 use doc::Docs;
 
 use crate::{
     impl_display_for_module,
     impl_module,
-    detect::initsystem::InitSystemInfo,
-    modules::Module, 
+    detect::initsystem::{InitSystemInfo, pid},
+    modules::Module,
+    ui::lazy::LazyField,
     sync::OnceLock,
     imp::path::Path
 };
@@ -15,13 +20,13 @@ static INITSYSTEM: OnceLock<Initsystem> = OnceLock::new();
 #[derive(Debug, Docs)]
 pub struct Initsystem {
     #[doc = "Name"]
-    pub name: String,
+    pub name: Cow<'static, str>,
     #[doc = "Exe path"]
     pub exe: Path,
     #[doc = "Version path"]
     pub version: String,
     #[doc = "Pid"]
-    pub pid: u32
+    pub pid: LazyField<u32>
 }
 
 impl Module for Initsystem {
@@ -31,7 +36,7 @@ impl Module for Initsystem {
             name: info.name,
             exe: info.exe,
             version: info.version,
-            pid: info.pid
+            pid: LazyField::new(Box::new(pid))
         }
     }
 

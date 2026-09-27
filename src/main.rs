@@ -216,6 +216,7 @@ fn build_info_buf(max_len: usize) -> Vec<&'static str> {
 }
 
 pub fn exit(code: u32) -> ! {
+    let _ = flush();
     cfg_if! {
         if #[cfg(any(target_os = "linux", target_os = "android"))] {
             // SAFETY: Run in binary, safe

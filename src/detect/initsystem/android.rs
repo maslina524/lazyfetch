@@ -1,7 +1,7 @@
 use core::ffi::CStr;
 
 use alloc::{
-    borrow::ToOwned,
+    borrow::{ToOwned, Cow},
     string::String
 };
 
@@ -26,9 +26,8 @@ impl InitSystemInfo {
             .into_owned();
 
         Self { 
-            exe, 
-            pid: 1, 
-            name, 
+            exe,
+            name: Cow::Owned(name), 
             version
         }
     }
