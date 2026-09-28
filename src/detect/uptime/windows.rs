@@ -4,7 +4,7 @@ use crate::{
     detect::uptime::{UptimeInfo, UPTIME_INFO}, 
     format, 
     windows::link::{
-        FILETIME, FileTimeToLocalFileTime, FileTimeToSystemTime, 
+        FILETIME, FileTimeToSystemTime, 
         GetSystemTimeAsFileTime, GetTickCount64, SYSTEMTIME
     }
 };
@@ -13,6 +13,8 @@ const DAY_MS: u64 = 1000 * 60 * 60 * 24;
 const HOUR_MS: u64 = 1000 * 60 * 60;
 const MIN_MS: u64 = 1000 * 60;
 const SEC_MS: u64 = 1000;
+
+const EPOCH_DIFF_100NS: u64 = 116_444_736_000_000_000;
 
 impl UptimeInfo {
     pub fn new() -> &'static Self {
@@ -61,20 +63,17 @@ impl UptimeInfo {
         unsafe {
             GetSystemTimeAsFileTime(&raw mut now_ft);
         }
-        let now_ns = ((now_ft.dwHighDateTime as u64) << 32) | (now_ft.dwLowDateTime as u64);
-        let boot_ns = now_ns - ms * 10_000;
+        let now_100ns = ((now_ft.dwHighDateTime as u64) << 32) | (now_ft.dwLowDateTime as u64);
+        let boot_100ns = now_100ns - ms * 10_000;
 
-        let boot_ft_utc = FILETIME {
-            dwLowDateTime: boot_ns as u32,
-            dwHighDateTime: (boot_ns >> 32) as u32,
+        let boot_timestamp = boot_100ns
+            .checked_sub(EPOCH_DIFF_100NS)
+            .map_or(0, |x| x / 10_000_000);
+
+        let boot_ft = FILETIME {
+            dwLowDateTime: boot_100ns as u32,
+            dwHighDateTime: (boot_100ns >> 32) as u32,
         };
-        let mut boot_ft = FILETIME::default();
-        unsafe {
-            // SAFETY: Completely safe
-            FileTimeToLocalFileTime(&raw const boot_ft_utc, &raw mut boot_ft);
-        }
-
-        let boot_timestamp = ((boot_ft.dwHighDateTime as u64) << 32) | (boot_ft.dwLowDateTime as u64);
 
         let mut st = SYSTEMTIME::default();
         // SAFETY: Completely safe
@@ -88,7 +87,7 @@ impl UptimeInfo {
                 st.wYear, st.wMonth, st.wDay,
                 st.wHour, st.wMinute, st.wSecond
             ),
-            boot_timestamp
+            boot_timestamp,
         )
     }
 }

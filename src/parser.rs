@@ -1,6 +1,9 @@
+use core::fmt::Display;
+
 use alloc::{
     collections::BTreeMap,
     string::String,
+    borrow::ToOwned,
     vec::Vec
 };
 
@@ -9,12 +12,16 @@ use crate::imp::{
     path::Path
 };
 
-#[repr(transparent)]
-pub struct LineBased {
-    inner: BTreeMap<&'static str, &'static str>
+pub struct LineBased<'lb> {
+    inner: BTreeMap<&'lb str, &'lb str>,
+    splitter: char
 }
 
-impl LineBased {
+impl<'lb> LineBased<'lb> {
+    pub const fn new() -> Self {
+        Self { inner: BTreeMap::new(), splitter: '=' }
+    }
+
     pub fn parse_os_release() -> Result<Self, fs::ReadError> {
         Self::parse_file("/etc/os-release", '=')
     }
@@ -53,10 +60,10 @@ impl LineBased {
             ret.insert(k, v.trim());
         }
 
-        Self { inner: ret }
+        Self { inner: ret, splitter: split }
     }
 
-    pub fn get_default(&self, key: &str, default: &'static str) -> &'static str {
+    pub fn get_default(&self, key: &str, default: &'lb str) -> &'lb str {
         self
             .inner
             .get(key)
@@ -64,11 +71,17 @@ impl LineBased {
             .unwrap_or(default)
     }
 
-    pub fn get(&self, key: &str) -> Option<&'static str> {
+    pub fn get(&self, key: &str) -> Option<&'lb str> {
         self
             .inner
             .get(key)
             .map(|s| s.trim())
+    }
+
+    pub fn insert(&mut self, key: &str, value: &str) -> Option<&'lb str> {
+        let key: &'static str = String::leak(key.to_owned());
+        let value: &'static str = String::leak(value.to_owned());
+        self.inner.insert(key, value)
     }
 }
 
@@ -95,4 +108,14 @@ pub fn parse_range_notation(s: &str, capacity: Option<usize>) -> Vec<usize> {
     ret.sort_unstable();
     ret.dedup();
     ret
+}
+
+impl Display for LineBased<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let splitter = self.splitter;
+        for (k, v) in &self.inner {
+            writeln!(f, "{k}{splitter}{v}")?;
+        }
+        Ok(())
+    }
 }

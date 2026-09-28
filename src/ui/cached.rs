@@ -6,30 +6,84 @@ use core::{
 
 use alloc::{
     borrow::ToOwned, 
-    boxed::Box, 
-    collections::BTreeMap, 
-    string::String
+    boxed::Box,
+    string::{String, ToString}
 };
 
 use crate::{
-    format,
-    lua::{AsLua, LuaType},
-    sync::Mutex,
-    warning,
+    format, 
+    imp::{
+        path::Path,
+        fs::{File, Access, ReadError}
+    }, 
+    lua::{AsLua, LuaType}, 
+    parser::LineBased, 
+    sync::Mutex, warning,
+    detect::uptime::UptimeInfo
 };
-
-pub struct CacheEntry {}
 
 static LOADED: AtomicBool = AtomicBool::new(false);
 static EDITED: AtomicBool = AtomicBool::new(false);
 
-static ENTRIES: Mutex<BTreeMap<String, String>> = Mutex::new(BTreeMap::new());
+static ENTRIES: Mutex<LineBased> = Mutex::new(LineBased::new());
+
+pub fn flush_to_file() {
+    if !EDITED.load(Ordering::Acquire) {
+        return;
+    }
+
+    let path = Path::cache().join("session");
+    let file = match File::create_always(path, Access::Write) {
+        Ok(f) => f,
+        Err(e) => {
+            warning!("Failed to create cache/session: {e}");
+            return;
+        }
+    };
+
+    let entries = ENTRIES.lock();
+    if let Err(e) = file.write(format!("{}", *entries)) {
+        warning!("Failed to write to cache/session: {e}");
+    }
+}
 
 fn load_entries() {
-    if LOADED.load(Ordering::Relaxed) {
-        LOADED.store(true, Ordering::Relaxed);
-
+    if LOADED.load(Ordering::Acquire) {
+        return;
     }
+
+    let mut entries = ENTRIES.lock();
+    if LOADED.load(Ordering::Acquire) {
+        return;
+    }
+
+    let actual = UptimeInfo::new().boot_timestamp;
+    let path = Path::cache().join("session");
+
+    let fallback = || LineBased::parse(format!("boot_timestamp={actual}"), '=');
+
+    let mut parsed = match LineBased::parse_file(path, '=') {
+        Ok(p) => p,
+        Err(ReadError::Utf8(e)) => {
+            warning!("Failed to read cache/session: {e}");
+            fallback()
+        },
+        Err(ReadError::Code(e)) if !e.is_file_not_found() => {
+            warning!("Failed to read cache/session: {e}");
+            fallback()
+        },
+        Err(_) => fallback(),
+    };
+
+    match parsed.get("boot_timestamp").and_then(u64::from_cached) {
+        Some(bt) if bt == actual => {}
+        _ => {
+            parsed = LineBased::parse(format!("boot_timestamp={actual}"), '=');
+        }
+    }
+
+    *entries = parsed;
+    LOADED.store(true, Ordering::Release);
 }
 
 pub struct SessionCached<T: AsCached> {
@@ -51,20 +105,23 @@ impl<T: AsCached + Clone + Send + Sync + 'static> SessionCached<T> {
     }
 
     pub fn load(&self) -> T {
-        if let Some(v) = self.get_value() {
-            v
-        } else {
+        self.get_value().unwrap_or_else(|| {
             let v = (self.func)();
             self.save_value(&v);
             v
-        }
-    }
+        })
+   }
 
     fn get_value(&self) -> Option<T> {
         load_entries();
-        None
+        ENTRIES.lock().get(&self.name).and_then(AsCached::from_cached)
     }
-    const fn save_value(&self, _: &T) {}
+
+    fn save_value(&self, val: &T) {
+        let cached = val.as_cached();
+        (*ENTRIES.lock()).insert(&self.name, &cached);
+        EDITED.store(true, Ordering::Release);
+    }
 }
 
 impl<T: Display + AsCached + Clone + Send + Sync + 'static> Display for SessionCached<T> {
@@ -94,15 +151,23 @@ pub trait AsCached: Sized {
 
 impl AsCached for String {
     fn as_cached(&self) -> String {
-        format!("\"{self}\"")
+        self.clone()
     }
 
     fn from_cached(cache: &str) -> Option<Self> {
-        if cache.len() < 2 {
-            warning!("Incorrect string in cache");
+        Some(cache.to_owned())
+    }
+}
+
+impl AsCached for u64 {
+    fn as_cached(&self) -> String {
+        self.to_string()
+    }
+
+    fn from_cached(cache: &str) -> Option<Self> {
+        cache.parse::<Self>().map_or_else(|_| {
+            warning!("Incorrect u64 in cache");
             None
-        } else {
-            Some(cache[1..cache.len() - 1].to_owned())
-        }
+        }, Some)
     }
 }

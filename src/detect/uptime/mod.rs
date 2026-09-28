@@ -14,7 +14,7 @@ cfg_if! {
     }
 }
 
-static UPTIME_INFO: OnceLock<UptimeInfo> = OnceLock::new();
+pub static UPTIME_INFO: OnceLock<UptimeInfo> = OnceLock::new();
 
 #[derive(Debug)]
 pub struct UptimeInfo {

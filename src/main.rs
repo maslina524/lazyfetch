@@ -92,7 +92,8 @@ use crate::{
     png::Png, 
     sync::OnceLock, 
     url::Url,
-    print::flush
+    print::flush,
+    ui::cached
 };
 
 #[global_allocator]
@@ -669,18 +670,19 @@ fn lazyfetch_main() -> i32 {
         print_alloc_report();
     }
 
+    // The handle is created not with `GetStdHandle`,
+    // but with `CreateFile`, which requires manual freeing
+    #[cfg(target_os = "windows")]
+    let _ = env::close_terminal_handle();
+    NvidiaLib::drop_nvidia();
+    cached::flush_to_file();
+    
     if args.iter().any(|a| a == "--wait" || a == "-w") {
         loop {
             // SAFETY: Just a nop
             unsafe { core::arch::asm!("nop") };
         }
     }
-
-    // The handle is created not with `GetStdHandle`,
-    // but with `CreateFile`, which requires manual freeing
-    #[cfg(target_os = "windows")]
-    let _ = env::close_terminal_handle();
-    NvidiaLib::drop_nvidia();
 
     0
 }
