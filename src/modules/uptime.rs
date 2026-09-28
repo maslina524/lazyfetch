@@ -1,4 +1,3 @@
-use alloc::string::String;
 use doc::Docs;
 
 use crate::{
@@ -24,7 +23,7 @@ pub struct Uptime {
     #[doc ="Milliseconds after boot"]
     pub milliseconds: u16,
     #[doc ="Boot time in local timezone"]
-    pub boot_time: String,
+    pub boot_time: &'static str,
     #[doc ="Years integer after boot"]
     pub years: u16,
     #[doc ="Days of year after boot"]
@@ -32,7 +31,7 @@ pub struct Uptime {
     #[doc ="Years fraction after boot"]
     pub years_fraction: f32,
     #[doc ="Formatted uptime"]
-    pub formatted: String,
+    pub formatted: &'static str,
 }
 
 impl Module for Uptime {
@@ -44,11 +43,11 @@ impl Module for Uptime {
             minutes: info.mins,
             seconds: info.secs,
             milliseconds: info.ms,
-            boot_time: info.boot_time,
+            boot_time: info.boot_time.as_str(),
             years: info.years,
             days_of_year: info.days_of_year,
             years_fraction: info.years_fraction,
-            formatted: info.formatted,
+            formatted: info.formatted.as_str(),
         }
     }
 

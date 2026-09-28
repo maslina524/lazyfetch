@@ -38,6 +38,7 @@ mod sync;
 mod url;
 mod zlib;
 mod print;
+mod parser;
 
 mod detect;
 mod json;

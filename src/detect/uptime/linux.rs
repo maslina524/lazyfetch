@@ -1,7 +1,10 @@
 use alloc::string::String;
 
 use crate::{
-    detect::uptime::UptimeInfo, format, linux::libc::{Tm, c_time, get_sysinfo, localtime_r, time}
+    detect::uptime::{UptimeInfo, BOOT_TIMESTAMP}, 
+    format,
+    imp::env::timestamp_secs,
+    linux::libc::{Tm, c_time, get_sysinfo, localtime_r, time}
 };
 
 const DAY_MS: u64 = 1000 * 60 * 60 * 24;
@@ -15,6 +18,8 @@ impl UptimeInfo {
 
         let uptime_secs = info.uptime as u64;
         let ms = uptime_secs * 1000;
+
+        let _ = BOOT_TIMESTAMP.set(uptime_secs);
 
         let days = ms / DAY_MS;
         let rem = ms % DAY_MS;

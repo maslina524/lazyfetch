@@ -1,6 +1,5 @@
 use alloc::{
     string::String,
-    boxed::Box,
     borrow::Cow
 };
 use doc::Docs;

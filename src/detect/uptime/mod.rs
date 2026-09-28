@@ -1,8 +1,9 @@
 use alloc::string::String;
 
 use crate::{
-    cfg_if,
-    format
+    cfg_if, 
+    format, 
+    sync::OnceLock
 };
 
 cfg_if! {
@@ -13,8 +14,11 @@ cfg_if! {
     }
 }
 
+static UPTIME_INFO: OnceLock<UptimeInfo> = OnceLock::new();
+
 #[derive(Debug)]
 pub struct UptimeInfo {
+    pub boot_timestamp: u64,
     pub years: u16,
     pub days: u32,
     pub hours: u8,

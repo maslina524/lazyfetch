@@ -4,17 +4,17 @@ use alloc::{
     vec::Vec
 };
 
-use crate::{
-    linux::fs,
-    linux::path::Path
+use crate::imp::{
+    fs,
+    path::Path
 };
 
 #[repr(transparent)]
-pub struct LinuxInfo {
+pub struct LineBased {
     inner: BTreeMap<&'static str, &'static str>
 }
 
-impl LinuxInfo {
+impl LineBased {
     pub fn parse_os_release() -> Result<Self, fs::ReadError> {
         Self::parse_file("/etc/os-release", '=')
     }
