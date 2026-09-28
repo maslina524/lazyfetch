@@ -32,8 +32,7 @@ impl GpuInfo {
             device_id,
             driver,
             typ: GpuType::get_by_vendor_and_bus(vendor_id, device_id, &pci_address),
-            memory_total,
-            frequency: Self::frequency(vendor_id)
+            memory_total
         }
     }
 

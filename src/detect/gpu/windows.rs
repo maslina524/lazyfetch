@@ -43,8 +43,7 @@ impl GpuInfo {
             device_id: desc.DeviceId,
             driver,
             typ: GpuType::get_old(desc.VendorId, memory_total),
-            memory_total,
-            frequency: Self::frequency(desc.VendorId)
+            memory_total
         }
     }
     

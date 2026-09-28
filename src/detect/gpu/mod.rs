@@ -87,8 +87,7 @@ pub struct GpuInfo {
     pub device_id: u32,
     pub driver: String,
     pub typ: GpuType,
-    pub memory_total: MemorySize,
-    pub frequency: Frequency
+    pub memory_total: MemorySize
 }
 
 impl GpuInfo {
@@ -147,14 +146,6 @@ impl GpuInfo {
         }
     }
 
-    fn frequency(vendor_id: u32) -> Frequency {
-        let val = match vendor_id {
-            0x10DE => NvidiaLib::get().get_frequency_ghz() as f32,
-            _ => 0.0,
-        };
-        Frequency::GHz(val)
-    }
-
     const fn vendor_name(vendor_id: u32) -> &'static str {
         match vendor_id {
             0x10DE => "NVIDIA",
@@ -192,4 +183,12 @@ pub fn name(vendor_id: u32, device_id: u32) -> String {
 pub fn name(_: u32, _: u32) -> String {
     crate::imp::fs::read_to_string("/sys/class/kgsl/kgsl-3d0/gpu_model")
         .unwrap_or("Unknown".to_owned())
+}
+
+pub fn frequency(vendor_id: u32) -> Frequency {
+    let val = match vendor_id {
+        0x10DE => NvidiaLib::get().get_frequency_ghz() as f32,
+        _ => 0.0,
+    };
+    Frequency::GHz(val)
 }

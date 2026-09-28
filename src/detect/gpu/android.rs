@@ -38,8 +38,7 @@ impl GpuInfo {
             device_id: 0,
             driver: egl,
             typ: GpuType::BuiltIn,
-            memory_total: MemorySize::default(),
-            frequency: Self::frequency(vendor_id)
+            memory_total: MemorySize::default()
         }
     }
 }

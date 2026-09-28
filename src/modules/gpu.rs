@@ -2,7 +2,7 @@ use alloc::string::String;
 use doc::Docs;
 
 use crate::{
-    detect::gpu::{GpuInfo, GpuType, temperature, name},
+    detect::gpu::{GpuInfo, GpuType, temperature, name, frequency},
     formats::{Frequency, MemorySize, Percent, Temperature},
     impl_display_for_module,
     impl_module,
@@ -41,7 +41,7 @@ pub struct Gpu {
     #[doc = "The platform API used when detecting the GPU"]
     pub platform_api: String,
     #[doc = "Current frequency in GHz"]
-    pub frequency: Frequency,
+    pub frequency: SessionCached<Frequency>,
     #[doc = "GPU vendor specific index"]
     pub index: u32,
     #[doc = "Dedicated memory usage percentage num"]
@@ -87,7 +87,9 @@ impl Module for Gpu {
             shared_total: MemorySize::default(),
             shared_used: MemorySize::default(),
             platform_api: String::new(),
-            frequency: info.frequency,
+            frequency: SessionCached::new(
+                "gpu.frequency", move || { frequency(vendor_id) }
+            ),
             index: info.device_id,
             dedicated_percentage_num: Percent::default(),
             dedicated_percentage_bar: String::new(),
@@ -112,10 +114,7 @@ impl Module for Gpu {
     }
 
     fn title(&self) -> &'static str {
-        if matches!(self.r#type, GpuType::Unknown) 
-            || self.frequency == Frequency::default() 
-            || self.dedicated_total == MemorySize::default()
-        {
+        if matches!(self.r#type, GpuType::Unknown) {
             "{name}"
         } else {
             "{name} @ {frequency} ({dedicated-total}) [{type}]"

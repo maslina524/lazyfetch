@@ -11,15 +11,17 @@ use alloc::{
 };
 
 use crate::{
-    format, 
+    detect::uptime::UptimeInfo,
+    format,
+    formats::Frequency,
     imp::{
-        path::Path,
-        fs::{File, Access, ReadError}
-    }, 
-    lua::{AsLua, LuaType}, 
-    parser::LineBased, 
-    sync::Mutex, warning,
-    detect::uptime::UptimeInfo
+        fs::{Access, File, ReadError},
+        path::Path
+    },
+    lua::{AsLua, LuaType},
+    parser::LineBased,
+    sync::Mutex,
+    warning
 };
 
 static LOADED: AtomicBool = AtomicBool::new(false);
@@ -143,7 +145,6 @@ impl<T: Display + AsCached + AsLua + Clone + Send + Sync + 'static> AsLua for Se
     const LUA_TYPE: &'static str = T::LUA_TYPE;
 }
 
-
 pub trait AsCached: Sized {
     fn as_cached(&self) -> String;
     fn from_cached(cache: &str) -> Option<Self>;
@@ -169,5 +170,18 @@ impl AsCached for u64 {
             warning!("Incorrect u64 in cache");
             None
         }, Some)
+    }
+}
+
+impl AsCached for Frequency {
+    fn as_cached(&self) -> String {
+        self.as_hz().to_string()
+    }
+
+    fn from_cached(cache: &str) -> Option<Self> {
+        cache.parse::<u64>().map_or_else(|_| {
+            warning!("Incorrect u64 in cache");
+            None
+        }, |v| Some(Self::from_hz(v)))
     }
 }

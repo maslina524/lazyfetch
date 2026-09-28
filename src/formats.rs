@@ -43,7 +43,7 @@ impl Frequency {
         )]
         let mut f_hz = hz as f64;
 
-        while f_hz >= 1000.0 && divisions < 2 {
+        while f_hz >= 1000.0 && divisions < 3 {
             f_hz /= 1000.0;
             divisions += 1;
         }
@@ -105,7 +105,7 @@ impl MemorySize {
         )]
         let mut f_bytes = bytes as f64;
 
-        while f_bytes >= 1024.0 && divisions < 3 {
+        while f_bytes >= 1024.0 && divisions < 4 {
             f_bytes /= 1024.0;
             divisions += 1;
         }

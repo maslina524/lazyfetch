@@ -80,7 +80,8 @@ pub fn flush() -> core::fmt::Result {
 pub struct Stdout(isize);
 
 impl Stdout {
-    pub const fn get() -> Self {
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn get() -> Self {
         Self(stdout())
     }
 
@@ -100,7 +101,8 @@ impl Write for Stdout {
 pub struct Stderr(isize);
 
 impl Stderr {
-    pub const fn get() -> Self {
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn get() -> Self {
         Self(stderr())
     }
 
