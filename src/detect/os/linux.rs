@@ -4,7 +4,7 @@ use alloc::{
 };
 
 use crate::{
-    imp::parser::LinuxInfo,
+    parser::LineBased,
     imp::fs,
     detect::os::OsInfo,
     superstr::ConcatStr
@@ -14,7 +14,7 @@ const SYSNAME: &str = "Linux";
 
 impl OsInfo {
     pub fn new() -> Self {
-        let os_release = LinuxInfo::parse_os_release().unwrap();
+        let os_release = LineBased::parse_os_release().unwrap();
 
         let name = os_release.get_default("NAME", "Unknown");
         let codename = os_release.get_default("VERSION_CODENAME", "");

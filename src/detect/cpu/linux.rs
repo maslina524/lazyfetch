@@ -1,31 +1,22 @@
-use alloc::{
-    vec::Vec,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, vec::Vec};
 
 use crate::{
-    abort, 
-    detect::cpu::CpuInfo, 
-    format, 
-    formats::Frequency, 
-    imp::{
-        fs, 
-        parser::{
-            LinuxInfo, 
-            parse_range_notation
-        }, 
-        path::Path
-    }
+    abort,
+    detect::cpu::CpuInfo,
+    format,
+    formats::Frequency,
+    imp::{fs, path::Path},
+    parser::{LineBased, parse_range_notation},
 };
 
 impl CpuInfo {
     pub fn new() -> Self {
-        let info = LinuxInfo::parse_cpu_info()
+        let info = LineBased::parse_cpu_info()
             .unwrap_or_else(|e| abort!("Failed to open /proc/cpuinfo: {e}"));
 
         let name = info.get_default("model name", "Unknown");
         let logical_cores = Self::logical_cores_count();
-        
+
         let base_freq_raw = info
             .get("cpu MHz")
             .map_or(0.0, |s| s.parse::<f64>().unwrap_or(0.0));
@@ -50,7 +41,7 @@ impl CpuInfo {
             temperature: Self::temperature(),
             max_freq: Self::max_freq(),
             logical_grouped: Self::logical_grouped(),
-            micro_arch: Self::micro_arch()
+            micro_arch: Self::micro_arch(),
         }
     }
 
@@ -90,9 +81,9 @@ impl CpuInfo {
     }
 
     fn online_cores_count(logical_cores: usize) -> usize {
-        let content = match  fs::read_to_string("/sys/devices/system/cpu/online") {
+        let content = match fs::read_to_string("/sys/devices/system/cpu/online") {
             Ok(c) => c,
-            Err(e) => abort!("Failed to read /sys/devices/system/cpu/online: {e}")
+            Err(e) => abort!("Failed to read /sys/devices/system/cpu/online: {e}"),
         };
 
         let cores = parse_range_notation(&content, Some(logical_cores));
@@ -103,7 +94,9 @@ impl CpuInfo {
         let mut ret = Vec::with_capacity(24);
         let mut n = 0;
         loop {
-            let path = Path::from(format!("/sys/devices/system/cpu/cpu{n}/topology/physical_package_id"));
+            let path = Path::from(format!(
+                "/sys/devices/system/cpu/cpu{n}/topology/physical_package_id"
+            ));
             if !path.exists() {
                 break;
             }

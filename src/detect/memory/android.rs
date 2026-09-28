@@ -1,13 +1,8 @@
-use crate::{
-    detect::memory::MemoryInfo, 
-    formats::MemorySize, 
-    linux::parser::LinuxInfo, 
-    warning
-};
+use crate::{detect::memory::MemoryInfo, formats::MemorySize, linux::parser::LineBased, warning};
 
 impl MemoryInfo {
     pub fn new() -> Self {
-        let info = match LinuxInfo::parse_mem_info() {
+        let info = match LineBased::parse_mem_info() {
             Ok(c) => c,
             Err(e) => {
                 warning!("Failed to open /proc/meminfo: {e}");

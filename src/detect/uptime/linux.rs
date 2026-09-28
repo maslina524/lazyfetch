@@ -1,9 +1,9 @@
 use alloc::string::String;
 
 use crate::{
-    detect::uptime::{UptimeInfo, BOOT_TIMESTAMP}, 
+    detect::uptime::{UptimeInfo, UPTIME_INFO}, 
     format,
-    imp::env::timestamp_secs,
+    imp::env,
     linux::libc::{Tm, c_time, get_sysinfo, localtime_r, time}
 };
 
@@ -13,13 +13,15 @@ const MIN_MS: u64 = 1000 * 60;
 const SEC_MS: u64 = 1000;
 
 impl UptimeInfo {
-    pub fn new() -> Self {
+    pub fn new() -> &'static Self {
+        UPTIME_INFO.get_or_init(Self::get)
+    }
+
+    pub fn get() -> Self {
         let info = get_sysinfo();
 
         let uptime_secs = info.uptime as u64;
         let ms = uptime_secs * 1000;
-
-        let _ = BOOT_TIMESTAMP.set(uptime_secs);
 
         let days = ms / DAY_MS;
         let rem = ms % DAY_MS;
@@ -35,10 +37,12 @@ impl UptimeInfo {
         let years_fraction = (days as f32) / 365.0;
 
         let boot_time = Self::boot_time(uptime_secs);
+        let boot_timestamp = env::timestamp_secs() - uptime_secs;
 
         let formatted = Self::formatted(days as u32, hours, mins, secs);
 
         Self {
+            boot_timestamp,
             years,
             days: days as u32,
             hours,

@@ -1,7 +1,4 @@
-use alloc::{
-    string::String,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, string::String};
 
 use crate::{cfg_if, superstr::ConcatStr};
 
@@ -25,7 +22,7 @@ pub struct OsInfo {
     pub codename: Cow<'static, str>,
     pub variant: Cow<'static, str>,
     pub variant_id: Cow<'static, str>,
-    pub nerd: char
+    pub nerd: char,
 }
 
 #[cfg(target_os = "android")]
@@ -35,19 +32,16 @@ pub fn get_id() -> ConcatStr<2> {
 
 #[cfg(target_os = "linux")]
 pub fn get_id() -> ConcatStr<2> {
-    use crate::linux::parser::LinuxInfo;
+    use crate::parser::LineBased;
 
-    let os_release = LinuxInfo::parse_os_release().unwrap();
+    let os_release = LineBased::parse_os_release().unwrap();
     let id = os_release.get_default("ID", "Unknown");
     ConcatStr::new([id, ""])
 }
 
 #[cfg(target_os = "windows")]
 pub fn get_id() -> ConcatStr<2> {
-    use crate::{
-        windows::env,
-        superstr::ConcatStr
-    };
+    use crate::{superstr::ConcatStr, windows::env};
 
     let (_, _, build) = env::get_version();
     let version = OsInfo::version(build as i32);

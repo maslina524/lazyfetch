@@ -6,7 +6,7 @@ use alloc::{
 use crate::{
     detect::gpu::{GpuInfo, GpuType}, 
     linux::fs::{self, ItemType},
-    linux::parser::LinuxInfo,
+    parser::LineBased,
     formats::MemorySize,
     warning,
     format
@@ -59,7 +59,7 @@ impl GpuInfo {
 
     fn driver(pci_address: &str) -> Option<&'static str> {
         let path = format!("/sys/bus/pci/devices/{pci_address}/uevent");
-        let parsed = match LinuxInfo::parse_file(&path, '=') {
+        let parsed = match LineBased::parse_file(&path, '=') {
             Ok(c) => c,
             Err(e) => {
                 warning!("Failed to parse {path}: {e}");

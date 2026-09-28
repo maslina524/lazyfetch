@@ -30,4 +30,4 @@ pub fn pid() -> u32 {
 }
 
 #[cfg(not(target_os = "windows"))]
-pub fn pid() -> u32 { 1 }
+pub const fn pid() -> u32 { 1 }

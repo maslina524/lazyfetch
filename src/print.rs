@@ -80,7 +80,7 @@ pub fn flush() -> core::fmt::Result {
 pub struct Stdout(isize);
 
 impl Stdout {
-    pub fn get() -> Self {
+    pub const fn get() -> Self {
         Self(stdout())
     }
 
@@ -100,7 +100,7 @@ impl Write for Stdout {
 pub struct Stderr(isize);
 
 impl Stderr {
-    pub fn get() -> Self {
+    pub const fn get() -> Self {
         Self(stderr())
     }
 
