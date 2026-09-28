@@ -36,7 +36,7 @@ impl Module for Initsystem {
             name: info.name,
             exe: info.exe,
             version: info.version,
-            pid: LazyField::new(Box::new(pid))
+            pid: LazyField::new(pid)
         }
     }
 

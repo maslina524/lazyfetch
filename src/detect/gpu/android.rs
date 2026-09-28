@@ -16,9 +16,6 @@ const PROP_VALUE_MAX: usize = 92;
 
 impl GpuInfo {
     pub fn new() -> Self {
-        let name = fs::read_to_string("/sys/class/kgsl/kgsl-3d0/gpu_model")
-            .unwrap_or("Unknown".to_owned());
-
         let mut c_egl = [0u8; PROP_VALUE_MAX + 1];
         __system_property_get(c"ro.hardware.egl".as_ptr(), c_egl.as_mut_ptr());
         let egl = unsafe { CStr::from_ptr(c_egl.as_ptr().cast()) }
@@ -38,7 +35,6 @@ impl GpuInfo {
         Self {
             vendor_id,
             vendor,
-            name,
             device_id: 0,
             driver: egl,
             typ: GpuType::BuiltIn,

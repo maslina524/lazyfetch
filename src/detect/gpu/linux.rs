@@ -29,7 +29,6 @@ impl GpuInfo {
         Self {
             vendor_id,
             vendor: Self::vendor_name(vendor_id),
-            name: Self::name(vendor_id, device_id),
             device_id,
             driver,
             typ: GpuType::get_by_vendor_and_bus(vendor_id, device_id, &pci_address),

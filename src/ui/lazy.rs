@@ -2,16 +2,26 @@ use core::fmt::{self, Debug, Display};
 
 use alloc::boxed::Box;
 
-use crate::sync::OnceLock;
+use crate::{
+    format,
+    lua::{AsLua, LuaType},
+    sync::OnceLock,
+};
 
 pub struct LazyField<T> {
     value: OnceLock<T>,
     func: Box<dyn Fn() -> T + Send + Sync>,
 }
 
-impl<T> LazyField<T> {
-    pub fn new(func: Box<dyn Fn() -> T + Send + Sync>) -> Self {
-        Self { value: OnceLock::new(), func }
+impl<T: Send + Sync + 'static> LazyField<T> {
+    pub fn new<F>(func: F) -> Self
+    where
+        F: Fn() -> T + Send + Sync + 'static,
+    {
+        Self {
+            value: OnceLock::new(),
+            func: Box::new(func),
+        }
     }
 
     pub fn get(&self) -> &T {
@@ -19,17 +29,21 @@ impl<T> LazyField<T> {
     }
 }
 
-impl<T: Display> Display for LazyField<T> {
+impl<T: Display + Send + Sync + 'static> Display for LazyField<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.get())
     }
 }
 
-impl<T: Debug> Debug for LazyField<T> {
+impl<T: Debug + Send + Sync + 'static> Debug for LazyField<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.value.get() {
-            Some(v) => v.fmt(f),
-            None => f.write_str("<lazy>"),
-        }
+        write!(f, "{:?}", self.get())
     }
+}
+
+impl<T: Display + AsLua + Send + Sync + 'static> AsLua for LazyField<T> {
+    fn as_lua(&self) -> LuaType {
+        LuaType::String(format!("{self}"))
+    }
+    const LUA_TYPE: &'static str = T::LUA_TYPE;
 }

@@ -84,7 +84,6 @@ impl core::fmt::Display for GpuType {
 pub struct GpuInfo {
     pub vendor_id: u32,
     pub vendor: &'static str,
-    pub name: String,
     pub device_id: u32,
     pub driver: String,
     pub typ: GpuType,
@@ -93,17 +92,6 @@ pub struct GpuInfo {
 }
 
 impl GpuInfo {
-    fn name(vendor_id: u32, device_id: u32) -> String {
-        match vendor_id {
-            0x10DE => NvidiaLib::get().device_name(),
-            0x15ad => format!("VMware {}", Self::vmware_name(device_id)),
-            0x1002 => format!("AMD {}", Self::amd_name(device_id)),
-            0x8086 => format!("Intel {}", Self::intel_name(device_id)),
-            0x80EE => format!("InnoTek Systemberatung GmbH {}", Self::innotek_name(device_id)),
-            _ => "Unknown".to_owned(),
-        }
-    }
-
     const fn innotek_name(device_id: u32) -> &'static str {
         match device_id {
             0xBEEF => "VirtualBox Graphics Adapter",
@@ -186,4 +174,22 @@ pub fn temperature(vendor_id: u32) -> Temperature {
         _ => 0.0,
     };
     Temperature::Celsius(val)
+}
+
+#[cfg(not(target_os = "android"))]
+pub fn name(vendor_id: u32, device_id: u32) -> String {
+    match vendor_id {
+        0x10DE => NvidiaLib::get().device_name(),
+        0x15ad => format!("VMware {}", GpuInfo::vmware_name(device_id)),
+        0x1002 => format!("AMD {}", GpuInfo::amd_name(device_id)),
+        0x8086 => format!("Intel {}", GpuInfo::intel_name(device_id)),
+        0x80EE => format!("InnoTek Systemberatung GmbH {}", GpuInfo::innotek_name(device_id)),
+        _ => "Unknown".to_owned(),
+    }
+}
+
+#[cfg(target_os = "android")]
+pub fn name(_: u32, _: u32) -> String {
+    crate::imp::fs::read_to_string("/sys/class/kgsl/kgsl-3d0/gpu_model")
+        .unwrap_or("Unknown".to_owned())
 }

@@ -31,8 +31,6 @@ impl GpuInfo {
             |e| abort!("CreateDXGIFactory error: {e}")
         );
 
-        let name = Self::name(desc.VendorId, desc.DeviceId);
-
         let driver = Self::driver_version().unwrap_or_else(
             || { warning!("Failed to get driver version"); String::from("Unknown") }
         );
@@ -42,7 +40,6 @@ impl GpuInfo {
         Self {
             vendor_id: desc.VendorId,
             vendor: Self::vendor_name(desc.VendorId),
-            name,
             device_id: desc.DeviceId,
             driver,
             typ: GpuType::get_old(desc.VendorId, memory_total),
