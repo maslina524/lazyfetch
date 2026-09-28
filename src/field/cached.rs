@@ -173,6 +173,19 @@ impl AsCached for u64 {
     }
 }
 
+impl AsCached for u32 {
+    fn as_cached(&self) -> String {
+        self.to_string()
+    }
+
+    fn from_cached(cache: &str) -> Option<Self> {
+        cache.parse::<Self>().map_or_else(|_| {
+            warning!("Incorrect u32 in cache");
+            None
+        }, Some)
+    }
+}
+
 impl AsCached for Frequency {
     fn as_cached(&self) -> String {
         self.as_hz().to_string()

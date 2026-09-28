@@ -9,7 +9,10 @@ use crate::{
     impl_module,
     detect::initsystem::{InitSystemInfo, pid},
     modules::Module,
-    ui::lazy::LazyField,
+    field::{
+        lazy::LazyField,
+        cached::SessionCached
+    },
     sync::OnceLock,
     imp::path::Path
 };
@@ -25,7 +28,7 @@ pub struct Initsystem {
     #[doc = "Version path"]
     pub version: String,
     #[doc = "Pid"]
-    pub pid: LazyField<u32>
+    pub pid: LazyField<SessionCached<u32>>
 }
 
 impl Module for Initsystem {
@@ -35,7 +38,7 @@ impl Module for Initsystem {
             name: info.name,
             exe: info.exe,
             version: info.version,
-            pid: LazyField::new(pid)
+            pid: LazyField::new(|| SessionCached::new("initsystem.pid", pid))
         }
     }
 

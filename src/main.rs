@@ -44,7 +44,7 @@ mod detect;
 mod json;
 mod logo;
 mod modules;
-mod ui;
+mod field;
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -93,7 +93,7 @@ use crate::{
     sync::OnceLock, 
     url::Url,
     print::flush,
-    ui::cached
+    field::cached
 };
 
 #[global_allocator]
