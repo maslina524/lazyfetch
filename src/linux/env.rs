@@ -51,21 +51,6 @@ pub fn args() -> &'static Vec<String> {
     ARGS.get().expect("Unreachable")
 }
 
-pub fn args_owned() -> Vec<String> {
-    ARGS.get().cloned().expect("Unreachable")
-}
-
-pub fn contains_in_dbg_args(flag: &str) -> bool {
-    let args = args();
-    let Some(dbg_idx) = args.iter().position(|s| s == "--dbg") else {
-        return false;
-    };
-    let Some(flag_idx) = args.iter().position(|s| s == flag) else {
-        return false;
-    };
-    flag_idx > dbg_idx
-}
-
 pub fn timestamp_mils() -> u64 {
     let mut ts = Timespec::default();
     clock_gettime(0, &raw mut ts);

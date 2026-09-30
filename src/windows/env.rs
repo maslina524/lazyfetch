@@ -19,7 +19,7 @@ use crate::{
     w, 
     warning, 
     windows::{
-        encoding::wide, 
+        encoding::{wide, utf16le_to_utf8, Utf16Len}, 
         error::{self, ErrorCode}, 
         fs::{Access, File}, 
         link::{
@@ -27,7 +27,7 @@ use crate::{
             EnumProcesses, FILETIME, FileTimeToLocalFileTime, FileTimeToSystemTime, GetCommandLineW, 
             GetConsoleScreenBufferInfo, GetFileVersionInfoSizeW, GetFileVersionInfoW, 
             GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, 
-            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW
+            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetEnvironmentVariableW
         }, 
         path::Path, 
         regedit::{self, Hkey, Regedit}
@@ -201,21 +201,6 @@ pub fn args_init() -> Vec<String> {
 
 pub fn args() -> &'static Vec<String> {
     ARGS.get().expect("Unreachable")
-}
-
-pub fn args_owned() -> Vec<String> {
-    ARGS.get().cloned().expect("Unreachable")
-}
-
-pub fn contains_in_dbg_args(flag: &str) -> bool {
-    let args = args();
-    let Some(dbg_idx) = args.iter().position(|s| s == "--dbg") else {
-        return false;
-    };
-    let Some(flag_idx) = args.iter().position(|s| s == flag) else {
-        return false;
-    };
-    flag_idx > dbg_idx
 }
 
 pub fn find_pid_by_name(name: &str) -> u32 {
@@ -406,6 +391,25 @@ fn day_of_year(st: &SYSTEMTIME) -> u16 {
 
 const fn is_leap_year(year: u16) -> bool {
     (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
+}
+
+pub fn get_var(name: &str, size: Option<usize>) -> error::Result<String> {
+    let name_wide = wide(name)?;
+    let size = size.unwrap_or(1024);
+    let mut buf = vec![0u16; size];
+
+    let len = unsafe {
+        GetEnvironmentVariableW(
+            name_wide.as_ptr(),
+            buf.as_mut_ptr(),
+            size as u32
+        )
+    };
+    if len == 0 {
+        return Err(ErrorCode::last());
+    }
+
+    utf16le_to_utf8(&buf, Utf16Len::Len(len as usize))
 }
 
 #[cfg(test)]

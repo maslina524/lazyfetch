@@ -10,10 +10,12 @@ use alloc::{
 };
 
 use crate::{
-    windows::encoding::wide,
-    windows::error,
-    windows::link::{GUID, SHGetKnownFolderPath, PathFileExistsW},
-    windows::encoding::{utf16le_to_utf8, Utf16Len}
+    windows::{
+        encoding::{wide, utf16le_to_utf8, Utf16Len},
+        error,
+        link::{GUID, SHGetKnownFolderPath, PathFileExistsW},
+        env
+    }
 };
 
 const FOLDERID_LOCALAPPDATA: GUID = GUID::from_u128(
@@ -32,6 +34,10 @@ impl Path {
     }
 
     pub fn local() -> Self {
+        if let Ok(s) = env::get_var("LOCALAPPDATA", None) {
+            return Self::from(s);
+        }
+
         let mut path_ptr = ptr::null_mut();
 
         // SAFETY: Completely safe

@@ -102,3 +102,4 @@ GetDiskFreeSpaceExA
 GetFileAttributesA
 GetDriveTypeA
 GetVolumeInformationA
+GetEnvironmentVariableW

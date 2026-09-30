@@ -42,6 +42,7 @@ link!("kernel32" "system" fn GetDateFormatEx(lplocalename : PCWSTR, dwflags : EN
 link!("kernel32" "system" fn GetDiskFreeSpaceExA(lpdirectoryname : PCSTR, lpfreebytesavailabletocaller : *mut u64, lptotalnumberofbytes : *mut u64, lptotalnumberoffreebytes : *mut u64) -> BOOL);
 link!("kernel32" "system" fn GetDriveTypeA(lprootpathname : PCSTR) -> u32);
 link!("kernel32" "system" fn GetDynamicTimeZoneInformation(ptimezoneinformation : *mut DYNAMIC_TIME_ZONE_INFORMATION) -> u32);
+link!("kernel32" "system" fn GetEnvironmentVariableW(lpname : PCWSTR, lpbuffer : PWSTR, nsize : u32) -> u32);
 link!("kernel32" "system" fn GetFileAttributesA(lpfilename : PCSTR) -> u32);
 link!("kernel32" "system" fn GetFileSizeEx(hfile : HANDLE, lpfilesize : *mut i64) -> BOOL);
 link!("version" "system" fn GetFileVersionInfoSizeW(lptstrfilename : PCWSTR, lpdwhandle : *mut u32) -> u32);
