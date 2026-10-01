@@ -1,4 +1,9 @@
-use crate::{detect::memory::MemoryInfo, formats::MemorySize, linux::parser::LineBased, warning};
+use crate::{
+    detect::memory::MemoryInfo, 
+    formats::MemorySize,
+    parser::LineBased,
+    warning
+    };
 
 impl MemoryInfo {
     pub fn new() -> Self {

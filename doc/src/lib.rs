@@ -87,9 +87,10 @@ pub fn docs_derive(input: TokenStream) -> TokenStream {
         let strings = fields.iter().map(|field| {
             let name = field_to_config_name(field);
             let typ = format!("{{{idx}}}");
-            let desc = match get_doc_comment(field) {
-                Some(s) => quote! { Some(#s) },
-                None => quote! { None }
+            let desc = if let Some(s) = get_doc_comment(field) { 
+                quote! { Some(#s) } 
+            } else { 
+                quote! { None } 
             };
             idx += 1;
 
@@ -118,9 +119,10 @@ pub fn docs_derive(input: TokenStream) -> TokenStream {
         let strings = fields.iter().map(|field| {
             let name = field_to_config_name(field);
             let field_ty = &field.ty;
-            let desc = match get_doc_comment(field) {
-                Some(s) => quote! { Some(#s) },
-                None => quote! { None }
+            let desc = if let Some(s) = get_doc_comment(field) { 
+                quote! { Some(#s) } 
+            } else { 
+                quote! { None } 
             };
 
             quote! {

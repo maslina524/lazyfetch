@@ -24,6 +24,9 @@ pub struct Commit {
 }
 
 impl Commit {
+    /// # Panics
+    /// Panicked when git failed
+    #[must_use]
     pub fn new() -> Self {
         let log = Command::new("git")
             .env("LC_ALL", "C")
@@ -217,8 +220,7 @@ mod setup {
 
     pub fn offset_bits_cfg() {
         let offset_bits_64 = std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH")
-            .map(|w| w == "64")
-            .unwrap_or(false);
+            .is_ok_and(|w| w == "64");
 
         if offset_bits_64 {
             println!("cargo:rustc-cfg=file_offset_bits_64");

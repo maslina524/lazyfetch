@@ -9,11 +9,11 @@ use crate::{
     abort, 
     detect::cpu::CpuInfo, 
     format, 
-    formats::Frequency, 
+    formats::Frequency,
+    parser::parse_range_notation,
     linux::{
         fs,
         libc::__system_property_get,
-        parser::parse_range_notation, 
         path::Path
     }, 
     warning

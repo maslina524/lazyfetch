@@ -596,6 +596,8 @@ set -gx ANDROID_PLATFORM 24
 fish_add_path $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
 cargo ndk -t arm64-v8a --platform 24 build --release
 
+INSTALL LUA LINUX
+
 WINDOWS & LINUX
 cargo build --release
 */

@@ -1,13 +1,8 @@
 use core::ffi::CStr;
 
-use alloc::borrow::ToOwned;
-
 use crate::{
     detect::gpu::{GpuInfo, GpuType}, 
-    linux::{
-        fs,
-        libc::__system_property_get
-    },
+    linux::libc::__system_property_get,
     formats::MemorySize
 };
 

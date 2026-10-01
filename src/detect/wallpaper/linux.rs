@@ -18,10 +18,9 @@ impl WallpaperInfo {
     pub fn new() -> Self {
         let full_path = Self::xdg()
             .and_then(|s| Self::call(&s.trim().to_lowercase()))
-            .map(|s| {
+            .map_or_default(|s| {
                 Path::from(s.trim().trim_start_matches("file://"))
-            })
-            .unwrap_or_default();
+            });
 
         Self {
             full_path,
