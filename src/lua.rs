@@ -9,7 +9,7 @@ use crate::{
     abort, 
     cfg_if, 
     format, 
-    formats::{expand_rust_unicode, snake_to_camel_ascii}, 
+    formats::{ZeroPadded, expand_rust_unicode, snake_to_camel_ascii}, 
     imp::fs::{self, ReadError}, 
     str::ConcatStr, 
     sync::OnceLock, 
@@ -169,16 +169,21 @@ impl_as_lua_into_f64!(
 impl_as_lua_as_f64!(
     usize, u8, u16, u32, u64, u128, isize, i8, i16, i32, i64, i128, f32, f64,
 );
+
 impl AsLua for bool {
     fn as_lua(&self) -> LuaType {
-        #[allow(clippy::cast_precision_loss)]
         LuaType::Boolean(*self)
     }
     const LUA_TYPE: &'static str = "boolean";
 }
 impl<const N: usize> AsLua for ConcatStr<N> {
     fn as_lua(&self) -> LuaType {
-        #[allow(clippy::cast_precision_loss)]
+        LuaType::String(format!("{self:?}"))
+    }
+    const LUA_TYPE: &'static str = "string";
+}
+impl<T: core::fmt::Display, const W: usize> AsLua for ZeroPadded<T, W> {
+    fn as_lua(&self) -> LuaType {
         LuaType::String(format!("{self:?}"))
     }
     const LUA_TYPE: &'static str = "string";

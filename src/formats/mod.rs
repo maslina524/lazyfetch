@@ -14,6 +14,7 @@ mod percent;
 mod temp;
 mod time;
 mod splitted;
+mod display;
 
 pub use freq::Frequency;
 pub use mem::MemorySize;
@@ -21,6 +22,7 @@ pub use percent::Percent;
 pub use temp::Temperature;
 pub use time::Time;
 pub use splitted::SplittedAnsiIter;
+pub use display::{ZeroPadded, ZeroPaddedTwo};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ColorPlan { FG, BG }
