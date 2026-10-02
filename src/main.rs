@@ -24,7 +24,6 @@ mod color;
 mod config;
 mod crc32;
 mod deflate;
-mod formats;
 mod huffman;
 mod image;
 mod kitty;
@@ -46,6 +45,7 @@ mod logo;
 mod modules;
 mod opt;
 mod str;
+mod formats;
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {

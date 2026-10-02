@@ -118,6 +118,16 @@ macro_rules! cfg_if {
 }
 
 #[macro_export]
+macro_rules! format {
+    ($($tt:tt)*) => {{
+        let mut string = alloc::string::String::with_capacity(16);
+        let mut formatter = $crate::formats::StringFormatter::new(&mut string);
+        let _ = formatter.write_fmt(format_args!($($tt)*));
+        string
+    }};
+}
+
+#[macro_export]
 #[cfg(debug_assertions)]
 macro_rules! dbg {
     () => {
