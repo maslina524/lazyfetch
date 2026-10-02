@@ -1,10 +1,14 @@
 use core::ops::Deref;
 
-use alloc::sync::Arc;
+use alloc::{
+    sync::Arc,
+    string::String
+};
 
 const INLINE_CAP: usize = 30;
 
 pub enum Repr {
+    Empty,
     Inline { 
         len: u8, data: [u8; INLINE_CAP] 
     },
@@ -16,12 +20,17 @@ pub enum Repr {
 pub struct SmolStr(Repr);
 
 impl SmolStr {
+    pub const fn empty() -> Self {
+        Self(Repr::Empty)
+    }
+
     pub const fn from_static(s: &'static str) -> Self {
         Self(Repr::Static(s))
     }
 
     pub fn as_str(&self) -> &str {
         match &self.0 {
+            Repr::Empty => "",
             Repr::Heap(a) => a,
             // SAFETY: `SmolStr` is created only from `str`, utf8 is always valid.
             Repr::Inline { len, data } => unsafe { 
@@ -48,17 +57,38 @@ fn str_to_arr(s: &str) -> [u8; INLINE_CAP] {
     out
 }
 
-impl From<&str> for SmolStr {
-    fn from(value: &str) -> Self {
-        let repr = if value.len() > INLINE_CAP {
-            Repr::Heap(Arc::from(value))
-        } else {
-            Repr::Inline { 
-                len: value.len() as u8, 
-                data: str_to_arr(value) 
-            }
-        };
+macro_rules! impl_from_string {
+    ($($typ:ty)+) => {$(
+        impl From<$typ> for SmolStr {
+            fn from(value: $typ) -> Self {
+                let repr = if value.len() > INLINE_CAP {
+                    Repr::Heap(Arc::from(value))
+                } else {
+                    Repr::Inline { 
+                        len: value.len() as u8, 
+                        data: str_to_arr(&value) 
+                    }
+                };
 
-        Self(repr)
+                Self(repr)
+            }
+        }
+    )+};
+}
+
+impl_from_string!(
+    String
+    &str
+);
+
+impl core::fmt::Display for SmolStr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl core::fmt::Debug for SmolStr {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{:?}", self.as_str())
     }
 }

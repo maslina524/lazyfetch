@@ -44,15 +44,12 @@ pub use wallpaper::Wallpaper;
 pub use weather::Weather;
 
 use alloc::{
-    string::{String, ToString},
+    string::String,
     collections::BTreeMap,
     vec::Vec
 };
 
-use crate::{
-    json::Value,
-    formats
-};
+use crate::json::Value;
 
 type ModulePtr = &'static dyn Module;
 type Registry  = (&'static str, fn() -> ModulePtr);
@@ -154,21 +151,6 @@ pub fn from_preset_module(s: &str) -> Option<&'static dyn Module> {
         .iter()
         .find(|(k, _)| k.eq_ignore_ascii_case(s))
         .map(|(_, f)| f())
-}
-
-pub fn replace_fields<T>(mut s: String, fields: &[(&str, T)]) -> String
-where 
-    T: ToString
-{
-    for (idx, (k, v)) in (1..).zip(fields.iter()) {
-        let placeholder_underscore = alloc::fmt::format(format_args!("{{{}}}", k.trim_start_matches("r#")));
-        let placeholder_hyphen = placeholder_underscore.replace('_', "-");
-        let value = || { v.to_string() };
-
-        s = formats::lazy_replace(&s, placeholder_hyphen.as_str(), value).into_owned();
-        s = formats::lazy_replace(&s, &crate::format!("{{{idx}}}"), value).into_owned();
-    }
-    s
 }
 
 pub fn __field_name(raw: &'static str) -> &'static str {

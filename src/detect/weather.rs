@@ -1,4 +1,4 @@
-use core::str::{FromStr, SplitN};
+use core::str::{SplitN, FromStr};
 
 use alloc::{
     string::String,

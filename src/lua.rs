@@ -153,6 +153,7 @@ impl_as_lua_debug_string!(
     char,
     crate::detect::gpu::GpuType,
     crate::imp::path::Path,
+    crate::str::SmolStr,
     alloc::borrow::Cow<'static, str>
 );
 impl_as_lua_to_string!(

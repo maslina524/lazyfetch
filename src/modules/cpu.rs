@@ -2,11 +2,11 @@ use alloc::{borrow::Cow, string::String};
 use doc::Docs;
 
 use crate::{
-    detect::cpu::CpuInfo,
-    impl_module, 
-    formats::{Frequency, Temperature}, 
-    impl_display_for_module, 
-    modules::Module, 
+    detect::cpu,
+    impl_module,
+    formats::{Frequency, Temperature},
+    impl_display_for_module,
+    modules::Module,
     sync::OnceLock
 };
 
@@ -39,30 +39,14 @@ pub struct Cpu {
     #[doc = "NUMA node count"]
     pub numa_nodes: usize,
     #[doc = "Code name, like \"Raptor Lake\""]
-    pub code_name: String,
+    pub code_name: &'static str,
     #[doc = "Technology"]
-    pub technology: String
+    pub technology: &'static str
 }
 
 impl Module for Cpu {
     fn new() -> Self {
-        let info = CpuInfo::new();
-        Self {
-            name: info.name,
-            vendor: info.vendor,
-            cores_physical: info.physical_cores,
-            cores_logical: info.logical_cores,
-            cores_online: info.online_cores,
-            freq_base: info.base_freq,
-            freq_max: info.max_freq,
-            temperature: Temperature::Celsius(info.temperature),
-            core_types: info.logical_grouped,
-            packages: info.packages,
-            march: info.micro_arch,
-            numa_nodes: info.numa_nodes,
-            code_name: info.code_name,
-            technology: info.technology
-        }
+        cpu::get()
     }
 
     fn get() -> &'static Self {
