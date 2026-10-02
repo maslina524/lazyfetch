@@ -6,13 +6,12 @@ use core::{
 use alloc::{borrow::Cow, collections::BTreeMap, ffi::CString, string::String};
 
 use crate::{
-    abort, 
-    cfg_if, 
-    format, 
-    formats::{ZeroPadded, expand_rust_unicode, snake_to_camel_ascii}, 
-    imp::fs::{self, ReadError}, 
-    str::ConcatStr, 
-    sync::OnceLock, 
+    abort,
+    cfg_if,
+    format,
+    formats::{expand_rust_unicode, snake_to_camel_ascii},
+    imp::fs::{self, ReadError},
+    sync::OnceLock,
     warning,
 };
 
@@ -175,18 +174,6 @@ impl AsLua for bool {
         LuaType::Boolean(*self)
     }
     const LUA_TYPE: &'static str = "boolean";
-}
-impl<const N: usize> AsLua for ConcatStr<N> {
-    fn as_lua(&self) -> LuaType {
-        LuaType::String(format!("{self:?}"))
-    }
-    const LUA_TYPE: &'static str = "string";
-}
-impl<T: core::fmt::Display, const W: usize> AsLua for ZeroPadded<T, W> {
-    fn as_lua(&self) -> LuaType {
-        LuaType::String(format!("{self:?}"))
-    }
-    const LUA_TYPE: &'static str = "string";
 }
 
 impl core::fmt::Debug for LuaType {

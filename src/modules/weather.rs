@@ -76,7 +76,7 @@ pub struct Weather {
     pub sunset: &'static str,
     #[doc = "Dusk time"]
     pub dusk: &'static str,
-    #[doc = "Time, like `16:45:01+0300`"]
+    #[doc = "Weather detection time, like `16:45:01+0300`"]
     pub time: &'static str,
     #[doc = "Timezone, like `Europe/Moscow`"]
     pub timezone: &'static str

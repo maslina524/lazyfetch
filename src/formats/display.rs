@@ -5,6 +5,8 @@ use core::fmt::{
     Formatter
 };
 
+use crate::lua::{AsLua, LuaType};
+
 pub type ZeroPaddedTwo<T> = ZeroPadded<T, 2>;
 
 pub struct ZeroPadded<T, const W: usize> {
@@ -29,4 +31,11 @@ impl<T: Display, const W: usize> Debug for ZeroPadded<T, W> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:0width$}", self.value, width = W)
     }
+}
+
+impl<T: core::fmt::Display + Copy + Into<f64>, const W: usize> AsLua for ZeroPadded<T, W> {
+    fn as_lua(&self) -> LuaType {
+        LuaType::Number(self.value.into())
+    }
+    const LUA_TYPE: &'static str = "number";
 }

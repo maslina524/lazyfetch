@@ -4,7 +4,11 @@ use doc::Docs;
 use crate::{
     detect::cpu,
     impl_module,
-    formats::{Frequency, Temperature},
+    formats::{
+        Frequency,
+        Temperature,
+        MicroArch
+    },
     impl_display_for_module,
     modules::Module,
     sync::OnceLock
@@ -35,7 +39,7 @@ pub struct Cpu {
     #[doc = "Package count"]
     pub packages: usize,
     #[doc = "Microarchitecture"]
-    pub march: String,
+    pub march: MicroArch,
     #[doc = "NUMA node count"]
     pub numa_nodes: usize,
     #[doc = "Code name, like \"Raptor Lake\""]

@@ -1,16 +1,19 @@
 #[cfg(target_arch = "x86_64")]
-use core::arch::x86_64::{__cpuid, __cpuid_count, _xgetbv};
-
-use alloc::{
-    borrow::ToOwned, 
-    string::String
+use core::arch::x86_64::{
+    __cpuid, 
+    __cpuid_count, 
+    _xgetbv
 };
 
+use alloc::string::String;
+
 use crate::{
-    format,
     cfg_if,
-    formats::Temperature,
-    formats::Frequency
+    formats::{
+        Temperature,
+        Frequency,
+        MicroArch
+    }
 };
 
 cfg_if! {
@@ -188,13 +191,12 @@ fn level_x86_64() -> u8 {
 fn level_x86_64() -> u8 {
     0
 }
-fn micro_arch() -> String {
-    let arch = env!("TARGET_ARCH");
+fn micro_arch() -> MicroArch {
     if cfg!(any(target_arch = "x86_64", target_arch = "x86")) {
         let level = level_x86_64();
-        format!("{arch}-v{level}")
+        MicroArch::new(level)
     } else {
-        arch.to_owned()
+        MicroArch::default()
     }
 }
 // NOT IMPLEMENTED

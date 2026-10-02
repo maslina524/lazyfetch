@@ -6,6 +6,11 @@ use alloc::{
     vec::Vec
 };
 
+use crate::{
+    lua::{AsLua, LuaType},
+    format
+};
+
 #[derive(Clone, Copy)]
 pub struct ConcatStr<const N: usize> {
     parts: [&'static str; N]
@@ -84,4 +89,11 @@ impl From<&'static str> for ConcatStr<1> {
     fn from(value: &'static str) -> Self {
         Self { parts: [value] }
     }
+}
+
+impl<const N: usize> AsLua for ConcatStr<N> {
+    fn as_lua(&self) -> LuaType {
+        LuaType::String(format!("{self:?}"))
+    }
+    const LUA_TYPE: &'static str = "string";
 }
