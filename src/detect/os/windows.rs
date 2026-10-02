@@ -4,18 +4,17 @@ use alloc::{
 };
 
 use crate::{
-    detect::os::{OsInfo, get_id},
-    imp::env,
-    imp::regedit::RegValue,
+    detect::os::{OsInfo, get_id}, imp::{env, regedit::RegValue}, str::SmolStr,
 };
+
+const SYSNAME: &str = "WIN32_NT";
 
 impl OsInfo {
     pub fn new() -> Self {
-        let sysname = "WIN32_NT";
-        let name = "Windows".to_owned();
+        let name = Cow::Borrowed("Windows");
 
         let (_, _, build) = env::get_version();
-        let version = Self::version(build as i32).to_owned();
+        let version = SmolStr::from_static(Self::version(build as i32));
         let codename = Self::codename(build as i32);
 
         let value = env::current_version()
@@ -32,8 +31,8 @@ impl OsInfo {
         let nerd = Self::nerd(&version);
 
         Self {
-            sysname,
-            name: name.leak(),
+            sysname: SYSNAME,
+            name,
             id: get_id(),
             id_like: get_id(),
             version: version.clone(),

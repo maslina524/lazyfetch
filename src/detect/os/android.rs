@@ -15,7 +15,6 @@ use crate::{
 
 const PROP_VALUE_MAX: usize = 92;
 const SYSNAME       : &str  = "Linux";
-const NAME          : &str  = "Android";
 const ID            : &str  = "android";
 
 impl OsInfo {
@@ -27,9 +26,11 @@ impl OsInfo {
             .to_string_lossy()
             .into_owned();
 
+        let name = Cow::Borrowed("Android");
+
         Self { 
             sysname: SYSNAME,
-            name: NAME,
+            name,
             id: get_id(),
             id_like: get_id(),
             version: version.clone(),

@@ -8,7 +8,7 @@ use crate::{
     format, 
     impl_module, 
     impl_display_for_module, 
-    str::ConcatStr, 
+    str::{ConcatStr, SmolStr}, 
     logo::LogoInfo, 
     modules::Module, 
     sync::OnceLock
@@ -21,7 +21,7 @@ pub struct Os {
     #[doc = "Name of the kernel"]
     pub sysname: &'static str,
     #[doc = "Name"]
-    pub name: &'static str,
+    pub name: Cow<'static, str>,
     #[doc = "Pretty name, if available"]
     pub pretty_name: String,
     #[doc = "ID"]
@@ -33,9 +33,9 @@ pub struct Os {
     #[doc = "Variant ID"]
     pub variant_id: Cow<'static, str>,
     #[doc = "Version"]
-    pub version: String,
+    pub version: SmolStr,
     #[doc = "Version ID"]
-    pub version_id: String,
+    pub version_id: SmolStr,
     #[doc = "Version codename"]
     pub codename: Cow<'static, str>,
     #[doc = "Build ID"]

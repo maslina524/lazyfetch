@@ -1,5 +1,3 @@
-use alloc::string::String
-;
 use doc::Docs;
 
 use crate::{
@@ -8,7 +6,8 @@ use crate::{
     modules::Module,
     sync::OnceLock,
     detect::wallpaper::WallpaperInfo,
-    imp::path::Path
+    imp::path::Path,
+    str::SmolStr
 };
 
 static WALLPAPER: OnceLock<Wallpaper> = OnceLock::new();
@@ -16,7 +15,7 @@ static WALLPAPER: OnceLock<Wallpaper> = OnceLock::new();
 #[derive(Debug, Docs)]
 pub struct Wallpaper {
     #[doc = "File name"]
-    pub file_name: String,
+    pub file_name: SmolStr,
     #[doc = "Full path"]
     pub full_path: Path
 }
@@ -27,7 +26,7 @@ impl Module for Wallpaper {
         let info = WallpaperInfo::new();
         let file_name = info.full_path
             .last()
-            .map_or(String::new(),String::from);
+            .map_or_default(SmolStr::from);
 
         Self {
             file_name,

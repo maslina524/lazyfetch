@@ -1,11 +1,8 @@
-use alloc::{
-    borrow::Cow, 
-    string::String
-};
+use alloc::borrow::Cow;
 
 use crate::{
     cfg_if, 
-    str::ConcatStr
+    str::{ConcatStr, SmolStr}
 };
 
 cfg_if! {
@@ -20,11 +17,11 @@ cfg_if! {
 
 pub struct OsInfo {
     pub sysname: &'static str,
-    pub name: &'static str,
+    pub name: Cow<'static, str>,
     pub id: ConcatStr<2>,
     pub id_like: ConcatStr<2>,
-    pub version: String,
-    pub version_id: String,
+    pub version: SmolStr,
+    pub version_id: SmolStr,
     pub codename: Cow<'static, str>,
     pub variant: Cow<'static, str>,
     pub variant_id: Cow<'static, str>,

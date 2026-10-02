@@ -1,13 +1,16 @@
 use core::ops::Deref;
 
 use alloc::{
-    sync::Arc,
-    string::String
+    borrow::Cow, 
+    string::String, 
+    sync::Arc
 };
 
 const INLINE_CAP: usize = 30;
 
+#[derive(Default, Clone)]
 pub enum Repr {
+    #[default]
     Empty,
     Inline { 
         len: u8, data: [u8; INLINE_CAP] 
@@ -17,6 +20,7 @@ pub enum Repr {
 }
 
 /// [`SmolStr`] only stores the string, does not modify it
+#[derive(Default, Clone)]
 pub struct SmolStr(Repr);
 
 impl SmolStr {
@@ -26,6 +30,10 @@ impl SmolStr {
 
     pub const fn from_static(s: &'static str) -> Self {
         Self(Repr::Static(s))
+    }
+
+    pub const fn from_slice(slice: [u8; INLINE_CAP], len: usize) -> Self {
+        Self(Repr::Inline { len: len as u8, data: slice })
     }
 
     pub fn as_str(&self) -> &str {
@@ -58,7 +66,7 @@ fn str_to_arr(s: &str) -> [u8; INLINE_CAP] {
 }
 
 macro_rules! impl_from_string {
-    ($($typ:ty)+) => {$(
+    ($($typ:ty),+ $(,)?) => {$(
         impl From<$typ> for SmolStr {
             fn from(value: $typ) -> Self {
                 let repr = if value.len() > INLINE_CAP {
@@ -77,8 +85,9 @@ macro_rules! impl_from_string {
 }
 
 impl_from_string!(
-    String
-    &str
+    String,
+    &str,
+    Cow<'static, str>
 );
 
 impl core::fmt::Display for SmolStr {
