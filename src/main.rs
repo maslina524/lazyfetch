@@ -38,6 +38,7 @@ mod url;
 mod zlib;
 mod print;
 mod parser;
+mod allocator;
 
 mod detect;
 mod json;
@@ -77,8 +78,8 @@ use crate::{
     formats::{SplittedAnsiIter, MemorySize}, 
     image::Image, 
     detect::os,
+    allocator::{AllocationReport, Allocator}, 
     imp::{
-        allocator::{AllocationReport, Allocator}, 
         env, 
         fs, 
         http::Request
