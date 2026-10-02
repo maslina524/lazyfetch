@@ -44,7 +44,7 @@ pub fn flush_to_file() {
     };
 
     let entries = ENTRIES.lock();
-    if let Err(e) = file.write(format!("{}", *entries)) {
+    if let Err(e) = file.write(format!("{}", *entries).as_bytes()) {
         warning!("Failed to write to cache/session: {e}");
     }
 }

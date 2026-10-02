@@ -119,8 +119,7 @@ impl File {
         self.0
     }
 
-    pub fn write(&self, buf: impl Into<Vec<u8>>) -> error::Result<()> {
-        let buf = buf.into();
+    pub fn write(&self, buf: &[u8]) -> error::Result<()> {
         let written = fwrite(buf.as_ptr().cast(), 1, buf.len(), self.0);
         if written == buf.len() {
             Ok(())

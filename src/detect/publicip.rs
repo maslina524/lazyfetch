@@ -103,7 +103,7 @@ fn set_cache(hour: u64, map: &Map) -> Option<()> {
     let path = path_dir.join("publicip");
     let file = File::create_always(path, Access::Write).ok()?;
     let formatted = format!("{hour}\n{map}");
-    file.write(formatted).ok()?;
+    file.write(formatted.as_bytes()).ok()?;
 
     Some(())
 }

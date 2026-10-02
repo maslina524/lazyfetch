@@ -6,6 +6,7 @@ use alloc::{
 };
 
 use crate::{
+    str::SmolStr,
     linux::{
         fs,
         libc::__system_property_get
@@ -21,10 +22,12 @@ impl OsInfo {
     pub fn new() -> Self {
         let mut c_version = [0u8; PROP_VALUE_MAX + 1];
         __system_property_get(c"ro.build.version.release".as_ptr(), c_version.as_mut_ptr());
-        let version = CStr::from_bytes_until_nul(&c_version)
+        let version_raw = CStr::from_bytes_until_nul(&c_version)
             .unwrap()
             .to_string_lossy()
             .into_owned();
+
+        let version = SmolStr::from(version_raw);
 
         let name = Cow::Borrowed("Android");
 

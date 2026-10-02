@@ -41,28 +41,29 @@ pub fn get() -> Weather {
     if raw_string.is_empty() {
         return Weather::default();
     }
+
     let raw: &'static str = String::leak(raw_string);
     let mut parts = raw.splitn(20, ';');
-    let condition_emoji = parts.next().unwrap_or("");
-    let condition = parts.next().unwrap_or("");
-    let condition_symbol = parts.next().unwrap_or("");
-    let humidity = parts.next().unwrap_or("");
-    let temperature_actual = parts.next().unwrap_or("");
-    let temperature_feels = parts.next().unwrap_or("");
-    let wind = parts.next().unwrap_or("");
-    let location = parts.next().unwrap_or("");
-    let moon_emoji = parts.next().unwrap_or("");
-    let moon_day = parts.next().unwrap_or("");
-    let precipitation = parts.next().unwrap_or("");
-    let pressure = parts.next().unwrap_or("");
-    let uv_index = parts.next().unwrap_or("");
-    let dawn = parts.next().unwrap_or("");
-    let sunrise = parts.next().unwrap_or("");
-    let zenith = parts.next().unwrap_or("");
-    let sunset = parts.next().unwrap_or("");
-    let dusk = parts.next().unwrap_or("");
-    let time = parts.next().unwrap_or("");
-    let timezone = parts.next().unwrap_or("");
+    let condition_emoji = parts.next().unwrap_or_default();
+    let condition = parts.next().unwrap_or_default();
+    let condition_symbol = parts.next().unwrap_or_default();
+    let humidity = parts.next().unwrap_or_default();
+    let temperature_actual = parts.next().unwrap_or_default();
+    let temperature_feels = parts.next().unwrap_or_default();
+    let wind = parts.next().unwrap_or_default();
+    let location = parts.next().unwrap_or_default();
+    let moon_emoji = parts.next().unwrap_or_default();
+    let moon_day = parts.next().unwrap_or_default();
+    let precipitation = parts.next().unwrap_or_default();
+    let pressure = parts.next().unwrap_or_default();
+    let uv_index = parts.next().unwrap_or_default();
+    let dawn = parts.next().unwrap_or_default();
+    let sunrise = parts.next().unwrap_or_default();
+    let zenith = parts.next().unwrap_or_default();
+    let sunset = parts.next().unwrap_or_default();
+    let dusk = parts.next().unwrap_or_default();
+    let time = parts.next().unwrap_or_default();
+    let timezone = parts.next().unwrap_or_default();
 
     Weather {
         result: ConcatStr::new([temperature_actual, " — ", condition, " (", location, ")"]),
@@ -135,6 +136,6 @@ fn set_cache(hour: u64, data: &str) -> Option<()> {
     let path = path_dir.join("weather");
     let file = File::create_always(path, Access::Write).ok()?;
     let formatted = format!("{hour}\n{data}");
-    file.write(formatted).ok()?;
+    file.write(formatted.as_bytes()).ok()?;
     Some(())
 }

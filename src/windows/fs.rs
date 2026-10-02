@@ -106,8 +106,7 @@ impl File {
         Ok(Self(handle))
     }
 
-    pub fn write(&self, buf: impl Into<Vec<u8>>) -> error::Result<()> {
-        let mut buf = buf.into();
+    pub fn write(&self, buf: &[u8]) -> error::Result<()> {
         let len = buf.len() as u32;
         let mut written = 0;
 
@@ -116,7 +115,7 @@ impl File {
         let ret = unsafe {
             WriteFile(
                 self.0, 
-                buf.as_mut_ptr(), 
+                buf.as_ptr(), 
                 len, 
                 &raw mut written, 
                 ptr::null_mut()
@@ -125,10 +124,6 @@ impl File {
         if ret == 0 || written != len {
             return Err(ErrorCode::last());
         }
-        
-        let written_usize = written as usize;
-        // SAFETY: WinAPI modifies data in `Vec<_>`, you must update the len
-        unsafe { buf.set_len(written_usize) };
         
         Ok(())
     }
@@ -222,7 +217,7 @@ mod tests {
     #[test]
     fn write_file_test() {
         let file = File::open("test.txt", Access::Write).unwrap();
-        let _ = file.write("Hello World!");
+        let _ = file.write(b"Hello World!");
     }
 
     #[test]

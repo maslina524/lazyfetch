@@ -7,7 +7,7 @@ use crate::{
     parser::LineBased,
     imp::fs,
     detect::os::OsInfo,
-    str::ConcatStr
+    str::{ConcatStr, SmolStr}
 };
 
 const SYSNAME: &str = "Linux";
@@ -25,9 +25,13 @@ impl OsInfo {
         let variant = os_release.get_default("VARIANT", "");
         let variant_id = os_release.get_default("VARIANT_ID", "");
         let id = os_release.get_default("ID", "Unknown");
-        let version = Self::get_version(id).unwrap_or_else(|| {
+
+        let version_raw = Self::get_version(id).unwrap_or_else(|| {
             os_release.get_default("VERSION_ID", "Unknown").to_owned()
         });
+        let version = SmolStr::from(version_raw);
+
+
         let nerd = Self::nerd(id);
 
         Self { 
