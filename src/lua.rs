@@ -11,7 +11,7 @@ use crate::{
     format, 
     formats::{expand_rust_unicode, snake_to_camel_ascii}, 
     imp::fs::{self, ReadError}, 
-    superstr::ConcatStr, 
+    str::ConcatStr, 
     sync::OnceLock, 
     warning,
 };

@@ -5,7 +5,7 @@ use crate::{
     impl_module, 
     formats::{Percent, Temperature}, 
     impl_display_for_module, 
-    superstr::ConcatStr, 
+    str::ConcatStr, 
     modules::Module, 
     sync::OnceLock
 };

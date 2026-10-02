@@ -9,7 +9,7 @@ use crate::{
     impl_module,
     detect::initsystem::{InitSystemInfo, pid},
     modules::Module,
-    field::{
+    opt::{
         lazy::LazyField,
         cached::SessionCached
     },

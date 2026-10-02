@@ -396,8 +396,10 @@ const fn is_leap_year(year: u16) -> bool {
 pub fn get_var(name: &str, size: Option<usize>) -> error::Result<String> {
     let name_wide = wide(name)?;
     let size = size.unwrap_or(1024);
-    let mut buf = vec![0u16; size];
+    let mut buf = vec![0u16; size + 1];
 
+    // SAFETY: Buffer overflow will not occur,
+    //  1 byte remains for the null byte, safe
     let len = unsafe {
         GetEnvironmentVariableW(
             name_wide.as_ptr(),

@@ -30,7 +30,7 @@ impl KernelInfo {
 
     fn version() -> String {
         let value = env::current_version().read("BuildLabEx").unwrap_or(RegValue::None);
-        value.as_string().map(ToOwned::to_owned).unwrap_or_default()
+        value.as_string().map_or_default(ToOwned::to_owned)
     }
 
     fn ubr() -> u32 {

@@ -28,7 +28,6 @@ mod formats;
 mod huffman;
 mod image;
 mod kitty;
-mod superstr;
 mod lua;
 mod lz77;
 mod macros;
@@ -44,7 +43,8 @@ mod detect;
 mod json;
 mod logo;
 mod modules;
-mod field;
+mod opt;
+mod str;
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -93,7 +93,7 @@ use crate::{
     sync::OnceLock, 
     url::Url,
     print::flush,
-    field::cached
+    opt::cached
 };
 
 #[global_allocator]

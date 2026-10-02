@@ -7,7 +7,7 @@ use crate::{
     parser::LineBased,
     imp::fs,
     detect::os::OsInfo,
-    superstr::ConcatStr
+    str::ConcatStr
 };
 
 const SYSNAME: &str = "Linux";

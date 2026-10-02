@@ -1,6 +1,12 @@
-use alloc::{borrow::Cow, string::String};
+use alloc::{
+    borrow::Cow, 
+    string::String
+};
 
-use crate::{cfg_if, superstr::ConcatStr};
+use crate::{
+    cfg_if, 
+    str::ConcatStr
+};
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -41,7 +47,10 @@ pub fn get_id() -> ConcatStr<2> {
 
 #[cfg(target_os = "windows")]
 pub fn get_id() -> ConcatStr<2> {
-    use crate::{superstr::ConcatStr, windows::env};
+    use crate::{
+        str::ConcatStr,
+        windows::env
+    };
 
     let (_, _, build) = env::get_version();
     let version = OsInfo::version(build as i32);

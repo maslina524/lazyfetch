@@ -8,7 +8,7 @@ use crate::{
     impl_module,
     modules::Module,
     sync::OnceLock,
-    field::{
+    opt::{
         lazy::LazyField,
         cached::SessionCached
     }

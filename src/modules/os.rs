@@ -8,7 +8,7 @@ use crate::{
     format, 
     impl_module, 
     impl_display_for_module, 
-    superstr::ConcatStr, 
+    str::ConcatStr, 
     logo::LogoInfo, 
     modules::Module, 
     sync::OnceLock

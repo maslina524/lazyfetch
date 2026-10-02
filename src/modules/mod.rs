@@ -277,13 +277,13 @@ macro_rules! impl_module {
 
             // Substituting values into the module body
             let mut body_ret = String::with_capacity(96);
-            let body_parser = $crate::field::parser::FormatParserIter::new(&body);
+            let body_parser = $crate::opt::parser::FormatParserIter::new(&body);
             for part in body_parser {
                 match part {
-                    $crate::field::parser::Part::Text(s) => {
+                    $crate::opt::parser::Part::Text(s) => {
                         let _ = write!(body_ret, "{s}");
                     },
-                    $crate::field::parser::Part::Var(v) => {
+                    $crate::opt::parser::Part::Var(v) => {
                         if let Some(display) = self.resolve_field(v) {
                             let _ = write!(body_ret, "{}", display);
                         } else {
@@ -299,13 +299,13 @@ macro_rules! impl_module {
 
             // Substituting values into the module key
             let mut key_ret = String::with_capacity(16);
-            let key_parser = $crate::field::parser::FormatParserIter::new(key.format.unwrap_or(self.key()));
+            let key_parser = $crate::opt::parser::FormatParserIter::new(key.format.unwrap_or(self.key()));
             for part in key_parser {
                 match part {
-                    $crate::field::parser::Part::Text(s) => {
+                    $crate::opt::parser::Part::Text(s) => {
                         let _ = write!(key_ret, "{s}");
                     },
-                    $crate::field::parser::Part::Var(v) => {
+                    $crate::opt::parser::Part::Var(v) => {
                         if let Some(display) = self.resolve_field(v) {
                             let _ = write!(key_ret, "{}", display);
                         } else {
