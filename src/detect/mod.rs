@@ -14,3 +14,4 @@ pub mod initsystem;
 pub mod os;
 pub mod disk;
 pub mod publicip;
+pub mod theme;
