@@ -43,7 +43,7 @@ mod detect;
 mod json;
 mod logo;
 mod modules;
-mod opt;
+mod field;
 mod str;
 mod formats;
 
@@ -94,7 +94,7 @@ use crate::{
     sync::OnceLock, 
     url::Url,
     print::flush,
-    opt::cached
+    field::cached
 };
 
 #[global_allocator]
