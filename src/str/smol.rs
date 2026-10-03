@@ -1,4 +1,7 @@
-use core::ops::Deref;
+use core::{
+    ops::Deref,
+    mem
+};
 
 use alloc::{
     borrow::Cow, 
@@ -6,14 +9,55 @@ use alloc::{
     sync::Arc
 };
 
-const INLINE_CAP: usize = 30;
+const INLINE_CAP: usize = 23;
+
+#[repr(u8)]
+#[derive(Clone, Copy)]
+pub enum InlineLen {
+    _V1 = 1,
+    _V2 = 2,
+    _V3 = 3,
+    _V4 = 4,
+    _V5 = 5,
+    _V6 = 6,
+    _V7 = 7,
+    _V8 = 8,
+    _V9 = 9,
+    _V10 = 10,
+    _V11 = 11,
+    _V12 = 12,
+    _V13 = 13,
+    _V14 = 14,
+    _V15 = 15,
+    _V16 = 16,
+    _V17 = 17,
+    _V18 = 18,
+    _V19 = 19,
+    _V20 = 20,
+    _V21 = 21,
+    _V22 = 22,
+    _V23 = 23
+}
+
+impl TryFrom<u8> for InlineLen {
+    type Error = ();
+    fn try_from(value: u8) -> Result<Self, ()> {
+        if (1u8..=INLINE_CAP as u8).contains(&value) {
+            // SAFETY: Enum bounds are checked, it has the same layout as u8, safe
+            let len = unsafe { mem::transmute::<u8, Self>(value) };
+            Ok(len)
+        } else {
+            Err(())
+        }
+    }
+}
 
 #[derive(Default, Clone)]
 pub enum Repr {
     #[default]
     Empty,
     Inline { 
-        len: u8, data: [u8; INLINE_CAP] 
+        len: InlineLen, data: [u8; INLINE_CAP] 
     },
     Heap(Arc<str>),
     Static(&'static str)
@@ -29,12 +73,20 @@ impl SmolStr {
     }
 
     pub const fn from_static(s: &'static str) -> Self {
-        Self(Repr::Static(s))
+        if s.is_empty() {
+            Self::empty()
+        } else {
+            Self(Repr::Static(s))
+        }
     }
 
-    pub const fn from_slice(slice: [u8; INLINE_CAP], len: usize) -> Self {
-        Self(Repr::Inline { len: len as u8, data: slice })
-    }
+    // pub const fn from_slice(slice: [u8; INLINE_CAP], len: usize) -> Self {
+    //     if len == 0 {
+    //         Self::empty()
+    //     } else {
+    //         Self(Repr::Inline { len: len as u8, data: slice })
+    //     }
+    // }
 
     pub fn as_str(&self) -> &str {
         match &self.0 {
@@ -69,11 +121,13 @@ macro_rules! impl_from_string {
     ($($typ:ty),+ $(,)?) => {$(
         impl From<$typ> for SmolStr {
             fn from(value: $typ) -> Self {
-                let repr = if value.len() > INLINE_CAP {
+                let repr = if value.len() == 0 {
+                    Repr::Empty
+                } else if value.len() > INLINE_CAP {
                     Repr::Heap(Arc::from(value))
                 } else {
                     Repr::Inline { 
-                        len: value.len() as u8, 
+                        len: (value.len() as u8).try_into().unwrap(), 
                         data: str_to_arr(&value) 
                     }
                 };

@@ -71,7 +71,7 @@ fn load_entries() {
             fallback()
         },
         Err(ReadError::Code(e)) if !e.is_file_not_found() => {
-            warning!("Failed to read cache/session: {e}");
+            warning!("Failed to read cache/session: {e} ({:2X})", e.code());
             fallback()
         },
         Err(_) => fallback(),

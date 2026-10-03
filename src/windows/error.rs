@@ -42,7 +42,7 @@ impl ErrorCode {
     }
 
     pub const fn is_file_not_found(&self) -> bool {
-        self.0 == 0x2
+        self.0 == 0x2 || self.0 == 0x3
     }
 }
 

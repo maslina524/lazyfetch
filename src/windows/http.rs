@@ -173,16 +173,16 @@ impl Request {
         };
         if query == 0 { return Err(ErrorCode::last()); }
 
-        let mut buf = Vec::with_capacity(4096);
+        let mut buf = Vec::with_capacity(1024);
         let mut read = 0;
         loop {
-            let mut chunk = [0u8; 4096];
+            let mut chunk = [0u8; 1024];
             // SAFETY: Parameters are fully correct, return value is checked
             let ret = unsafe {
                 WinHttpReadData(
                     req,
                     chunk.as_mut_ptr().cast(),
-                    4096,
+                    1024,
                     &raw mut read,
                 )
             };
