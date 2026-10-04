@@ -26,7 +26,7 @@ pub struct InitSystemInfo {
 
 #[cfg(target_os = "windows")]
 pub fn pid() -> u32 {
-    crate::imp::env::find_pid_by_name("smss.exe")
+    crate::imp::env::get_initsystem_pid()
 }
 
 #[cfg(not(target_os = "windows"))]

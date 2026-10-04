@@ -14,10 +14,11 @@ use alloc::{
 
 use crate::{
     ARGS, 
-    format, 
+    format,
     sync::OnceLock, 
     w, 
     warning, 
+    abort,
     windows::{
         encoding::{wide, utf16le_to_utf8, Utf16Len}, 
         error::{self, ErrorCode}, 
@@ -34,16 +35,66 @@ use crate::{
     }
 };
 
-const EPOCH_DIFF              : u64               = 116_444_736_000_000_000;
-const EPOCH_DIFF_SECS         : u64               = 11_644_473_600;
-const INVALID_HANDLE          : *mut c_void       = (-1isize).cast_unsigned() as *mut c_void;
+const EPOCH_DIFF              : u64                     = 116_444_736_000_000_000;
+const EPOCH_DIFF_SECS         : u64                     = 11_644_473_600;
+const INVALID_HANDLE          : *mut c_void             = (-1isize).cast_unsigned() as *mut c_void;
 
-const TICKS_PER_SEC           : u64               = 10_000_000;
-const LOCALE_NAME_USER_DEFAULT: *const u16        = ptr::null();
-const DEFAULT_DATE_FMT        : [u16; 11]         = w!("dd.MM.yyyy");
-const TIME_FMT                : [u16; 9]          = w!("HH:mm:ss");
-static TERMINAL_HANDLE        : OnceLock<isize>   = OnceLock::new();
-static CURRENT_VERSION        : OnceLock<Regedit> = OnceLock::new();
+const TICKS_PER_SEC           : u64                     = 10_000_000;
+const LOCALE_NAME_USER_DEFAULT: *const u16              = ptr::null();
+const DEFAULT_DATE_FMT        : [u16; 11]               = w!("dd.MM.yyyy");
+const TIME_FMT                : [u16; 9]                = w!("HH:mm:ss");
+const INITSYSTEM_NAME         : &CStr                   = c"smss.exe";
+static TERMINAL_HANDLE        : OnceLock<isize>         = OnceLock::new();
+static CURRENT_VERSION        : OnceLock<Regedit>       = OnceLock::new();
+static SHARED_PROCESS         : OnceLock<SharedProcess> = OnceLock::new();
+
+struct SharedProcess {
+    initsystem_pid: u32
+}
+
+fn get_shared_process() -> &'static SharedProcess {
+    SHARED_PROCESS.get_or_init(|| {
+        let mut initsystem_pid = 0;
+
+        // SAFETY: Completely safe
+        let snapshot = unsafe { CreateToolhelp32Snapshot(2, 0) };
+        if snapshot == INVALID_HANDLE {
+            abort!("Failed to create shapshot")
+        }
+
+        let mut pe = PROCESSENTRY32 {
+            dwSize: size_of::<PROCESSENTRY32>() as u32,
+            .. PROCESSENTRY32::default()
+        };
+
+        // SAFETY: Completely safe
+        let first = unsafe { Process32First(snapshot, &raw mut pe) };
+        if first != 0 {
+            loop {
+                // SAFETY: Libc is guaranteed to return a valid c string
+                let proc_name = unsafe { CStr::from_ptr(pe.szExeFile.as_ptr()) };
+                if proc_name == INITSYSTEM_NAME {
+                    initsystem_pid = pe.th32ProcessID;
+                    break;
+                }
+                // SAFETY: Completely safe
+                let ret = unsafe { Process32Next(snapshot, &raw mut pe) };
+                if ret == 0 {
+                    break;
+                }
+            }
+        }
+
+        // SAFETY: Completely safe
+        unsafe { CloseHandle(snapshot) };
+        
+        SharedProcess { initsystem_pid }
+    })
+}
+
+pub fn get_initsystem_pid() -> u32 {
+    get_shared_process().initsystem_pid
+}
 
 #[repr(C)]
 #[derive(Default, Debug)]
@@ -201,40 +252,6 @@ pub fn args_init() -> Vec<String> {
 
 pub fn args() -> &'static Vec<String> {
     ARGS.get().expect("Unreachable")
-}
-
-pub fn find_pid_by_name(name: &str) -> u32 {
-    let mut pid = 0;
-    // SAFETY: Completely safe
-    let snapshot = unsafe { CreateToolhelp32Snapshot(2, 0) };
-    if snapshot == INVALID_HANDLE { return 0; }
-
-    let mut pe = PROCESSENTRY32 {
-        dwSize: size_of::<PROCESSENTRY32>() as u32,
-        .. PROCESSENTRY32::default()
-    };
-
-    // SAFETY: Completely safe
-    let first = unsafe { Process32First(snapshot, &raw mut pe) };
-    if first != 0 {
-        loop {
-            // SAFETY: Libc is guaranteed to return a valid c string
-            let proc_name = unsafe { CStr::from_ptr(pe.szExeFile.as_ptr()) };
-            if proc_name.to_bytes() == name.as_bytes() {
-                pid = pe.th32ProcessID;
-                break;
-            }
-            // SAFETY: Completely safe
-            let ret = unsafe { Process32Next(snapshot, &raw mut pe) };
-            if ret == 0 {
-                break;
-            }
-        }
-    }
-
-    // SAFETY: Completely safe
-    unsafe { CloseHandle(snapshot) };
-    pid
 }
 
 pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<String> {
@@ -432,13 +449,6 @@ mod tests {
     fn terminal_size_test() {
         let size = env::terminal_size();
         println!("{size:?}");
-    }
-
-    #[test]
-    fn find_pid_test() {
-        let name = "System";
-        let pid = env::find_pid_by_name(name);
-        assert_eq!(pid, 4);
     }
 
     #[test]
