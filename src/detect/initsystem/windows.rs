@@ -4,10 +4,10 @@ use alloc::{
 };
 
 use crate::{
-    warning,
-    windows::env,
-    windows::path::Path,
-    detect::initsystem::InitSystemInfo
+    detect::initsystem::InitSystemInfo, 
+    str::SmolStr, 
+    warning, 
+    windows::{env, path::Path}
 };
 
 const NAME: &str = "smss";
@@ -19,7 +19,7 @@ impl InitSystemInfo {
             Ok(v) => v,
             Err(e) => {
                 warning!("Failed to get file version: {e} (initsystem)");
-                "0.0.0.0".to_owned()
+                SmolStr::from_static("0.0.0.0")
             }
         };
 

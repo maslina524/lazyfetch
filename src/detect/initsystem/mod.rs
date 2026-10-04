@@ -1,11 +1,9 @@
-use alloc::{
-    borrow::Cow, 
-    string::String
-};
+use alloc::borrow::Cow;
 
 use crate::{
-    imp::path::Path,
-    cfg_if
+    cfg_if, 
+    imp::path::Path, 
+    str::SmolStr
 };
 
 cfg_if! {
@@ -21,7 +19,7 @@ cfg_if! {
 pub struct InitSystemInfo {
     pub exe: Path,
     pub name: Cow<'static, str>,
-    pub version: String
+    pub version: SmolStr
 }
 
 #[cfg(target_os = "windows")]

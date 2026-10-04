@@ -15,7 +15,7 @@ static SHELL: OnceLock<Shell> = OnceLock::new();
 #[derive(Debug, Default, Docs)]
 pub struct Shell {
     pub process_name: SmolStr,
-    pub exe: SmolStr,
+    pub exe: Path,
     pub exe_name: SmolStr,
     pub version: SmolStr,
     pub pid: u32,

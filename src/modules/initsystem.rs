@@ -1,7 +1,5 @@
-use alloc::{
-    string::String,
-    borrow::Cow
-};
+use alloc::borrow::Cow;
+
 use doc::Docs;
 
 use crate::{
@@ -9,6 +7,7 @@ use crate::{
     impl_module,
     detect::initsystem::{InitSystemInfo, pid},
     modules::Module,
+    str::SmolStr,
     field::{
         lazy::LazyField,
         cached::SessionCached
@@ -26,7 +25,7 @@ pub struct Initsystem {
     #[doc = "Exe path"]
     pub exe: Path,
     #[doc = "Version path"]
-    pub version: String,
+    pub version: SmolStr,
     #[doc = "Pid"]
     pub pid: LazyField<SessionCached<u32>>
 }

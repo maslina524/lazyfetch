@@ -19,6 +19,7 @@ use crate::{
     w, 
     warning, 
     abort,
+    str::SmolStr,
     windows::{
         encoding::{wide, utf16le_to_utf8, Utf16Len}, 
         error::{self, ErrorCode}, 
@@ -38,18 +39,19 @@ use crate::{
 
 const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
 
-const EPOCH_DIFF              : u64                     = 116_444_736_000_000_000;
-const EPOCH_DIFF_SECS         : u64                     = 11_644_473_600;
-const INVALID_HANDLE          : *mut c_void             = (-1isize).cast_unsigned() as *mut c_void;
+const EPOCH_DIFF              : u64         = 116_444_736_000_000_000;
+const EPOCH_DIFF_SECS         : u64         = 11_644_473_600;
+const INVALID_HANDLE          : *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
 
-const TICKS_PER_SEC           : u64                     = 10_000_000;
-const LOCALE_NAME_USER_DEFAULT: *const u16              = ptr::null();
-const DEFAULT_DATE_FMT        : [u16; 11]               = w!("dd.MM.yyyy");
-const TIME_FMT                : [u16; 9]                = w!("HH:mm:ss");
-const INITSYSTEM_NAME         : &CStr                   = c"smss.exe";
-static TERMINAL_HANDLE        : OnceLock<isize>         = OnceLock::new();
-static CURRENT_VERSION        : OnceLock<Regedit>       = OnceLock::new();
-static SHARED_PROCESS         : OnceLock<SharedProcess> = OnceLock::new();
+const TICKS_PER_SEC           : u64         = 10_000_000;
+const LOCALE_NAME_USER_DEFAULT: *const u16  = ptr::null();
+const DEFAULT_DATE_FMT        : [u16; 11]   = w!("dd.MM.yyyy");
+const TIME_FMT                : [u16; 9]    = w!("HH:mm:ss");
+const INITSYSTEM_NAME         : &CStr       = c"smss.exe";
+
+static TERMINAL_HANDLE: OnceLock<isize>         = OnceLock::new();
+static CURRENT_VERSION: OnceLock<Regedit>       = OnceLock::new();
+static SHARED_PROCESS : OnceLock<SharedProcess> = OnceLock::new();
 
 #[derive(Default)]
 pub struct ShellInfo {
@@ -321,7 +323,7 @@ pub fn args() -> &'static Vec<String> {
     ARGS.get().expect("Unreachable")
 }
 
-pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<String> {
+pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<SmolStr> {
     let path_str = path.into().into_inner();
     let path_wide = wide(path_str)?;
 
@@ -375,7 +377,9 @@ pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<String> 
     let build = (info.dwProductVersionLS >> 16) & 0xFFFF;
     let rev = info.dwProductVersionLS & 0xFFFF;
 
-    Ok(format!("{major}.{minor}.{build}.{rev}"))
+    Ok(
+        SmolStr::from(format!("{major}.{minor}.{build}.{rev}"))
+    )
 }
 
 pub fn format_timestamp(time: u64, format: Option<&str>) -> String {

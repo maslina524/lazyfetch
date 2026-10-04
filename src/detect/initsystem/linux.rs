@@ -4,7 +4,8 @@ use crate::{
     warning,
     linux::fs,
     linux::path::Path,
-    detect::initsystem::InitSystemInfo
+    detect::initsystem::InitSystemInfo,
+    str::SmolStr
 };
 
 impl InitSystemInfo {
@@ -27,7 +28,7 @@ impl InitSystemInfo {
             }
         });
 
-        let version = "0.0.0.0".to_owned();
+        let version = SmolStr::from_static("0.0.0.0");
 
         Self { 
             exe,

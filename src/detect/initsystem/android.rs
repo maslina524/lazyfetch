@@ -11,7 +11,8 @@ use crate::{
         fs::{self, ItemType},
         libc::__system_property_get,
         path::Path
-    }
+    },
+    str::SmolStr
 };
 
 const PROP_VALUE_MAX: usize = 92;
@@ -21,9 +22,11 @@ impl InitSystemInfo {
         let (name, exe) = Self::name_and_exe();
         let mut c_version = [0u8; PROP_VALUE_MAX + 1];
         __system_property_get(c"ro.system.build.id".as_ptr(), c_version.as_mut_ptr());
-        let version = unsafe { CStr::from_ptr(c_version.as_ptr().cast()) }
-            .to_string_lossy()
-            .into_owned();
+
+        let version_cow = unsafe { CStr::from_ptr(c_version.as_ptr().cast()) }
+            .to_string_lossy();
+        
+        let version = SmolStr::from(version_cow);
 
         Self { 
             exe,
