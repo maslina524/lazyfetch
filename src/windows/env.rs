@@ -28,12 +28,15 @@ use crate::{
             EnumProcesses, FILETIME, FileTimeToLocalFileTime, FileTimeToSystemTime, GetCommandLineW, 
             GetConsoleScreenBufferInfo, GetFileVersionInfoSizeW, GetFileVersionInfoW, 
             GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, 
-            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetEnvironmentVariableW
+            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetEnvironmentVariableW,
+            GetCurrentProcessId, OpenProcess, QueryFullProcessImageNameW
         }, 
         path::Path, 
         regedit::{self, Hkey, Regedit}
     }
 };
+
+const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
 
 const EPOCH_DIFF              : u64                     = 116_444_736_000_000_000;
 const EPOCH_DIFF_SECS         : u64                     = 11_644_473_600;
@@ -48,12 +51,65 @@ static TERMINAL_HANDLE        : OnceLock<isize>         = OnceLock::new();
 static CURRENT_VERSION        : OnceLock<Regedit>       = OnceLock::new();
 static SHARED_PROCESS         : OnceLock<SharedProcess> = OnceLock::new();
 
+#[derive(Default)]
+pub struct ShellInfo {
+    pub pid: u32,
+    pub exe_path: Path
+}
+
 struct SharedProcess {
-    initsystem_pid: u32
+    initsystem_pid: u32,
+    shell: Option<ShellInfo>
+}
+
+fn compute_shell_info(pid: u32) -> ShellInfo {
+    // SAFETY: Completely safe
+    let handle = unsafe { 
+        OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, 
+            0, 
+            pid
+        ) 
+    };
+    if handle == INVALID_HANDLE {
+        warning!("Failed to get shell process handle: {}", ErrorCode::last());
+        return ShellInfo::default()
+    }
+
+    let mut size = 260;
+    let mut buf = [0u16; 260];
+    // SAFETY: Completely safe
+    let ret = unsafe {
+        QueryFullProcessImageNameW(
+            handle, 
+            0, 
+            buf.as_mut_ptr(), 
+            &raw mut size
+        )
+    };
+    
+    let exe_path = if ret == 1 {
+        // SAFETY: WinAPI returns a valid C string and always leaves 261 bytes zeroed
+        match utf16le_to_utf8(&buf, Utf16Len::Len(size as usize)) {
+            Ok(s) => Path::from(s),
+            Err(e) => {
+                warning!("Failed to convert Utf16 to Utf8 in shell exe path: {e}");
+                Path::default()
+            }
+        }
+    } else {
+        warning!("Failed to get shell exe path: {}", ErrorCode::last());
+        Path::default()
+    };
+
+    ShellInfo { pid, exe_path }
 }
 
 fn get_shared_process() -> &'static SharedProcess {
     SHARED_PROCESS.get_or_init(|| {
+        // SAFETY: Completely safe
+        let pid = unsafe { GetCurrentProcessId() };
+        let mut shell = None;
         let mut initsystem_pid = 0;
 
         // SAFETY: Completely safe
@@ -75,8 +131,12 @@ fn get_shared_process() -> &'static SharedProcess {
                 let proc_name = unsafe { CStr::from_ptr(pe.szExeFile.as_ptr()) };
                 if proc_name == INITSYSTEM_NAME {
                     initsystem_pid = pe.th32ProcessID;
-                    break;
                 }
+
+                if pe.th32ProcessID == pid {
+                    shell = Some(compute_shell_info(pe.th32ParentProcessID));
+                }
+
                 // SAFETY: Completely safe
                 let ret = unsafe { Process32Next(snapshot, &raw mut pe) };
                 if ret == 0 {
@@ -88,12 +148,19 @@ fn get_shared_process() -> &'static SharedProcess {
         // SAFETY: Completely safe
         unsafe { CloseHandle(snapshot) };
         
-        SharedProcess { initsystem_pid }
+        SharedProcess { 
+            initsystem_pid, 
+            shell
+        }
     })
 }
 
 pub fn get_initsystem_pid() -> u32 {
     get_shared_process().initsystem_pid
+}
+
+pub fn get_shell() -> Option<&'static ShellInfo> {
+    get_shared_process().shell.as_ref()
 }
 
 #[repr(C)]

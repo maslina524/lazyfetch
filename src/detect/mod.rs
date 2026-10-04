@@ -15,3 +15,4 @@ pub mod os;
 pub mod disk;
 pub mod publicip;
 pub mod theme;
+pub mod shell;

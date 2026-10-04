@@ -1,5 +1,6 @@
 use core::{
     ops::Deref,
+    ffi::CStr,
     mem
 };
 
@@ -143,6 +144,27 @@ impl_from_string!(
     &str,
     Cow<'static, str>
 );
+
+impl TryFrom<&CStr> for SmolStr {
+    type Error = core::str::Utf8Error;
+    fn try_from(value: &CStr) -> Result<Self, Self::Error> {
+        let len = value.count_bytes();
+        let repr = if len == 0 {
+            Repr::Empty
+        } else if len > INLINE_CAP {
+            let s = value.to_str()?;
+            Repr::Heap(Arc::from(s))
+        } else {
+            let s = value.to_str()?;
+            Repr::Inline { 
+                len: (len as u8).try_into().unwrap(), 
+                data: str_to_arr(s) 
+            }
+        };
+
+        Ok(Self(repr))
+    }
+}
 
 impl core::fmt::Display for SmolStr {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

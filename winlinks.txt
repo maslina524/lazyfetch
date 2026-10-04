@@ -103,3 +103,6 @@ GetFileAttributesA
 GetDriveTypeA
 GetVolumeInformationA
 GetEnvironmentVariableW
+GetCurrentProcessId
+OpenProcess
+QueryFullProcessImageNameW

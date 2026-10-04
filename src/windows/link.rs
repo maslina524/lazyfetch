@@ -75,10 +75,12 @@ link!("kernel32" "system" fn LoadLibraryA(lplibfilename : PCSTR) -> HMODULE);
 link!("kernel32" "system" fn LoadLibraryW(lplibfilename : PCWSTR) -> HMODULE);
 link!("kernel32" "system" fn LocalFree(hmem : HLOCAL) -> HLOCAL);
 link!("kernel32" "system" fn MultiByteToWideChar(codepage : u32, dwflags : MULTI_BYTE_TO_WIDE_CHAR_FLAGS, lpmultibytestr : PCSTR, cbmultibyte : i32, lpwidecharstr : PWSTR, cchwidechar : i32) -> i32);
+link!("kernel32" "system" fn OpenProcess(dwdesiredaccess : PROCESS_ACCESS_RIGHTS, binherithandle : BOOL, dwprocessid : u32) -> HANDLE);
 link!("advapi32" "system" fn OpenProcessToken(processhandle : HANDLE, desiredaccess : TOKEN_ACCESS_MASK, tokenhandle : *mut HANDLE) -> BOOL);
 link!("shlwapi" "system" fn PathFileExistsW(pszpath : PCWSTR) -> BOOL);
 link!("kernel32" "system" fn Process32First(hsnapshot : HANDLE, lppe : *mut PROCESSENTRY32) -> BOOL);
 link!("kernel32" "system" fn Process32Next(hsnapshot : HANDLE, lppe : *mut PROCESSENTRY32) -> BOOL);
+link!("kernel32" "system" fn QueryFullProcessImageNameW(hprocess : HANDLE, dwflags : PROCESS_NAME_FORMAT, lpexename : PWSTR, lpdwsize : *mut u32) -> BOOL);
 link!("kernel32" "system" fn ReadFile(hfile : HANDLE, lpbuffer : *mut u8, nnumberofbytestoread : u32, lpnumberofbytesread : *mut u32, lpoverlapped : *mut OVERLAPPED) -> BOOL);
 link!("advapi32" "system" fn RegCloseKey(hkey : HKEY) -> WIN32_ERROR);
 link!("advapi32" "system" fn RegCreateKeyExW(hkey : HKEY, lpsubkey : PCWSTR, reserved : u32, lpclass : PCWSTR, dwoptions : REG_OPEN_CREATE_OPTIONS, samdesired : REG_SAM_FLAGS, lpsecurityattributes : *const SECURITY_ATTRIBUTES, phkresult : *mut HKEY, lpdwdisposition : *mut REG_CREATE_KEY_DISPOSITION) -> WIN32_ERROR);
@@ -373,6 +375,8 @@ impl Default for PROCESSENTRY32 {
 }
 pub type PROCESSOR_ARCHITECTURE = u16;
 pub type PROCESSOR_CACHE_TYPE = i32;
+pub type PROCESS_ACCESS_RIGHTS = u32;
+pub type PROCESS_NAME_FORMAT = u32;
 pub type PSID = *mut core::ffi::c_void;
 pub type PSTR = *mut u8;
 pub type PWSTR = *mut u16;
