@@ -16,6 +16,7 @@ pub mod os;         // 47) OS            : Print the OS or Linux distribution na
 pub mod publicip;   // 52) PublicIp      : Print your public IP address, etc
 pub mod processes;  // 53) Processes     : Print number of running processes
 pub mod separator;  // 55) Separator     : Print a separator line
+pub mod shell;      // 56) Shell         : Print the current shell name and version
 // pub mod swap;    // 58) Swap          : Print swap (paging file) space usage
 pub mod title;      // 63) Title         : Print the title, including your username and hostname
 pub mod theme;      // 65) Theme         : Print the current desktop environment theme
@@ -40,6 +41,7 @@ pub use os::Os;
 pub use publicip::PublicIP;
 pub use processes::Processes;
 pub use separator::Separator;
+pub use shell::Shell;
 pub use title::Title;
 pub use theme::Theme;
 pub use uptime::Uptime;
@@ -78,6 +80,7 @@ static REGISTRY: &[Registry] = &[
     ("publicip",   || PublicIP::get()),
     ("processes",  || Processes::get()),
     ("separator",  || Separator::get()),
+    ("shell",      || Shell::get()),
     ("title",      || Title::get()),
     ("theme",      || Theme::get()),
     ("uptime",     || Uptime::get()),
@@ -131,6 +134,7 @@ impl DocsVtable {
             "publicip"   => Some(Self { format: PublicIP::strings_format,   lua: PublicIP::strings_lua,   example: || PublicIP::strings_example(PublicIP::new())           }),
             "processes"  => Some(Self { format: Processes::strings_format,  lua: Processes::strings_lua,  example: || Processes::strings_example(Processes::new())         }),
             "separator"  => Some(Self { format: Separator::strings_format,  lua: Separator::strings_lua,  example: || Separator::strings_example(Separator::new())         }),
+            "shell"      => Some(Self { format: Shell::strings_format,      lua: Shell::strings_lua,      example: || Shell::strings_example(Shell::new())                       }),
             "title"      => Some(Self { format: Title::strings_format,      lua: Title::strings_lua,      example: || Title::strings_example(Title::new())                 }),
             "theme"      => Some(Self { format: Theme::strings_format,      lua: Theme::strings_lua,      example: || Theme::strings_example(Theme::new())                 }),
             "uptime"     => Some(Self { format: Uptime::strings_format,     lua: Uptime::strings_lua,     example: || Uptime::strings_example(Uptime::new())               }),
