@@ -2,12 +2,38 @@ use std::{
     collections::HashMap, 
     fs, 
     path::Path, 
-    process::Command
+    process::Command, 
+    sync::OnceLock
 };
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use serde::Deserialize;
+
+pub static TARGET_OS    : OnceLock<String> = OnceLock::new();
+pub static TARGET_FAMILY: OnceLock<String> = OnceLock::new();
+pub static TARGET_ENV   : OnceLock<String> = OnceLock::new();
+
+#[allow(clippy::missing_panics_doc)]
+pub fn target_os() -> &'static str {
+    TARGET_OS.get_or_init(|| {
+        std::env::var("CARGO_CFG_TARGET_OS").unwrap()
+    })
+}
+
+#[allow(clippy::missing_panics_doc)]
+pub fn target_family() -> &'static str {
+    TARGET_FAMILY.get_or_init(|| {
+        std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap()
+    })
+}
+
+#[allow(clippy::missing_panics_doc)]
+pub fn target_env() -> &'static str {
+    TARGET_ENV.get_or_init(|| {
+        std::env::var("CARGO_CFG_TARGET_ENV").unwrap()
+    })
+}
 
 pub struct Commit {
     pub author: String,
@@ -325,10 +351,8 @@ mod setup {
             println!("cargo:rustc-env=TARGET={target}");
         }
 
-        pub fn target_os() -> String {
-            let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
-            println!("cargo:rustc-env=TARGET_OS={target_os}");
-            target_os
+        pub fn target_os() {
+            println!("cargo:rustc-env=TARGET_OS={}", crate::target_os());
         }
 
         pub fn target_arch() {
@@ -395,48 +419,109 @@ mod setup {
             println!("cargo:rustc-env=COMMIT_TOTAL={}", commit.total);
         }
 
-        pub fn libc_version(target_os: &str) {
-            #[cfg(target_os = "linux")]
-            fn get_libc_version() -> String {
-                use std::{path::PathBuf, process::Command};
+        pub fn libc_version() {
+            pub mod glibc {
+                pub fn compile() -> Option<String> {
+                    use std::{path::PathBuf, process::Command};
 
-                let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-                let c_file = out_dir.join("version.c");
-                let exe = out_dir.join("version");
+                    let out_dir = PathBuf::from(std::env::var("OUT_DIR").ok()?);
+                    let c_file = out_dir.join("version.c");
+                    let exe = out_dir.join("version");
 
-                std::fs::write(
-                    &c_file,
-                    r#"
-                    #include <stdio.h>
+                    std::fs::write(
+                        &c_file,
+                        "#include <gnu/libc-version.h>
+                        #include <stdio.h>
+                        int main(void) { puts(gnu_get_libc_version()); return 0; }
+                        ",
+                    )
+                    .ok()?;
 
-                    int main() {
-                        printf("%d.%d\n", __GLIBC__, __GLIBC_MINOR__);
-                        return 0;
+                    let cc = std::env::var("CC")
+                        .or_else(|_| std::env::var("HOST_CC"))
+                        .unwrap_or_else(|_| "cc".to_owned());
+
+                    let status = Command::new(&cc)
+                        .arg(&c_file)
+                        .arg("-o")
+                        .arg(&exe)
+                        .status()
+                        .ok()?;
+                    if !status.success() {
+                        println!("cargo:warning=failed to compile glibc probe with {cc}");
+                        return None;
                     }
-                "#,
-                )
-                .unwrap();
 
-                let status = Command::new("gcc")
-                    .arg(&c_file)
-                    .arg("-o")
-                    .arg(&exe)
-                    .status()
-                    .expect("failed to compile C program");
-
-                assert!(status.success(), "Compilation failed");
-
-                let output = Command::new(&exe).output().expect("failed to run program");
-
-                String::from_utf8(output.stdout).unwrap().trim().to_string()
+                    let output = Command::new(&exe).output().ok()?;
+                    if !output.status.success() {
+                        return None;
+                    }
+                    Some(String::from_utf8(output.stdout).ok()?.trim().to_owned())
+                }
             }
 
-            let ver = match target_os {
-                #[cfg(target_os = "linux")]
-                "linux" => get_libc_version(),
-                "android" => "bionic".to_string(),
-                _ => String::new(),
-            };
+            pub mod bionic {
+                pub fn compile() -> Option<String> {
+                    let target = std::env::var("TARGET").ok()?;
+                    target
+                        .rsplit("android")
+                        .next()
+                        .filter(|s| !s.is_empty() && s.chars().all(|c| c.is_ascii_digit()))
+                        .map(str::to_owned)
+                }
+            }
+
+            fn probe_is_safe() -> bool {
+                let host = std::env::var("HOST").unwrap_or_default();
+                let target = std::env::var("TARGET").unwrap_or_default();
+                !host.is_empty() && host == target
+            }
+
+            fn cross_glibc_hint() -> Option<String> {
+                if let Ok(v) = std::env::var("LIBC_VERSION_OVERRIDE")
+                    && !v.is_empty()
+                {
+                    return Some(v);
+                }
+
+                for key in ["ZIG_TARGET_GLIBC", "CARGO_ZIGBUILD_GLIBC_VERSION"] {
+                    if let Ok(v) = std::env::var(key)
+                        && !v.is_empty()
+                    {
+                        return Some(v);
+                    }
+                }
+                None
+            }
+
+            fn detect() -> String {
+                if let Ok(v) = std::env::var("LIBC_VERSION_OVERRIDE")
+                    && !v.is_empty()
+                {
+                    return v;
+                }
+
+                match (crate::target_os(), crate::target_env()) {
+                    ("android", _) => bionic::compile().unwrap_or_default(),
+                    ("linux", "gnu") => {
+                        if probe_is_safe() {
+                            glibc::compile().unwrap_or_default()
+                        } else if let Some(v) = cross_glibc_hint() {
+                            v
+                        } else {
+                            println!(
+                                "cargo:warning=cross-compiling without glibc version hint; \
+                                set LIBC_VERSION_OVERRIDE (e.g. 2.17) to record it"
+                            );
+                            String::new()
+                        }
+                    }
+                    ("linux", "musl") => "musl".to_owned(),
+                      _ => String::new(),
+                }
+            }
+
+            let ver = detect();
             println!("cargo:rustc-env=LIBC_VERSION={ver}");
         }
 
@@ -510,13 +595,13 @@ fn main() {
 
     // Setup env
     setup::env::target();
-    let os = setup::env::target_os();
+    setup::env::target_os();
     setup::env::target_arch();
     setup::env::build_time();
     setup::env::rustc_version();
     setup::env::cargo_version();
     setup::env::commit();
-    setup::env::libc_version(&os);
+    setup::env::libc_version();
     setup::env::project_hash();
 
     // Check is nightly
