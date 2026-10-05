@@ -332,10 +332,10 @@ pub fn read_link(path: impl Into<Path>, len: usize) -> Option<String> {
     if len == -1 {
         None
     } else {
-        buf[len as usize] = 0;
         // SAFETY: Libs are guaranteed to store a valid cstr
         let c_str = unsafe { CStr::from_ptr(buf.as_ptr()) };
-        Some(c_str.to_string_lossy().into_owned())
+        let string = c_str.to_string_lossy().into_owned();
+        Some(string)
     }
 }
 

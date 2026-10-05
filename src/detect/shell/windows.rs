@@ -35,6 +35,6 @@ pub fn get() -> Shell {
         pid,
         pretty_name: SmolStr::empty(),
         exe_path,
-        tty: SmolStr::from("-1")
+        tty: -1
     }
 }

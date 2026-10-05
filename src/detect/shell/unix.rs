@@ -22,6 +22,7 @@ struct Process {
     name: SmolStr,
     arg: Path,
     exe_path: Path,
+    tty: i32
 }
 
 impl Process {
@@ -34,7 +35,7 @@ impl Process {
                 null_idx += 1;
             }
 
-            let slice = &cmdline[..null_idx - 1];
+            let slice = &cmdline[..null_idx];
             Path::from(str::from_utf8(slice).unwrap_or_default())
         } else {
             Path::default()
@@ -43,13 +44,19 @@ impl Process {
         let exe = fs::read_link(format!("/proc/{pid}/exe"), 1024).unwrap_or_default();
         let exe_path = Path::from(exe);
         
+        let tty_path = fs::read_link(format!("/proc/{pid}/fd/0"), 512).unwrap_or_default();
+        let tty = Path::from(tty_path)
+            .last()
+            .and_then(|s| s.parse::<i32>().ok())
+            .unwrap_or(-1);
+
         Ok(
-            Self { pid, name: SmolStr::from(name), arg, exe_path }
+            Self { pid, name: SmolStr::from(name), arg, exe_path, tty }
         )
     }
 }
 
-pub fn get_terminal_process() -> Result<Process, ReadError> {
+fn get_terminal_process() -> Result<Process, ReadError> {
     let mut pid = getppid();
     loop {
         let state = fs::read_to_string(format!("/proc/{pid}/stat"))?;
@@ -58,17 +65,13 @@ pub fn get_terminal_process() -> Result<Process, ReadError> {
         let mut item_iter = item_iter.skip(1); // pid
         let raw = item_iter.next().expect("Strange unix /proc/pid/state");
 
-        let mut item_iter = item_iter.skip(1); // state
-        pid = item_iter
-            .next()
-            .and_then(|s| s.parse::<i32>().ok())
-            .expect("Strange unix /proc/pid/state");
-
         let name = if raw.starts_with('(') && raw.ends_with(')') { // Valid unix format
             &raw[1..raw.len() - 1]
         } else {
             raw
         };
+
+        crate::println!("`{name}`: {pid}");
         
         if (0..=1).contains(&pid) || name.eq_ignore_ascii_case("MainThread") {
             return Process::new(pid, name).map_err(ErrorCode::into);
@@ -77,6 +80,12 @@ pub fn get_terminal_process() -> Result<Process, ReadError> {
         if !BLACKLIST.contains(&name) {
             return Process::new(pid, name).map_err(ErrorCode::into);
         }
+
+        let mut item_iter = item_iter.skip(1); // state
+        pid = item_iter
+            .next()
+            .and_then(|s| s.parse::<i32>().ok())
+            .expect("Strange unix /proc/pid/state");
     }
 }
 
@@ -101,10 +110,10 @@ pub fn get() -> Shell {
         process_name: terminal.name, 
         exe: terminal.arg, 
         exe_name, 
-        version: (), 
+        version: SmolStr::default(), 
         pid: terminal.pid as u32, 
         pretty_name, 
         exe_path: terminal.exe_path, 
-        tty: () 
+        tty: terminal.tty
     }
 }

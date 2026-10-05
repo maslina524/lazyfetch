@@ -21,7 +21,7 @@ pub struct Shell {
     pub pid: u32,
     pub pretty_name: SmolStr,
     pub exe_path: Path,
-    pub tty: SmolStr,
+    pub tty: i32,
 }
 
 impl Module for Shell {
