@@ -274,8 +274,8 @@ impl LuaLib {
         #[cfg(lua5_4)]
         // SAFETY: Completely safe
         unsafe {
-            (self.open_libs)(state)
-        };
+            (self.open_libs)(state);
+        }
 
         #[cfg(lua5_5)]
         // SAFETY: `luaL_openselectedlibs` takes a valid state and opens all

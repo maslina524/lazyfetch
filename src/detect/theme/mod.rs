@@ -5,7 +5,7 @@ cfg_if! {
         mod windows;
         pub use windows::get;
     } else if #[cfg(target_family = "unix")] {
-        mod linux;
-        pub use linux::get;
+        mod unix;
+        pub use unix::get;
     }
 }

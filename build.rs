@@ -13,6 +13,7 @@ use serde::Deserialize;
 pub static TARGET_OS    : OnceLock<String> = OnceLock::new();
 pub static TARGET_FAMILY: OnceLock<String> = OnceLock::new();
 pub static TARGET_ENV   : OnceLock<String> = OnceLock::new();
+pub static TARGET_ARCH  : OnceLock<String> = OnceLock::new();
 
 #[allow(clippy::missing_panics_doc)]
 pub fn target_os() -> &'static str {
@@ -34,6 +35,14 @@ pub fn target_env() -> &'static str {
         std::env::var("CARGO_CFG_TARGET_ENV").unwrap()
     })
 }
+
+#[allow(clippy::missing_panics_doc)]
+pub fn target_arch() -> &'static str {
+    TARGET_ARCH.get_or_init(|| {
+        std::env::var("CARGO_CFG_TARGET_ARCH").unwrap()
+    })
+}
+
 
 pub struct Commit {
     pub author: String,
@@ -210,10 +219,7 @@ mod setup {
     pub fn lua_and_libc() {
         use std::env;
 
-        let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-        let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-
-        match (target_os.as_str(), target_arch.as_str()) {
+        match (crate::target_os(), crate::target_arch()) {
             ("linux", "x86_64") => {
                 println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
                 println!("cargo:rustc-link-lib=static=lua5.4");
@@ -221,8 +227,6 @@ mod setup {
                 println!("cargo:rustc-link-lib=dylib=m");
                 println!("cargo:rustc-link-arg=-pthread");
                 println!("cargo:rustc-link-arg=-lc");
-
-                println!("cargo:rustc-cfg=lua54");
             }
             ("android", "aarch64") => {
                 let lua_dir =
@@ -233,8 +237,6 @@ mod setup {
                 println!("cargo:rustc-link-arg=-lc");
                 println!("cargo:rustc-link-lib=dylib=m");
                 println!("cargo:rustc-link-lib=dylib=dl");
-
-                println!("cargo:rustc-cfg=lua54");
             }
             ("windows", _) => {
                 println!("cargo:rustc-link-search=native=bin/windows");
@@ -243,8 +245,6 @@ mod setup {
                 // FIXME: This just suppresses the error rather than solving it,
                 // in the future Lua should be built manually for the linker that Rust uses
                 println!("cargo:rustc-link-arg=/NODEFAULTLIB:LIBCMT");
-
-                println!("cargo:rustc-cfg=lua5_5");
             }
             _ => {}
         }
@@ -583,6 +583,24 @@ mod setup {
             println!("cargo:rustc-env=PROJECT_HASH={hex}");
         }
     }
+
+    pub mod cfg {
+        pub fn lua() {
+            if crate::target_os() == "windows" {
+                println!("cargo:rustc-cfg=lua5_5");
+            } else {
+                println!("cargo:rustc-cfg=lua5_4");
+            }
+        }
+
+        pub fn libc() {
+            match crate::target_os() {
+                "linux" => println!("cargo:rustc-cfg=glibc"),
+                "android" => println!("cargo:rustc-cfg=bionic"),
+                _ => {}
+            }
+        }
+    }
 }
 
 fn main() {
@@ -603,6 +621,10 @@ fn main() {
     setup::env::commit();
     setup::env::libc_version();
     setup::env::project_hash();
+
+    // Setup cfg
+    setup::cfg::lua();
+    setup::cfg::libc();
 
     // Check is nightly
     // let is_nightly = ver.contains("nightly") || ver.contains("dev");

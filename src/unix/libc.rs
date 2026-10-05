@@ -30,8 +30,8 @@ pub type c_dev = c_ulong;
 pub type c_nlink = c_ulong;
 pub type c_blksize = c_long;
 
-pub type c_ino    = usize;
-pub type c_off    = isize;
+pub type c_ino = usize;
+pub type c_off = isize;
 pub type c_blkcnt = isize;
 
 #[cfg(target_arch = "x86_64")]
@@ -102,13 +102,13 @@ unsafe extern "C" {
     pub safe fn gmtime(timep: *const c_time) -> *mut Tm;
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(glibc)]
 #[link(name = "c")]
 unsafe extern "C" {
     pub safe fn __errno_location() -> *mut c_int;
 }
 
-#[cfg(target_os = "android")]
+#[cfg(bionic)]
 #[link(name = "c")]
 unsafe extern "C" {
     pub safe fn __errno() -> *mut c_int;
@@ -116,7 +116,6 @@ unsafe extern "C" {
 }
 
 pub fn getdents64(fd: c_int, dirp: *mut c_void, count: c_size) -> c_ssize {
-    // crate::println!("\x1b[1mCall `getdents64`: Syscall: {SYS_GETDENTS64}, Fd: {fd}, Dirp: {dirp:?}, Count: {count}\x1b[0m");
     syscall(SYS_GETDENTS64, fd, dirp, count) as c_ssize
 }
 
@@ -134,13 +133,16 @@ pub fn get_sysinfo() -> &'static Sysinfo {
     })
 }
 
+#[cfg(glibc)]
 pub fn errno() -> i32 {
-    #[cfg(target_os = "android")]
-    // SAFETY: Libc is guaranteed to return a valid pointer
-    unsafe { *__errno() }
-    #[cfg(not(target_os = "android"))]
     // SAFETY: Libc is guaranteed to return a valid pointer
     unsafe { *__errno_location() }
+}
+
+#[cfg(bionic)]
+pub fn errno() -> i32 {
+    // SAFETY: Libc is guaranteed to return a valid pointer
+    unsafe { *__errno() }
 }
 
 #[repr(C)]
@@ -261,7 +263,7 @@ impl Default for LinuxDirent64 {
     }
 }
 
-#[cfg(not(target_arch = "aarch64"))]
+#[cfg(glibc)]
 #[repr(C)]
 #[derive(Default)]
 pub struct AddrInfo {
@@ -275,7 +277,7 @@ pub struct AddrInfo {
     pub ai_next: *mut Self,
 }
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(bionic)]
 #[repr(C)]
 #[derive(Default)]
 pub struct AddrInfo {
