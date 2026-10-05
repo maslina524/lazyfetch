@@ -157,6 +157,12 @@ fn generate_logo_info(entry: &LogoEntry) -> TokenStream {
 }
 
 mod setup {
+    pub fn windows_resource() {
+        use winresource::WindowsResource;
+        let res = WindowsResource::new();
+        res.compile().unwrap();
+    }
+
     pub fn build_bypass() {
         use std::{path::PathBuf, time::SystemTime};
 
@@ -350,7 +356,7 @@ mod setup {
             println!("cargo:rustc-env=COMPILE_TIME={build_time}");
         }
 
-        pub fn rustc_version() -> String {
+        pub fn rustc_version() {
             use std::process::Command;
 
             let mut rustc_version = Command::new("rustc")
@@ -364,7 +370,6 @@ mod setup {
                 rustc_version = rustc_version[..idx - 1].trim().to_string();
             }
             println!("cargo:rustc-env=RUSTC_VERSION={}", rustc_version.trim());
-            rustc_version
         }
 
         pub fn cargo_version() {
@@ -509,6 +514,10 @@ mod setup {
 }
 
 fn main() {
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
+        setup::windows_resource();
+    }
+    
     setup::build_bypass();
     setup::lua_and_libc();
     setup::offset_bits_cfg();
@@ -518,18 +527,18 @@ fn main() {
     let os = setup::env::target_os();
     setup::env::target_arch();
     setup::env::build_time();
-    let ver = setup::env::rustc_version();
+    setup::env::rustc_version();
     setup::env::cargo_version();
     setup::env::commit();
     setup::env::libc_version(&os);
     setup::env::project_hash();
 
     // Check is nightly
-    let is_nightly = ver.contains("nightly") || ver.contains("dev");
-    assert!(
-        is_nightly,
-        "\x1b[31;1mTo compile and work with the lazyfetch source code, the nightly version of the compiler is required\x1b[0m"
-    );
+    // let is_nightly = ver.contains("nightly") || ver.contains("dev");
+    // assert!(
+    //     is_nightly,
+    //     "\x1b[31;1mTo compile and work with the lazyfetch source code, the nightly version of the compiler is required\x1b[0m"
+    // );
 
     let (raw, encoded) = setup::compress_logos();
     #[allow(clippy::cast_precision_loss)]

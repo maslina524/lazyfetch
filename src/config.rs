@@ -272,6 +272,7 @@ impl Default for ConfigModuleArray {
             ConfigModule::from_str("memory"),
             ConfigModule::from_str("disk"),
             ConfigModule::from_str("weather"),
+            ConfigModule::from_str("publicip"),
             ConfigModule::from_str("locale"),
             ConfigModule::from_str("wallpaper"),
             ConfigModule::from_str("commit"),
