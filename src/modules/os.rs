@@ -54,7 +54,7 @@ impl Module for Os {
 
         // #[cfg(target_os = "windows")]
         // let pretty_name = format!("{} {} ({})", info.id, info.variant, info.codename);
-        // #[cfg(any(target_os = "linux", target_os = "android"))]
+        // #[cfg(target_family = "unix")]
         let pretty_name = format!("{} {}", info.name, info.version);
 
         Self { 

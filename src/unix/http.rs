@@ -11,7 +11,7 @@ use alloc::{
 
 use crate::{
     abort,
-    linux::{
+    unix::{
         libc::{
             AddrInfo, close, connect, freeaddrinfo, 
             getaddrinfo, recv, send, socket

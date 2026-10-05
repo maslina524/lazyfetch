@@ -59,6 +59,5 @@ resolver = "2"
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
         'cfg(lua5_5)', 'cfg(lua5_4)',
-        'cfg(file_offset_bits_64)', 'cfg(file_offset_bits_32)',
     ] 
 }

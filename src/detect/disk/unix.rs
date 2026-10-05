@@ -6,7 +6,7 @@ use alloc::{
 };
 
 use crate::{
-    formats::{MemorySize, Percent, Time}, linux::{
+    formats::{MemorySize, Percent, Time}, unix::{
         error::ErrorCode, 
         libc::{
             Statvfs, Statx, getmntent, setmntent, statvfs, statx

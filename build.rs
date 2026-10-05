@@ -224,19 +224,6 @@ mod setup {
         }
     }
 
-    pub fn offset_bits_cfg() {
-        let offset_bits_64 = std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH")
-            .is_ok_and(|w| w == "64");
-
-        if offset_bits_64 {
-            println!("cargo:rustc-cfg=file_offset_bits_64");
-        } else {
-            println!("cargo:rustc-cfg=file_offset_bits_32");
-        }
-        println!("cargo:rustc-check-cfg=cfg(file_offset_bits_64)");
-        println!("cargo:rustc-check-cfg=cfg(file_offset_bits_32)");
-    }
-
     pub fn compress_logos() -> (usize, usize) {
         use std::{
             path::PathBuf,
@@ -520,7 +507,6 @@ fn main() {
     
     setup::build_bypass();
     setup::lua_and_libc();
-    setup::offset_bits_cfg();
 
     // Setup env
     setup::env::target();

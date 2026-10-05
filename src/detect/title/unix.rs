@@ -9,7 +9,7 @@ use crate::{
     imp::fs,
     imp::libc::{getcwd, gethostname, getpid, getpwuid, getuid},
     imp::path::Path,
-    linux::error::ErrorCode,
+    unix::error::ErrorCode,
     logo::LogoInfo,
     warning,
 };

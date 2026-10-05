@@ -5,7 +5,7 @@ use alloc::{
 
 use crate::{
     detect::gpu::{GpuInfo, GpuType}, 
-    linux::fs::{self, ItemType},
+    unix::fs::{self, ItemType},
     parser::LineBased,
     formats::MemorySize,
     warning,

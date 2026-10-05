@@ -30,24 +30,9 @@ pub type c_dev = c_ulong;
 pub type c_nlink = c_ulong;
 pub type c_blksize = c_long;
 
-#[cfg(file_offset_bits_64)]
-pub type c_ino    = u64;
-#[cfg(file_offset_bits_64)]
-pub type c_off    = i64;
-#[cfg(file_offset_bits_64)]
-pub type c_blkcnt = i64;
-
-#[cfg(file_offset_bits_32)]
-pub type c_ino    = u32;
-#[cfg(file_offset_bits_32)]
-pub type c_off    = i32;
-#[cfg(file_offset_bits_32)]
-pub type c_blkcnt = i32;
-
-#[cfg(not(any(file_offset_bits_32, file_offset_bits_64)))]
-pub type c_ino = usize;
-#[cfg(not(any(file_offset_bits_32, file_offset_bits_64)))]
-pub type c_off = isize;
+pub type c_ino    = usize;
+pub type c_off    = isize;
+pub type c_blkcnt = isize;
 
 #[cfg(target_arch = "x86_64")]
 const SYS_GETDENTS64: c_long = 217;

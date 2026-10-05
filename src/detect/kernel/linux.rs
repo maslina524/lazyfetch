@@ -6,8 +6,8 @@ use alloc::{
 use crate::{
     detect::kernel::KernelInfo, 
     formats::MemorySize, 
-    linux::fs,
-    linux::libc::sysconf,
+    unix::fs,
+    unix::libc::sysconf,
     abort
 };
 

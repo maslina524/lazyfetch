@@ -1,7 +1,7 @@
 use crate::{
     detect::memory::MemoryInfo, 
     formats::MemorySize, 
-    linux::libc::get_sysinfo
+    unix::libc::get_sysinfo
 };
 
 impl MemoryInfo {

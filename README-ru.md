@@ -61,6 +61,7 @@ Lazyfetch использует два уровня кэша:
   "type": "title",
   "format": "lua: return 'Hello ' .. (...).hostNameColored .. '!'"
 }
+```
 
 ## Comparison
 

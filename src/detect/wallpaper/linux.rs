@@ -7,7 +7,7 @@ use alloc::{
 
 use crate::{
     detect::wallpaper::WallpaperInfo, 
-    linux::{
+    unix::{
         libc::{fgets, getenv, pclose, popen}, 
         path::Path
     }

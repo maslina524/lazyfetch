@@ -52,12 +52,12 @@ macro_rules! get_fn {
     }};
 }
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
+#[cfg(target_family = "unix")]
 #[macro_export]
 macro_rules! get_fn {
     ($handle:tt, $name:expr, $typ:ident) => {{
         // SAFETY: Completely safe
-        let addr = $crate::linux::libc::dlsym($handle, $name.as_ptr().cast());
+        let addr = $crate::unix::libc::dlsym($handle, $name.as_ptr().cast());
         if addr.is_null() {
             unload($handle);
             $crate::abort!(concat!(stringify!($name), " not found in library"));

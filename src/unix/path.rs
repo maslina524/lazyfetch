@@ -9,7 +9,7 @@ use alloc::{
 
 use crate::{
     abort, 
-    linux::libc::{getenv, access}
+    unix::libc::{getenv, access}
 };
 
 #[repr(transparent)]
@@ -182,7 +182,7 @@ impl Default for Path {
 
 #[cfg(test)]
 mod tests {
-    use crate::linux::path::Path;
+    use crate::unix::path::Path;
 
     #[test]
     fn get_local_test() {

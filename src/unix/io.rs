@@ -1,6 +1,6 @@
 use core::ffi::c_int;
 
-use crate::linux::libc;
+use crate::unix::libc;
 
 pub const fn stdout() -> isize {
     1
@@ -18,7 +18,7 @@ pub fn write(handle: isize, s: &[u8]) {
 #[allow(clippy::print_with_newline, clippy::print_literal)]
 mod tests {
     use crate::{
-        linux::io::{stdout, write}
+        unix::io::{stdout, write}
     };
 
     #[test]

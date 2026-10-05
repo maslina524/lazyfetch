@@ -10,15 +10,15 @@ use alloc::{
 };
 
 use crate::{
-    linux::libc::{
+    unix::libc::{
         FileHandle, fopen, fread, fclose, fwrite, rewind, mkdir,
         Dir, opendir, readdir, readlink, ferror
     },
-    linux::error::{self, ErrorCode},
-    linux::path::Path
+    unix::error::{self, ErrorCode},
+    unix::path::Path
 };
 
-use crate::linux::libc::{open, close, getdents64, LinuxDirent64};
+use crate::unix::libc::{open, close, getdents64, LinuxDirent64};
 const O_RDONLY: c_int = 0;
 
 #[cfg(target_arch = "aarch64")]
@@ -343,7 +343,7 @@ pub fn read_link(path: impl Into<Path>, len: usize) -> Option<String> {
 mod tests {
     use alloc::string::String;
 
-    use crate::linux::fs::{self, Access, File};
+    use crate::unix::fs::{self, Access, File};
 
     #[test]
     fn write_file_test() {

@@ -4,7 +4,7 @@ cfg_if! {
     if #[cfg(target_os = "windows")] {
         mod windows;
         pub use windows::get;
-    } else if #[cfg(any(target_os = "linux", target_os = "android"))] {
+    } else if #[cfg(target_family = "unix")] {
         mod linux;
         pub use linux::get;
     }

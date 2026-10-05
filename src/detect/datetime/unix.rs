@@ -10,7 +10,7 @@ use alloc::{
 
 use crate::{
     detect::datetime::{DatetimeInfo, AmPm},
-    linux::libc::{time, localtime},
+    unix::libc::{time, localtime},
     format
 };
 

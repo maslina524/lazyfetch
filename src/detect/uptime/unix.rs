@@ -4,7 +4,7 @@ use crate::{
     detect::uptime::{UptimeInfo, UPTIME_INFO}, 
     format,
     imp::env,
-    linux::libc::{Tm, c_time, get_sysinfo, localtime_r, time}
+    unix::libc::{Tm, c_time, get_sysinfo, localtime_r, time}
 };
 
 const DAY_MS: u64 = 1000 * 60 * 60 * 24;

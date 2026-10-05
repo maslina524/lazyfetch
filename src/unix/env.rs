@@ -13,7 +13,7 @@ use crate::{
     ARGS, 
     abort, 
     format, 
-    linux::{
+    unix::{
         fs, 
         libc::{
             Timespec, Winsize, clock_gettime, getenv, 
@@ -189,7 +189,7 @@ pub fn format_timestamp(time: u64, format: Option<&str>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::linux::env;
+    use crate::unix::env;
 
     #[test]
     fn terminal_size_test() {

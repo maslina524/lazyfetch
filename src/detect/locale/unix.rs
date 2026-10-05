@@ -1,7 +1,7 @@
 use core::{ffi::CStr, ptr};
 
 use crate::{
-    linux::libc::setlocale,
+    unix::libc::setlocale,
     str::SmolStr
 };
 

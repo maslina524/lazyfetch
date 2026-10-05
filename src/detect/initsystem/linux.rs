@@ -2,8 +2,8 @@ use alloc::borrow::{ToOwned, Cow};
 
 use crate::{
     warning,
-    linux::fs,
-    linux::path::Path,
+    unix::fs,
+    unix::path::Path,
     detect::initsystem::InitSystemInfo,
     str::SmolStr
 };

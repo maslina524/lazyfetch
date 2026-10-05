@@ -4,7 +4,7 @@ use core::{
 };
 
 use crate::{
-    linux::libc::{errno, strerror},
+    unix::libc::{errno, strerror},
     abort
 };
 
