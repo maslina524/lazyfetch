@@ -2,7 +2,7 @@ use core::ffi::CStr;
 
 use crate::{
     detect::gpu::{GpuInfo, GpuType}, 
-    linux::libc::__system_property_get,
+    unix::libc::__system_property_get,
     formats::MemorySize
 };
 

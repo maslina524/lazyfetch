@@ -8,7 +8,7 @@ use alloc::{
 use crate::{
     detect::kernel::KernelInfo, 
     formats::MemorySize, 
-    linux::{
+    unix::{
         libc::{Utsname, sysconf, uname}
     }
 };

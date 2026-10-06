@@ -12,7 +12,7 @@ use crate::{
     format, 
     formats::Frequency,
     parser::parse_range_notation,
-    linux::{
+    unix::{
         fs,
         libc::__system_property_get,
         path::Path

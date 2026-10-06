@@ -7,7 +7,7 @@ use alloc::{
 
 use crate::{
     str::SmolStr,
-    linux::{
+    unix::{
         fs,
         libc::__system_property_get
     },

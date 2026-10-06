@@ -40,7 +40,7 @@ impl Module for Shell {
     }
 
     fn title(&self) -> &'static str {
-        "shell format string"
+        "{pretty-name} {version}"
     }
 
     fn string_name(&self) -> &'static str {

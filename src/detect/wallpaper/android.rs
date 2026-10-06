@@ -1,7 +1,7 @@
 
 use crate::{
     detect::wallpaper::WallpaperInfo, 
-    linux::path::Path
+    unix::path::Path
 };
 
 impl WallpaperInfo {

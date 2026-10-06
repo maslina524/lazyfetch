@@ -7,7 +7,7 @@ use alloc::{
 
 use crate::{
     detect::initsystem::InitSystemInfo, 
-    linux::{
+    unix::{
         fs::{self, ItemType},
         libc::__system_property_get,
         path::Path

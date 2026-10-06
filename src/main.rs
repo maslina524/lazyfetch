@@ -140,6 +140,10 @@ mod panic_impl {
     }
 }
 
+#[cfg(not(test))]
+#[unsafe(no_mangle)]
+pub const extern "C" fn rust_eh_personality() {}
+
 fn max_line_len(lines: &[(String, usize)]) -> usize {
     let mut ret = 0;
     for (_, len) in lines {
@@ -571,37 +575,6 @@ static ARGS: OnceLock<Vec<String>> = OnceLock::new();
 
 #[cfg(target_family = "unix")]
 use core::ffi::c_char;
-
-/*
-ANDROID BUILD:
-rustup toolchain install nightly
-rustup component add rust-src --toolchain nightly
-rustup target add aarch64-linux-android --toolchain nightly
-
-cd ~
-wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-unzip android-ndk-r27c-linux.zip
-~/android-ndk-r27c/ndk-build --version
-
-`bash`:
-export ANDROID_NDK_HOME=$HOME/android-ndk-r27c
-export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-export ANDROID_PLATFORM=24
-export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-cargo ndk -t arm64-v8a --platform 24 build --release
-
-`fish`:
-set -gx ANDROID_NDK_HOME $HOME/android-ndk-r27c
-set -gx ANDROID_NDK_ROOT $ANDROID_NDK_HOME
-set -gx ANDROID_PLATFORM 24
-fish_add_path $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
-cargo ndk -t arm64-v8a --platform 24 build --release
-
-INSTALL LUA LINUX
-
-WINDOWS & LINUX
-cargo build --release
-*/
 
 // #[cfg(not(test))]
 #[allow(
