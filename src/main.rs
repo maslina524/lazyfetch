@@ -62,7 +62,6 @@ cfg_if! {
 extern crate alloc;
 
 use core::{
-    env, 
     ffi::c_int, 
     slice::Iter
 };
@@ -99,13 +98,22 @@ use crate::{
 
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator;
+static HELP     : &str      = concat!(
+    "lazyfetch is a neofetch-like tool for beautiful system information display with flexible output customization\n",
+    "\n",
+    "\x1b[1mUsage: lazyfetch\x1b[22;3m <?options>\x1b[0m\n",
+    "\n",
+    "\x1b[1mCommands:\x1b[0m\n",
+    "  -h, --help <?options>     \tPrint this message\n",
+    "  -v, --version <?options>  \tPrint lazyfetch version\n",
+    "  -l, --logo                \tCustom logo (name or file)\n",
+    "  -c, --config              \tCustom preset (http url or file)",
+);
 
-static HELP_STRING: &str = include_str!(concat!(env!("OUT_DIR"), "/help.txt"));
-
-const MIN_OFFSET: usize = 24;
-const IMAGE_SIZE: usize = 40;
-const CELL_ASPECT: f64 = 2.0;
-const ALLOC_REP_BAR_SIZE: u128 = 64;
+const MIN_OFFSET        : usize = 24;
+const IMAGE_SIZE        : usize = 40;
+const CELL_ASPECT       : f64   = 2.0;
+const ALLOC_REP_BAR_SIZE: u128  = 64;
 
 #[cfg(not(test))]
 mod panic_impl {
@@ -384,7 +392,7 @@ fn print_help(theme: Option<&str>) -> ! {
         exit(0);
     }
 
-    println!("{HELP_STRING}");
+    println!("{HELP}");
 
     exit(0)
 }
@@ -396,7 +404,6 @@ fn print_version(method: Option<&str>) -> ! {
         None => println!("{} {} ({})", ver.project_name, ver.version, ver.arch),
         Some("raw") => println!("{}", ver.version),
         Some("dbg") => println!("{ver:#?}"),
-        Some("hash") => println!("{}", ver.hash),
         Some("extended") => {
             let typ = match ver.build_type {
                 "release" => "\x1b[32mrelease\x1b[0m",

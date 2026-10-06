@@ -43,7 +43,6 @@ pub fn target_arch() -> &'static str {
     })
 }
 
-
 pub struct Commit {
     pub author: String,
     pub email: String,
@@ -251,22 +250,17 @@ mod setup {
     }
 
     pub fn compress_logos() -> (usize, usize) {
-        use std::{
-            path::PathBuf,
-            sync::atomic::{AtomicUsize, Ordering},
-        };
+        use std::path::PathBuf;
 
         use zlib_rs::{DeflateConfig, ReturnCode, compress_bound, compress_slice};
-
-        use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
         static VALID_CHARS: &[char] = &[
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
             'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_',
         ];
 
-        let raw_bytes_len = AtomicUsize::new(0);
-        let encoded_bytes_len = AtomicUsize::new(0);
+        let mut raw_bytes_len = 0;
+        let mut encoded_bytes_len = 0;
 
         let base_path = PathBuf::from("src/logo");
         let mut all_paths = Vec::new();
@@ -280,14 +274,14 @@ mod setup {
         }
 
         let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-        all_paths.par_iter().for_each(|path| {
+        for path in &all_paths {
             let content = std::fs::read(path).unwrap();
-            raw_bytes_len.fetch_add(content.len(), Ordering::Relaxed);
+            raw_bytes_len += content.len();
 
             let mut compressed_buf = vec![0u8; compress_bound(content.len())];
             let (compressed, rc) =
                 compress_slice(&mut compressed_buf, &content, DeflateConfig::default());
-            encoded_bytes_len.fetch_add(compressed.len(), Ordering::Relaxed);
+            encoded_bytes_len += compressed.len();
             assert_eq!(rc, ReturnCode::Ok);
 
             let letter = path
@@ -300,12 +294,9 @@ mod setup {
             std::fs::create_dir_all(&dest_dir).ok();
             let dest_path = dest_dir.join(path.file_name().unwrap());
             std::fs::write(dest_path, &*compressed).ok();
-        });
+        }
 
-        let raw = raw_bytes_len.load(Ordering::Relaxed);
-        let encoded = encoded_bytes_len.load(Ordering::Relaxed);
-
-        (raw, encoded)
+        (raw_bytes_len, encoded_bytes_len)
     }
 
     pub fn generate_logos() {
@@ -319,30 +310,6 @@ mod setup {
 
         std::fs::create_dir_all(&out_dir).expect("create OUT_DIR/logo");
         crate::generate(&json_path, &out_dir).expect("Generate logo modules");
-    }
-
-    pub fn generate_help() {
-        use std::path::PathBuf;
-
-        use termimad::MadSkin;
-
-        static HELP_RAW: &str = concat!(
-            "lazyfetch is a neofetch-like tool for beautiful system information display with flexible output customization\n",
-            "\n",
-            "**Usage: lazyfetch*** <?options>*\n",
-            "\n",
-            "**Commands:**\n",
-            "  -h, --help <?options>     \tPrint this message\n",
-            "  -v, --version <?options>  \tPrint lazyfetch version\n",
-            "  -l, --logo                \tCustom logo (name or file)\n",
-            "  -c, --config              \tCustom preset (http url or file)",
-        );
-
-        let skin = MadSkin::default();
-        let string = skin.text(HELP_RAW, None).to_string();
-
-        let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("help.txt");
-        std::fs::write(&out_dir, string).expect("Create OUT_DIR/help.txt");
     }
 
     pub mod env {
@@ -524,64 +491,6 @@ mod setup {
             let ver = detect();
             println!("cargo:rustc-env=LIBC_VERSION={ver}");
         }
-
-        pub fn project_hash() {
-            use std::fmt::Write as _;
-            use std::fs;
-            use std::io::Read;
-            use std::path::{Path, PathBuf};
-
-            use sha2::{Digest, Sha256};
-
-            fn collect_files(dir: &Path) -> Vec<PathBuf> {
-                let mut files = Vec::new();
-                let mut stack = vec![dir.to_path_buf()];
-
-                while let Some(current) = stack.pop() {
-                    let Ok(entries) = fs::read_dir(&current) else {
-                        continue;
-                    };
-                    for entry in entries.flatten() {
-                        let path = entry.path();
-                        if path.is_dir() {
-                            stack.push(path);
-                        } else {
-                            files.push(path);
-                        }
-                    }
-                }
-
-                files.sort();
-                files
-            }
-
-            fn hash_file(hasher: &mut Sha256, path: &Path) -> std::io::Result<()> {
-                hasher.update(path.to_string_lossy().as_bytes());
-                let mut file = fs::File::open(path)?;
-                let mut buffer = Vec::new();
-                file.read_to_end(&mut buffer)?;
-                hasher.update(&buffer);
-                Ok(())
-            }
-
-            fn to_hex(bytes: &[u8]) -> String {
-                let mut s = String::with_capacity(bytes.len() * 2);
-                for b in bytes {
-                    let _ = write!(s, "{b:02x}");
-                }
-                s
-            }
-
-            let mut hasher = Sha256::new();
-            for path in collect_files(Path::new("src")) {
-                if let Err(err) = hash_file(&mut hasher, &path) {
-                    eprintln!("cargo:warning=failed to hash {}: {err}", path.display());
-                }
-            }
-
-            let hex = to_hex(&hasher.finalize());
-            println!("cargo:rustc-env=PROJECT_HASH={hex}");
-        }
     }
 
     pub mod cfg {
@@ -620,7 +529,6 @@ fn main() {
     setup::env::cargo_version();
     setup::env::commit();
     setup::env::libc_version();
-    setup::env::project_hash();
 
     // Setup cfg
     setup::cfg::lua();
@@ -645,5 +553,4 @@ fn main() {
     }
 
     setup::generate_logos();
-    setup::generate_help();
 }
