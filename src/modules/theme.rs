@@ -35,7 +35,7 @@ impl Module for Theme {
     }
 
     fn title(&self) -> &'static str {
-        "{theme1}"
+        "{theme1}{theme2}"
     }
 
     fn string_name(&self) -> &'static str {

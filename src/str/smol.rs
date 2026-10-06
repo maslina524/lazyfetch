@@ -112,9 +112,13 @@ impl Deref for SmolStr {
 #[inline]
 fn str_to_arr(s: &str) -> [u8; INLINE_CAP] {
     let mut out = [0u8; INLINE_CAP];
-    for (dst, c) in out.iter_mut().zip(s.chars()) {
-        *dst = c as u8;
+    let mut len = s.len().min(INLINE_CAP);
+    
+    while len > 0 && !s.is_char_boundary(len) {
+        len -= 1;
     }
+    
+    out[..len].copy_from_slice(&s.as_bytes()[..len]);
     out
 }
 
