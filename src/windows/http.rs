@@ -54,7 +54,7 @@ impl Request {
     fn send(self, method: &str) -> Result<Response, ErrorCode> {
         // SAFETY: Parameters are fully correct, return value is checked
         let session = unsafe {
-            let header = wide("UserAgent/1.0").unwrap();
+            let header = wide("UserAgent/1.0");
             WinHttpOpen(
                 header.as_ptr(),
                 WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
@@ -75,7 +75,7 @@ impl Request {
         hostname.push('.');
         hostname.push_str(&self.url.tld);
 
-        let server = wide(hostname).unwrap();
+        let server = wide(&hostname);
         // SAFETY: Just a WinAPI function, the return value is checked
         let conn = unsafe {
             WinHttpConnect(session, server.as_ptr(), self.url.port(), 0)
@@ -87,8 +87,8 @@ impl Request {
             return Err(err);
         }
 
-        let method = wide(method).unwrap();
-        let path = wide(self.url.path).unwrap();
+        let method = wide(method);
+        let path = wide(&self.url.path);
         let flags = if self.url.protocol == "https" {
             WINHTTP_FLAG_SECURE
         } else {

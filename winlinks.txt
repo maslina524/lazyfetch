@@ -54,7 +54,6 @@ HeapReAlloc
 LoadLibraryA
 LoadLibraryW
 LocalFree
-MultiByteToWideChar
 OpenProcess
 OpenProcessToken
 PathFileExistsW
@@ -74,7 +73,6 @@ SetupDiGetClassDevsW
 SetupDiOpenDevRegKey
 SystemParametersInfoW
 VerQueryValueW
-WideCharToMultiByte
 WinHttpCloseHandle
 WinHttpConnect
 WinHttpOpen

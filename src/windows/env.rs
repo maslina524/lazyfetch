@@ -14,23 +14,24 @@ use alloc::{
 
 use crate::{
     ARGS, 
-    format,
+    abort, 
+    format, 
+    str::SmolStr,
     sync::OnceLock, 
     w, 
     warning, 
-    abort,
-    str::SmolStr,
     windows::{
-        encoding::{wide, utf16le_to_utf8, Utf16Len}, 
+        encoding::{self, Utf16Len, utf16le_to_utf8, wide, wide_without_alloc, EncodeError}, 
         error::{self, ErrorCode}, 
         fs::{Access, File}, 
         link::{
-            CONSOLE_SCREEN_BUFFER_INFO, CloseHandle, CommandLineToArgvW, CreateToolhelp32Snapshot, 
-            EnumProcesses, FILETIME, FileTimeToLocalFileTime, FileTimeToSystemTime, GetCommandLineW, 
-            GetConsoleScreenBufferInfo, GetFileVersionInfoSizeW, GetFileVersionInfoW, 
-            GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, 
-            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetEnvironmentVariableW,
-            GetCurrentProcessId, OpenProcess, QueryFullProcessImageNameW
+            CONSOLE_SCREEN_BUFFER_INFO, CloseHandle, CommandLineToArgvW, 
+            CreateToolhelp32Snapshot, EnumProcesses, FILETIME, FileTimeToLocalFileTime, 
+            FileTimeToSystemTime, GetCommandLineW, GetConsoleScreenBufferInfo, 
+            GetCurrentProcessId, GetEnvironmentVariableW, GetFileVersionInfoSizeW, 
+            GetFileVersionInfoW, GetSystemTimeAsFileTime, OSVERSIONINFOW, OpenProcess, 
+            PROCESSENTRY32, Process32First, Process32Next, QueryFullProcessImageNameW, 
+            RtlGetVersion, SYSTEMTIME, VerQueryValueW
         }, 
         path::Path, 
         regedit::{self, Hkey, Regedit}
@@ -325,7 +326,7 @@ pub fn args() -> &'static Vec<String> {
 
 pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<SmolStr> {
     let path_str = path.into().into_inner();
-    let path_wide = wide(path_str)?;
+    let path_wide = wide(&path_str);
 
     // SAFETY: Completely safe
     let buf_size = unsafe { 
@@ -354,7 +355,8 @@ pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<SmolStr>
 
     let mut info_ptr: *mut c_void = ptr::null_mut();
     let mut len = 0;
-    let wide_subblock = wide("\\")?;
+    let mut wide_subblock = [0u16; 1];
+    wide_without_alloc("\\", &mut wide_subblock);
 
     // SAFETY: Completely safe
     let ret = unsafe {
@@ -481,8 +483,8 @@ const fn is_leap_year(year: u16) -> bool {
     (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
 }
 
-pub fn get_var(name: &str, size: Option<usize>) -> error::Result<String> {
-    let name_wide = wide(name)?;
+pub fn get_var(name: &str, size: Option<usize>) -> encoding::Result<String> {
+    let name_wide = wide(name);
     let size = size.unwrap_or(1024);
     let mut buf = vec![0u16; size + 1];
 
@@ -496,10 +498,11 @@ pub fn get_var(name: &str, size: Option<usize>) -> error::Result<String> {
         )
     };
     if len == 0 {
-        return Err(ErrorCode::last());
+        return Err(ErrorCode::last().into());
     }
 
     utf16le_to_utf8(&buf, Utf16Len::Len(len as usize))
+        .map_err(EncodeError::from)
 }
 
 #[cfg(test)]

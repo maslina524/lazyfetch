@@ -1,10 +1,12 @@
 use crate::{
-    windows::encoding::{Utf16Len, utf16le_to_utf8},
-    windows::link::SystemParametersInfoW,
-    imp::error::{self, ErrorCode},
-    windows::path::Path,
-    detect::wallpaper::WallpaperInfo,
-    warning
+    detect::wallpaper::WallpaperInfo, 
+    imp::error::ErrorCode, 
+    warning, 
+    windows::{
+        encoding::{self, Utf16Len, utf16le_to_utf8}, 
+        link::SystemParametersInfoW, 
+        path::Path
+    }
 };
 
 const MAX_PATH: usize = 260 + 1; // `+1` for `\0`
@@ -25,7 +27,7 @@ impl WallpaperInfo {
         }
     }
     
-    fn full_path() -> error::Result<Path> {
+    fn full_path() -> encoding::Result<Path> {
         let mut buf = [0u16; MAX_PATH];
 
         // SAFETY: Completely safe
@@ -38,7 +40,7 @@ impl WallpaperInfo {
             )
         };
         if ret == 0 {
-            return Err(ErrorCode::last());
+            return Err(ErrorCode::last().into());
         }
 
         let utf8 = utf16le_to_utf8(&buf, Utf16Len::NullTerminated)?;

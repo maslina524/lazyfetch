@@ -100,7 +100,7 @@ unsafe impl Sync for Regedit {}
 impl Regedit {
     pub fn create(root: Hkey, subkey: &str, access: Access) -> error::Result<Self> {
         let mut handle = ptr::null_mut();
-        let wide = wide(subkey)?;
+        let wide = wide(subkey);
 
         // SAFETY: All parameters have been verified
         // against the documentation, safe
@@ -128,7 +128,7 @@ impl Regedit {
 
     pub fn open(root: Hkey, subkey: &str, access: Access) -> error::Result<Self> {
         let mut handle = ptr::null_mut();
-        let wide = wide(subkey)?;
+        let wide = wide(subkey);
 
         // SAFETY: All parameters have been verified
         // against the documentation, safe
@@ -157,7 +157,7 @@ impl Regedit {
     pub fn read(&self, key: &str) -> error::Result<RegValue> {
         let mut size = 0;
         let mut typ = 0;
-        let wide = wide(key)?;
+        let wide = wide(key);
 
         // SAFETY: Getting the buffer size and type, safe
         let ret = unsafe {

@@ -74,7 +74,6 @@ link!("kernel32" "system" fn HeapReAlloc(hheap : HANDLE, dwflags : HEAP_FLAGS, l
 link!("kernel32" "system" fn LoadLibraryA(lplibfilename : PCSTR) -> HMODULE);
 link!("kernel32" "system" fn LoadLibraryW(lplibfilename : PCWSTR) -> HMODULE);
 link!("kernel32" "system" fn LocalFree(hmem : HLOCAL) -> HLOCAL);
-link!("kernel32" "system" fn MultiByteToWideChar(codepage : u32, dwflags : MULTI_BYTE_TO_WIDE_CHAR_FLAGS, lpmultibytestr : PCSTR, cbmultibyte : i32, lpwidecharstr : PWSTR, cchwidechar : i32) -> i32);
 link!("kernel32" "system" fn OpenProcess(dwdesiredaccess : PROCESS_ACCESS_RIGHTS, binherithandle : BOOL, dwprocessid : u32) -> HANDLE);
 link!("advapi32" "system" fn OpenProcessToken(processhandle : HANDLE, desiredaccess : TOKEN_ACCESS_MASK, tokenhandle : *mut HANDLE) -> BOOL);
 link!("shlwapi" "system" fn PathFileExistsW(pszpath : PCWSTR) -> BOOL);
@@ -94,7 +93,6 @@ link!("setupapi" "system" fn SetupDiGetClassDevsW(classguid : *const GUID, enume
 link!("setupapi" "system" fn SetupDiOpenDevRegKey(deviceinfoset : HDEVINFO, deviceinfodata : *const SP_DEVINFO_DATA, scope : u32, hwprofile : u32, keytype : u32, samdesired : u32) -> HKEY);
 link!("user32" "system" fn SystemParametersInfoW(uiaction : SYSTEM_PARAMETERS_INFO_ACTION, uiparam : u32, pvparam : *mut core::ffi::c_void, fwinini : SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS) -> BOOL);
 link!("version" "system" fn VerQueryValueW(pblock : *const core::ffi::c_void, lpsubblock : PCWSTR, lplpbuffer : *mut *mut core::ffi::c_void, pulen : *mut u32) -> BOOL);
-link!("kernel32" "system" fn WideCharToMultiByte(codepage : u32, dwflags : u32, lpwidecharstr : PCWSTR, cchwidechar : i32, lpmultibytestr : PSTR, cbmultibyte : i32, lpdefaultchar : PCSTR, lpuseddefaultchar : *mut BOOL) -> i32);
 link!("winhttp" "system" fn WinHttpCloseHandle(hinternet : *mut core::ffi::c_void) -> BOOL);
 link!("winhttp" "system" fn WinHttpConnect(hsession : *mut core::ffi::c_void, pswzservername : PCWSTR, nserverport : u16, dwreserved : u32) -> *mut core::ffi::c_void);
 link!("winhttp" "system" fn WinHttpOpen(pszagentw : PCWSTR, dwaccesstype : WINHTTP_ACCESS_TYPE, pszproxyw : PCWSTR, pszproxybypassw : PCWSTR, dwflags : u32) -> *mut core::ffi::c_void);
@@ -301,7 +299,6 @@ pub struct MEMORYSTATUSEX {
     pub ullAvailVirtual: u64,
     pub ullAvailExtendedVirtual: u64,
 }
-pub type MULTI_BYTE_TO_WIDE_CHAR_FLAGS = u32;
 pub type NTSTATUS = i32;
 #[repr(C)]
 #[derive(Clone, Copy)]
