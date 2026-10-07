@@ -8,6 +8,9 @@ use core::{
 
 use alloc::{
     string::{String, ToString},
+    collections::BTreeMap,
+    borrow::ToOwned,
+    boxed::Box,
     vec::Vec,
     vec
 };
@@ -28,17 +31,14 @@ use crate::{
             CONSOLE_SCREEN_BUFFER_INFO, CloseHandle, CommandLineToArgvW, 
             CreateToolhelp32Snapshot, EnumProcesses, FILETIME, FileTimeToLocalFileTime, 
             FileTimeToSystemTime, GetCommandLineW, GetConsoleScreenBufferInfo, 
-            GetCurrentProcessId, GetEnvironmentVariableW, GetFileVersionInfoSizeW, 
-            GetFileVersionInfoW, GetSystemTimeAsFileTime, OSVERSIONINFOW, OpenProcess, 
-            PROCESSENTRY32, Process32First, Process32Next, QueryFullProcessImageNameW, 
-            RtlGetVersion, SYSTEMTIME, VerQueryValueW
+            GetEnvironmentVariableW, GetFileVersionInfoSizeW, GetFileVersionInfoW, 
+            GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, 
+            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetCurrentProcessId
         }, 
         path::Path, 
         regedit::{self, Hkey, Regedit}
     }
 };
-
-const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
 
 const EPOCH_DIFF              : u64         = 116_444_736_000_000_000;
 const EPOCH_DIFF_SECS         : u64         = 11_644_473_600;
@@ -52,68 +52,26 @@ const INITSYSTEM_NAME         : &CStr       = c"smss.exe";
 
 static TERMINAL_HANDLE: OnceLock<isize>         = OnceLock::new();
 static CURRENT_VERSION: OnceLock<Regedit>       = OnceLock::new();
-static SHARED_PROCESS : OnceLock<SharedProcess> = OnceLock::new();
 
-#[derive(Default)]
-pub struct ShellInfo {
-    pub pid: u32,
-    pub exe_path: Path
-}
+static SHARED_PROCESS: OnceLock<SharedProcess> = OnceLock::new();
+
+type Pid = u32;
+type PPid = u32;
+type PPidMap = BTreeMap<Pid, PPid>;
+type NamePidMap = BTreeMap<Pid, &'static CStr>;
 
 struct SharedProcess {
-    initsystem_pid: u32,
-    shell: Option<ShellInfo>
-}
-
-fn compute_shell_info(pid: u32) -> ShellInfo {
-    // SAFETY: Completely safe
-    let handle = unsafe { 
-        OpenProcess(
-            PROCESS_QUERY_LIMITED_INFORMATION, 
-            0, 
-            pid
-        ) 
-    };
-    if handle == INVALID_HANDLE {
-        warning!("Failed to get shell process handle: {}", ErrorCode::last());
-        return ShellInfo::default()
-    }
-
-    let mut size = 260;
-    let mut buf = [0u16; 260];
-    // SAFETY: Completely safe
-    let ret = unsafe {
-        QueryFullProcessImageNameW(
-            handle, 
-            0, 
-            buf.as_mut_ptr(), 
-            &raw mut size
-        )
-    };
-    
-    let exe_path = if ret == 1 {
-        // SAFETY: WinAPI returns a valid C string and always leaves 261 bytes zeroed
-        match utf16le_to_utf8(&buf, Utf16Len::Len(size as usize)) {
-            Ok(s) => Path::from(s),
-            Err(e) => {
-                warning!("Failed to convert Utf16 to Utf8 in shell exe path: {e}");
-                Path::default()
-            }
-        }
-    } else {
-        warning!("Failed to get shell exe path: {}", ErrorCode::last());
-        Path::default()
-    };
-
-    ShellInfo { pid, exe_path }
+    map: PPidMap,
+    name_map: NamePidMap,
+    init_pid: Pid,
+    my_pid: Pid
 }
 
 fn get_shared_process() -> &'static SharedProcess {
     SHARED_PROCESS.get_or_init(|| {
-        // SAFETY: Completely safe
-        let pid = unsafe { GetCurrentProcessId() };
-        let mut shell = None;
-        let mut initsystem_pid = 0;
+        let mut map = PPidMap::new();
+        let mut name_map = NamePidMap::new();
+        let mut init_pid = 0;
 
         // SAFETY: Completely safe
         let snapshot = unsafe { CreateToolhelp32Snapshot(2, 0) };
@@ -131,14 +89,16 @@ fn get_shared_process() -> &'static SharedProcess {
         if first != 0 {
             loop {
                 // SAFETY: Libc is guaranteed to return a valid c string
-                let proc_name = unsafe { CStr::from_ptr(pe.szExeFile.as_ptr()) };
-                if proc_name == INITSYSTEM_NAME {
-                    initsystem_pid = pe.th32ProcessID;
-                }
+                let proc_name_cstr = unsafe { CStr::from_ptr(pe.szExeFile.as_ptr()) };
+                let proc_name: &'static CStr = Box::leak(
+                    proc_name_cstr.to_owned().into_boxed_c_str()
+                );
 
-                if pe.th32ProcessID == pid {
-                    shell = Some(compute_shell_info(pe.th32ParentProcessID));
+                if proc_name == INITSYSTEM_NAME {
+                    init_pid = pe.th32ProcessID;
                 }
+                map.insert(pe.th32ProcessID, pe.th32ParentProcessID);
+                name_map.insert(pe.th32ProcessID, proc_name);
 
                 // SAFETY: Completely safe
                 let ret = unsafe { Process32Next(snapshot, &raw mut pe) };
@@ -150,20 +110,32 @@ fn get_shared_process() -> &'static SharedProcess {
 
         // SAFETY: Completely safe
         unsafe { CloseHandle(snapshot) };
-        
-        SharedProcess { 
-            initsystem_pid, 
-            shell
+        // SAFETY: Completely safe
+        let my_pid = unsafe { GetCurrentProcessId() };
+
+        SharedProcess {
+            map,
+            name_map,
+            init_pid,
+            my_pid
         }
     })
 }
 
-pub fn get_initsystem_pid() -> u32 {
-    get_shared_process().initsystem_pid
+pub fn get_initsystem_pid() -> Pid {
+    get_shared_process().init_pid
 }
 
-pub fn get_shell() -> Option<&'static ShellInfo> {
-    get_shared_process().shell.as_ref()
+pub fn get_my_pid() -> Pid {
+    get_shared_process().my_pid
+}
+
+pub fn get_ppid_by_pid(pid: Pid) -> Option<PPid> {
+    get_shared_process().map.get(&pid).copied()
+}
+
+pub fn get_name_by_pid(pid: Pid) -> Option<&'static CStr> {
+    get_shared_process().name_map.get(&pid).copied()
 }
 
 #[repr(C)]
