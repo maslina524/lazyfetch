@@ -12,7 +12,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
         let ptr = unsafe {
             malloc(layout.size())
         };
-        assert!(!ptr.is_null(), "Failed to call `malloc`!");
+        debug_assert!(!ptr.is_null(), "Failed to call malloc!");
         ptr.cast::<u8>()
     }
 
@@ -33,7 +33,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
                 1
             )
         };
-        assert!(!ptr.is_null(), "Failed to call `calloc`!");
+        debug_assert!(!ptr.is_null(), "Failed to call calloc!");
         ptr.cast::<u8>()
     }
 
@@ -47,7 +47,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
                 new_size
             )
         };
-        assert!(!new_ptr.is_null(), "Failed to call `realloc`!");
+        debug_assert!(!new_ptr.is_null(), "Failed to call realloc!");
         new_ptr.cast::<u8>()
     }
 }

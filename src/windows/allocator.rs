@@ -1,24 +1,26 @@
 use core::{
     alloc::{GlobalAlloc, Layout}, 
-    ffi::c_void
+    ffi::c_void,
+    sync::atomic::{AtomicUsize, Ordering::Relaxed}
 };
 
-use crate::{
-    windows::link::{GetProcessHeap, HeapAlloc, HeapFree, HeapReAlloc},
-    sync::OnceLock
+use crate::windows::link::{
+    GetProcessHeap, HeapAlloc, HeapFree, HeapReAlloc
 };
 
 const HEAP_ZERO_MEMORY: u32 = 0x08;
 
-static HEAP_HANDLE    : OnceLock<usize> = OnceLock::new();
+static HEAP_HANDLE    : AtomicUsize = AtomicUsize::new(0);
 
 fn get_heap_handle() -> *mut c_void {
-    // SAFETY: The `GetProcessHeap` function takes no arguments and
-    // is guaranteed to return a valid handle
-    let ptr = HEAP_HANDLE.get_or_init(|| 
-        unsafe { GetProcessHeap() as usize }
-    );
-    *ptr as *mut c_void
+    let mut handle = HEAP_HANDLE.load(Relaxed);
+    if handle == 0 {
+        // SAFETY: The `GetProcessHeap` function takes no arguments and
+        // is guaranteed to return a valid handle
+        handle = unsafe { GetProcessHeap() as usize };
+        HEAP_HANDLE.store(handle, Relaxed);
+    }
+    handle as *mut c_void
 }
 
 pub struct AllocatorInner;
@@ -39,7 +41,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
                 layout.size()
             )
         };
-        assert!(!ptr.is_null(), "`HeapAlloc` error!");
+        debug_assert!(!ptr.is_null(), "HeapAlloc error!");
         ptr.cast::<u8>()
     }
 
@@ -57,7 +59,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
                 ptr.cast::<c_void>()
             )
         };
-        assert!(ret != 0, "`HeapFree` error!");
+        debug_assert!(ret != 0, "HeapFree error!");
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
@@ -74,7 +76,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
                 layout.size()
             )
         };
-        assert!(!ptr.is_null(), "`HeapAlloc` error!");
+        debug_assert!(!ptr.is_null(), "HeapAlloc error!");
         ptr.cast::<u8>()
     }
 
@@ -85,7 +87,7 @@ unsafe impl GlobalAlloc for AllocatorInner {
         let new_ptr = unsafe {
             HeapReAlloc(handle, 0, ptr.cast(), new_size)
         };
-        assert!(!new_ptr.is_null(), "`HeapReAlloc` error!");
+        debug_assert!(!new_ptr.is_null(), "HeapReAlloc error!");
         new_ptr.cast::<u8>()
     }
 }
