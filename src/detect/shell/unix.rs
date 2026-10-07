@@ -13,7 +13,7 @@ use crate::{
 
 static BLACKLIST: [&str; 5] = [
     "python", "python3", "lazyfetch",
-    "fastfetch", "neofetch"
+    "fastfetch", "neofetch", "cargo"
 ];
 
 #[derive(Default)]
@@ -70,8 +70,6 @@ fn get_terminal_process() -> Result<Process, ReadError> {
         } else {
             raw
         };
-
-        crate::println!("`{name}`: {pid}");
         
         if (0..=1).contains(&pid) || name.eq_ignore_ascii_case("MainThread") {
             return Process::new(pid, name).map_err(ErrorCode::into);
