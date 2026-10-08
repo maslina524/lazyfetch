@@ -180,7 +180,7 @@ fn generate_logo_info(entry: &LogoEntry) -> TokenStream {
     quote! {
         crate::logo::LogoInfo {
             names: &[#(#names),*],
-            lines: include_bytes!(concat!(env!("LOGO_OUT_DIR"), #path_lit)),
+            encoded: include_bytes!(concat!(env!("LOGO_OUT_DIR"), #path_lit)),
             colors: &[
                 #(#colors),*
             ],

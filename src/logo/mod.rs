@@ -1,5 +1,7 @@
 #![doc = include_str!("README.md")]
 
+use core::fmt::Write;
+
 use alloc::{
     string::String, 
     vec::Vec
@@ -29,7 +31,7 @@ logo_mod!(
 const UNKNOWN: &[u8] = include_bytes!(concat!(env!("LOGO_OUT_DIR"), "/temp/_/unknown.txt"));
 static UNKNOWN_PTR: &LogoInfo = &LogoInfo {
     names: &[],
-    lines: UNKNOWN,
+    encoded: UNKNOWN,
     colors: &[],
     color_keys: color::FG_DEFAULT,
     color_title: color::FG_DEFAULT,
@@ -46,7 +48,7 @@ pub enum UILogo {
 
 pub struct LogoInfo {
     pub names: &'static [&'static str],
-    pub lines: &'static [u8],
+    pub encoded: &'static [u8],
     pub colors: &'static [&'static str],
     pub color_keys: &'static str,
     pub color_title: &'static str,
@@ -59,33 +61,33 @@ impl LogoInfo {
                 abort!("An empty string was passed for logo")
             };
 
-            let stack = match first_char {
-                'a' | 'A' => A,
-                'b' | 'B' => B,
-                'c' | 'C' => C,
-                'd' | 'D' => D,
-                'e' | 'E' => E,
-                'f' | 'F' => F,
-                'g' | 'G' => G,
-                'h' | 'H' => H,
-                'i' | 'I' => I,
-                'j' | 'J' => J,
-                'k' | 'K' => K,
-                'l' | 'L' => L,
-                'm' | 'M' => M,
-                'n' | 'N' => N,
-                'o' | 'O' => O,
-                'p' | 'P' => P,
-                'q' | 'Q' => Q,
-                'r' | 'R' => R,
-                's' | 'S' => S,
-                't' | 'T' => T,
-                'u' | 'U' => U,
-                'v' | 'V' => V,
-                'w' | 'W' => W,
-                'x' | 'X' => X,
-                'y' | 'Y' => Y,
-                'z' | 'Z' => Z,
+            let stack = match first_char.to_ascii_lowercase() {
+                'a' => A,
+                'b' => B,
+                'c' => C,
+                'd' => D,
+                'e' => E,
+                'f' => F,
+                'g' => G,
+                'h' => H,
+                'i' => I,
+                'j' => J,
+                'k' => K,
+                'l' => L,
+                'm' => M,
+                'n' => N,
+                'o' => O,
+                'p' => P,
+                'q' => Q,
+                'r' => R,
+                's' => S,
+                't' => T,
+                'u' => U,
+                'v' => V,
+                'w' => W,
+                'x' => X,
+                'y' => Y,
+                'z' => Z,
                 _ => return UNKNOWN_PTR,
             };
 
@@ -106,24 +108,22 @@ impl LogoInfo {
     pub fn get_ready_logo_lines(&self, logo: UILogo) -> Vec<(String, usize)> {
         let lines_string = match logo {
             UILogo::Preset => {
-                let mut decompressed = Vec::with_capacity(self.lines.len());
-                zlib::decompress(self.lines.to_vec(), &mut decompressed);
+                let mut decompressed = Vec::with_capacity(self.encoded.len());
+                zlib::decompress(self.encoded.to_vec(), &mut decompressed);
                 String::from_utf8(decompressed).expect("Non Utf8 in logo")
             }
             UILogo::Ascii(s) => s,
             _ => return Vec::new(),
         };
 
-        let lines_count = lines_string.chars().filter(|c| *c == ' ').count() + 1;
+        let lines_count = lines_string.chars().filter(|c| *c == '\n').count() + 1;
         let mut ret = Vec::with_capacity(lines_count);
-        let mut cur_code: &str = self.colors.first().copied().unwrap_or("");
+        let mut cur_code = self.colors.first().copied().unwrap_or("");
 
         for line in lines_string.lines() {
             let mut ret_len = 0usize;
             let mut ret_line = String::with_capacity(line.len() + 16);
-            ret_line.push_str("\x1b[1;");
-            ret_line.push_str(cur_code);
-            ret_line.push('m');
+            let _ = write!(ret_line, "\x1b[1;{cur_code}m");
 
             let mut in_percent = false;
             for ch in line.chars() {
@@ -131,10 +131,8 @@ impl LogoInfo {
                     if in_percent {
                         ret_line.push('$');
                         ret_len += 1;
-                        in_percent = false;
-                    } else {
-                        in_percent = true;
                     }
+                    in_percent = !in_percent;
                     continue;
                 }
                 if in_percent {
@@ -144,13 +142,10 @@ impl LogoInfo {
                     {
                         let code = self.colors.get(i as usize - 1).copied().unwrap_or("0");
                         cur_code = code;
-                        ret_line.push_str("\x1b[1;");
-                        ret_line.push_str(code);
-                        ret_line.push('m');
+                        let _ = write!(ret_line, "\x1b[1;{cur_code}m");
                         continue;
                     }
-                    ret_line.push('$');
-                    ret_line.push(ch);
+                    let _ = write!(ret_line, "${ch}");
                     ret_len += 2;
                     continue;
                 }
