@@ -9,7 +9,7 @@ use core::{
 use alloc::{
     string::{String, ToString},
     collections::BTreeMap,
-    borrow::ToOwned,
+    borrow::{ToOwned, Cow},
     boxed::Box,
     vec::Vec,
     vec
@@ -24,7 +24,7 @@ use crate::{
     w, 
     warning, 
     windows::{
-        encoding::{self, Utf16Len, utf16le_to_utf8, wide, wide_without_alloc, EncodeError}, 
+        encoding::{self, Utf16Len, utf16le_to_utf8, wide, wide_without_alloc, EncodeError, Utf16ToUtf8}, 
         error::{self, ErrorCode}, 
         fs::{Access, File}, 
         link::{
@@ -33,7 +33,8 @@ use crate::{
             FileTimeToSystemTime, GetCommandLineW, GetConsoleScreenBufferInfo, 
             GetEnvironmentVariableW, GetFileVersionInfoSizeW, GetFileVersionInfoW, 
             GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, 
-            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetCurrentProcessId
+            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetCurrentProcessId,
+            ExpandEnvironmentStringsW
         }, 
         path::Path, 
         regedit::{self, Hkey, Regedit}
@@ -143,19 +144,19 @@ pub fn get_name_by_pid(pid: Pid) -> Option<&'static CStr> {
 #[allow(non_snake_case, reason = "Copied from the Windows docs")]
 // https://learn.microsoft.com/en-us/windows/win32/api/verrsrc/ns-verrsrc-vs_fixedfileinfo
 struct VS_FIXEDFILEINFO {
-  pub dwSignature: u32,
-  pub dwStrucVersion: u32,
-  pub dwFileVersionMS: u32,
-  pub dwFileVersionLS: u32,
-  pub dwProductVersionMS: u32,
-  pub dwProductVersionLS: u32,
-  pub dwFileFlagsMask: u32,
-  pub dwFileFlags: u32,
-  pub dwFileOS: u32,
-  pub dwFileType: u32,
-  pub dwFileSubtype: u32,
-  pub dwFileDateMS: u32,
-  pub dwFileDateLS: u32
+    pub dwSignature: u32,
+    pub dwStrucVersion: u32,
+    pub dwFileVersionMS: u32,
+    pub dwFileVersionLS: u32,
+    pub dwProductVersionMS: u32,
+    pub dwProductVersionLS: u32,
+    pub dwFileFlagsMask: u32,
+    pub dwFileFlags: u32,
+    pub dwFileOS: u32,
+    pub dwFileType: u32,
+    pub dwFileSubtype: u32,
+    pub dwFileDateMS: u32,
+    pub dwFileDateLS: u32
 }
 
 pub fn current_version() -> &'static Regedit {
@@ -475,6 +476,46 @@ pub fn get_var(name: &str, size: Option<usize>) -> encoding::Result<String> {
 
     utf16le_to_utf8(&buf, Utf16Len::Len(len as usize))
         .map_err(EncodeError::from)
+}
+
+pub fn expand_env(s: &str) -> Result<Cow<'_, str>, Utf16ToUtf8> {
+    crate::println!("Try to expand: {s}");
+    if s.is_empty() {
+        return Ok(Cow::Borrowed(s))
+    }
+
+    let count = s.chars().filter(|c| *c == '%').count();
+    if count >= 2 {
+        let wide = wide(s);
+        // SAFETY: Completely safe
+        let size = unsafe {
+            ExpandEnvironmentStringsW(
+                wide.as_ptr(),
+                ptr::null_mut(),
+                0
+            )
+        };
+        if size == 0 {
+            return Ok(Cow::Owned(String::new()));
+        }
+
+        let mut buf = vec![0u16; size as usize];
+        // SAFETY: Completely safe
+        let written = unsafe {
+            ExpandEnvironmentStringsW(
+                wide.as_ptr(),
+                buf.as_mut_ptr(),
+                size
+            )
+        };
+        if written == 0 {
+            return Ok(Cow::Owned(String::new()));
+        }
+
+        utf16le_to_utf8(&buf, Utf16Len::NullTerminated).map(Cow::Owned)
+    } else {
+        Ok(Cow::Borrowed(s))
+    }
 }
 
 #[cfg(test)]
