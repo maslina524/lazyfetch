@@ -1,7 +1,16 @@
 use core::ffi::{c_void, CStr};
 
 use crate::{
-    modules::Shell, str::SmolStr, warning, windows::{encoding::{Utf16Len, utf16le_to_utf8}, env, error::ErrorCode, link::{OpenProcess, QueryFullProcessImageNameW}, path::Path}
+    modules::Shell, 
+    str::SmolStr, 
+    warning, 
+    windows::{
+        encoding::{Utf16Len, utf16le_to_utf8}, 
+        env, 
+        error::ErrorCode, 
+        link::{OpenProcess, QueryFullProcessImageNameW}, 
+        path::Path
+    }
 };
 
 const PROCESS_QUERY_LIMITED_INFORMATION: u32         = 0x1000;

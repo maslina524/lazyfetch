@@ -1,12 +1,13 @@
 use alloc::{
     string::String,
-    collections::BTreeMap
+    collections::BTreeMap,
+    borrow::Cow
 };
 use doc::Docs;
 
 use crate::{
     impl_display_for_module, 
-    modules::{Module, Title, FormatValue},
+    modules::{self, Module, Title, FormatValue},
     sync::OnceLock,
     formats,
     json::Value
@@ -40,10 +41,12 @@ impl Module for Separator {
         "separator"
     }
 
-    fn format(&self, _key: super::FormatValue, _format: super::FormatValue, _map: Option<&BTreeMap<String, Value>>) -> Option<String> {
-        Title::get()
+    fn format(&self, _key: super::FormatValue, _format: super::FormatValue, _map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
+        let string = Title::get()
             .format(FormatValue::default(), FormatValue::default(), None)
-            .map(|title| "-".repeat(formats::visible_len(&title)))
+            .map(|title| "-".repeat(formats::visible_len(&title)));
+
+        string.map(modules::expand_env_in_module)
     }
 
     fn resolve_field(&self, _name: &str) -> Option<&dyn core::fmt::Display> {

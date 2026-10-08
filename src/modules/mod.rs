@@ -52,10 +52,15 @@ pub use weather::Weather;
 use alloc::{
     string::String,
     collections::BTreeMap,
+    borrow::Cow,
     vec::Vec
 };
 
-use crate::json::Value;
+use crate::{
+    json::Value,
+    imp::env,
+    warning
+};
 
 type ModulePtr = &'static dyn Module;
 type Registry  = (&'static str, fn() -> ModulePtr);
@@ -152,7 +157,7 @@ pub trait Module {
     fn key(&self) -> &'static str;
     fn title(&self) -> &'static str;
     fn string_name(&self) -> &'static str;
-    fn format(&self, key: FormatValue, format: FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<String>;
+    fn format(&self, key: FormatValue, format: FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>>;
     fn resolve_field(&self, name: &str) -> Option<&dyn core::fmt::Display>;
 }
 
@@ -184,6 +189,17 @@ pub fn __eq_name_and_field(name: &str, field: &str) -> bool {
         .chars()
         .map(|c| if c == '_' { '-' } else { c })
         .eq(name.chars())
+}
+
+pub fn expand_env_in_module(s: String) -> Cow<'static, str> {
+    match env::expand_env(&s) {
+        Ok(alloc::borrow::Cow::Borrowed(_)) => s.into(),
+        Ok(alloc::borrow::Cow::Owned(expanded)) => expanded.into(),
+        Err(e) => {
+            warning!("Failed to convert Utf16: {e}");
+            s.into()
+        }
+    }
 }
 
 #[macro_export]
@@ -239,7 +255,7 @@ macro_rules! impl_module {
             key: super::FormatValue, 
             format: super::FormatValue, 
             _map: Option<&alloc::collections::BTreeMap<alloc::string::String, super::Value>>
-        ) -> Option<alloc::string::String> {
+        ) -> Option<alloc::borrow::Cow<'_, str>> {
             use core::fmt::Write;
 
             use alloc::string::String;
@@ -308,14 +324,16 @@ macro_rules! impl_module {
             }
 
             if key_ret.is_empty() {
-                return Some(body_ret);
+                let expanded = $crate::modules::expand_env_in_module(body_ret);
+                return Some(expanded);
             }
 
             let key_color = key.color.unwrap_or($crate::logo::LogoInfo::get().unwrap().color_keys);
             let separator = $crate::config::Config::get().get_display_separator();
-            
+
             let _ = write!(ret, "\x1b[{key_color};1m{key_ret}\x1b[0m{separator}{body_ret}");
-            Some(ret)
+            let expanded = $crate::modules::expand_env_in_module(ret);
+            Some(expanded)
         }
     };
 }

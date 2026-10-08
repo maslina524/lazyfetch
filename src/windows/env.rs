@@ -479,7 +479,6 @@ pub fn get_var(name: &str, size: Option<usize>) -> encoding::Result<String> {
 }
 
 pub fn expand_env(s: &str) -> Result<Cow<'_, str>, Utf16ToUtf8> {
-    crate::println!("Try to expand: {s}");
     if s.is_empty() {
         return Ok(Cow::Borrowed(s))
     }

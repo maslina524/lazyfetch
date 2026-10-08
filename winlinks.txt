@@ -89,3 +89,4 @@ GUID_DEVCLASS_DISPLAY
 IDXGIFactory
 IDXGIAdapter
 DIGCF_PRESENT
+ExpandEnvironmentStringsW

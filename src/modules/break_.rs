@@ -1,13 +1,14 @@
 use alloc::{
     string::String,
-    collections::BTreeMap
+    collections::BTreeMap,
+    borrow::{ToOwned, Cow}
 };
 
 use doc::Docs;
 
 use crate::{
     impl_display_for_module, 
-    modules::Module, 
+    modules::{self, Module}, 
     sync::OnceLock,
     json::Value
 };
@@ -33,15 +34,16 @@ impl Module for Break {
     }
 
     fn title(&self) -> &'static str {
-        ""
+        "\n"
     }
 
     fn string_name(&self) -> &'static str {
         "break"
     }
 
-    fn format(&self, _key: super::FormatValue, _format: super::FormatValue, _map: Option<&BTreeMap<String, Value>>) -> Option<String> {
-        Some(String::from('\n'))
+    fn format(&self, _key: super::FormatValue, format: super::FormatValue, _map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
+        let title_str = format.format.unwrap_or_else(|| self.title());
+        Some(modules::expand_env_in_module(title_str.to_owned()))
     }
 
     fn resolve_field(&self, _name: &str) -> Option<&dyn core::fmt::Display> {

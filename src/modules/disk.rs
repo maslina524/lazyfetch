@@ -1,7 +1,8 @@
 use alloc::{
     string::String,
     collections::BTreeMap,
-    vec::Vec
+    vec::Vec,
+    borrow::Cow
 };
 
 use doc::Docs;
@@ -12,7 +13,7 @@ use crate::{
     formats::{MemorySize, Percent, Time}, 
     impl_display_for_module, 
     json::Value, 
-    modules::Module, 
+    modules::{self, Module}, 
     sync::OnceLock
 };
 
@@ -53,13 +54,13 @@ impl Module for DiskList {
         "disk"
     }
 
-    fn format(&self, key: super::FormatValue, format: super::FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<String> {
+    fn format(&self, key: super::FormatValue, format: super::FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
         let s = self.list.iter()
             .filter_map(|d| d.format(key, format, map))
             .collect::<Vec<_>>()
             .join("\n");
 
-        Some(s)
+        Some(modules::expand_env_in_module(s))
     }
 
     fn resolve_field(&self, _name: &str) -> Option<&dyn core::fmt::Display> {
