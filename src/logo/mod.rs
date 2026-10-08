@@ -109,7 +109,7 @@ impl LogoInfo {
         let lines_string = match logo {
             UILogo::Preset => {
                 let mut decompressed = Vec::with_capacity(self.encoded.len());
-                zlib::decompress(self.encoded.to_vec(), &mut decompressed);
+                zlib::decompress(self.encoded, &mut decompressed);
                 String::from_utf8(decompressed).expect("Non Utf8 in logo")
             }
             UILogo::Ascii(s) => s,

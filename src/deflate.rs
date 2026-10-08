@@ -1,6 +1,7 @@
 use core::{
     cmp::Ordering,
-    error::Error
+    error::Error,
+    iter::repeat_n
 };
 
 use alloc::vec::Vec;
@@ -34,20 +35,29 @@ const DIST_BASE: [(usize, u8); 30] = [
     (16385,13),(24577,13),
 ];
 
+fn extend_at<T: Clone>(dst: &mut [T], offset: usize, src: impl IntoIterator<Item = T>) {
+    for (slot, val) in dst[offset..].iter_mut().zip(src) {
+        *slot = val;
+    }
+}
 
 fn build_fixed_trees() -> (HuffmanTree, HuffmanTree) {
     let mut litlen_lens = [0u8; 288];
     for (i, item) in litlen_lens.iter_mut().enumerate() {
-        *item = if i < 144 { 8 }
-            else if i < 256 { 9 }
-            else if i < 280 { 7 }
-            else { 8 };
+        *item = match i {
+            i if (144..256).contains(&i) => 7,
+            i if (256..280).contains(&i) => 9,
+            _ => 8
+        }
     }
-    let litlen_alphabet: Vec<u32> = (0..288).collect();
+
+    let mut litlen_alphabet = [0u32; 288];
+    extend_at(&mut litlen_alphabet, 0, 0..288);
     let litlen_tree = HuffmanTree::from_alphabet_and_bl_list(&litlen_alphabet, &litlen_lens);
 
     let dist_lens = [5u8; 32];
-    let dist_alphabet: Vec<u32> = (0..32).collect();
+    let mut dist_alphabet = [0u32; 32];
+    extend_at(&mut dist_alphabet, 0, 0..32);
     let dist_tree = HuffmanTree::from_alphabet_and_bl_list(&dist_alphabet, &dist_lens);
 
     (litlen_tree, dist_tree)
@@ -93,7 +103,9 @@ fn build_dynamic_trees(stream: &mut Stream) -> Result<(HuffmanTree, HuffmanTree)
     for i in 0..hclen {
         clen_lens[CLEN_ORDER[i]] = stream.read_bits(3) as u8;
     }
-    let clen_alphabet: Vec<u32> = (0..19).collect();
+
+    let mut clen_alphabet = [0u32; 19];
+    extend_at(&mut clen_alphabet, 0, 0..19);
     let clen_tree = HuffmanTree::from_alphabet_and_bl_list(&clen_alphabet, &clen_lens);
 
     let mut lens: Vec<u8> = Vec::with_capacity(hlit + hdist);
@@ -104,16 +116,16 @@ fn build_dynamic_trees(stream: &mut Stream) -> Result<(HuffmanTree, HuffmanTree)
             16 => {
                 let repeat = stream.read_bits(2) as usize + 3;
                 let last = *lens.last().ok_or(DeflateError::DecodeError)?;
-                lens.extend(core::iter::repeat_n(last, repeat));
-            }
+                lens.extend(repeat_n(last, repeat));
+            },
             17 => {
                 let repeat = stream.read_bits(3) as usize + 3;
-                lens.extend(core::iter::repeat_n(0, repeat));
-            }
+                lens.extend(repeat_n(0, repeat));
+            },
             18 => {
                 let repeat = stream.read_bits(7) as usize + 11;
-                lens.extend(core::iter::repeat_n(0, repeat));
-            }
+                lens.extend(repeat_n(0, repeat));
+            },
             _ => return Err(DeflateError::DynamicTreeError),
         }
     }
@@ -131,7 +143,7 @@ fn build_dynamic_trees(stream: &mut Stream) -> Result<(HuffmanTree, HuffmanTree)
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, DeflateError> {
-    let mut stream = Stream::new(input.to_vec());
+    let mut stream = Stream::new(input);
     let mut output = Vec::with_capacity(input.len());
 
     loop {
@@ -149,15 +161,15 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, DeflateError> {
                 for _ in 0..len {
                     output.push(stream.read_byte());
                 }
-            }
+            },
             1 => {
                 let (litlen_tree, dist_tree) = build_fixed_trees();
                 decode_block(&mut stream, &mut output, &litlen_tree, &dist_tree)?;
-            }
+            },
             2 => {
                 let (litlen_tree, dist_tree) = build_dynamic_trees(&mut stream)?;
                 decode_block(&mut stream, &mut output, &litlen_tree, &dist_tree)?;
-            }
+            },
             _ => {
                 return Err(DeflateError::InvalidBtype);
             }
@@ -175,7 +187,7 @@ fn decode_block(
     stream: &mut Stream,
     output: &mut Vec<u8>,
     litlen_tree: &HuffmanTree,
-    dist_tree: &HuffmanTree,
+    dist_tree: &HuffmanTree
 ) -> Result<(), DeflateError> {
     loop {
         let sym = decode_symb(stream, litlen_tree).ok_or(DeflateError::DecodeError)?;

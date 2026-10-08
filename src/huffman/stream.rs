@@ -1,14 +1,12 @@
-use alloc::vec::Vec;
-
 #[derive(Debug, Clone)]
-pub struct Stream {
-    memory: Vec<u8>,
+pub struct Stream<'zlib> {
+    memory: &'zlib [u8],
     byte_idx: usize,
     bit_idx: usize,
 }
 
-impl Stream {
-    pub const fn new(memory: Vec<u8>) -> Self {
+impl<'zlib> Stream<'zlib> {
+    pub const fn new(memory: &'zlib [u8]) -> Self {
         Self { memory, byte_idx: 0, bit_idx: 0 }
     }
 
@@ -19,7 +17,7 @@ impl Stream {
         }
     }
 
-    pub fn read_byte(&mut self) -> u8 {
+    pub const fn read_byte(&mut self) -> u8 {
         if self.bit_idx != 0 {
             self.bit_idx = 0;
             self.byte_idx += 1;
@@ -37,7 +35,7 @@ impl Stream {
         bytes
     }
 
-    pub fn read_bit(&mut self) -> u8 {
+    pub const fn read_bit(&mut self) -> u8 {
         let bit = (self.memory[self.byte_idx] >> self.bit_idx) & 1;
         self.bit_idx += 1;
         if self.bit_idx > 7 {
