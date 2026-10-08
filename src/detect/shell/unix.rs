@@ -11,7 +11,7 @@ use crate::{
     warning
 };
 
-static BLACKLIST: [&str; 5] = [
+static BLACKLIST: [&str; 6] = [
     "python", "python3", "lazyfetch",
     "fastfetch", "neofetch", "cargo"
 ];

@@ -56,11 +56,48 @@ use alloc::{
     vec::Vec
 };
 
-use crate::{
-    json::Value,
-    imp::env,
-    warning
-};
+use crate::json::Value;
+
+macro_rules! module_registry {
+    (
+        $(
+            $name:literal => $registry_ty:ty
+                $(, docs = $docs_ty:ty, example = $example:expr)?
+            ;
+        )*
+    ) => {
+        static REGISTRY: &[Registry] = &[
+            $(($name, || <$registry_ty>::get()),)*
+        ];
+
+        impl DocsVtable {
+            pub fn from_str(name: &str) -> Option<Self> {
+                match name {
+                    $(
+                        $name => Some(module_registry!(
+                            @entry $registry_ty $(, $docs_ty, $example)?
+                        )),
+                    )*
+                    _ => None,
+                }
+            }
+        }
+    };
+    (@entry $registry_ty:ty) => {
+        Self {
+            format:  <$registry_ty>::strings_format,
+            lua:     <$registry_ty>::strings_lua,
+            example: || <$registry_ty>::strings_example(<$registry_ty>::new()),
+        }
+    };
+    (@entry $registry_ty:ty, $docs_ty:ty, $example:expr) => {
+        Self {
+            format:  <$docs_ty>::strings_format,
+            lua:     <$docs_ty>::strings_lua,
+            example: || <$docs_ty>::strings_example($example),
+        }
+    };
+}
 
 type ModulePtr = &'static dyn Module;
 type Registry  = (&'static str, fn() -> ModulePtr);
@@ -68,31 +105,31 @@ type Example   = (&'static str, String);
 
 static UNSUPPORTED_FIELDS: [&str; 1] = ["{cmake-built-type}"];
 
-static REGISTRY: &[Registry] = &[
-    ("break",      || Break::get()),
-    ("colors",     || Colors::get()),
-    ("commit",     || Commit::get()),
-    ("cpu",        || Cpu::get()),
-    ("custom",     || Custom::get()),
-    ("datetime",   || Datetime::get()),
-    ("disk",       || DiskList::get()),
-    ("gpu",        || Gpu::get()),
-    ("initsystem", || Initsystem::get()),
-    ("kernel",     || Kernel::get()),
-    ("locale",     || Locale::get()),
-    ("memory",     || Memory::get()),
-    ("os",         || Os::get()),
-    ("publicip",   || PublicIP::get()),
-    ("processes",  || Processes::get()),
-    ("separator",  || Separator::get()),
-    ("shell",      || Shell::get()),
-    ("title",      || Title::get()),
-    ("theme",      || Theme::get()),
-    ("uptime",     || Uptime::get()),
-    ("version",    || Version::get()),
-    ("wallpaper",  || Wallpaper::get()),
-    ("weather",    || Weather::get()),
-];
+module_registry! {
+    "break"      => Break;
+    "colors"     => Colors;
+    "commit"     => Commit;
+    "cpu"        => Cpu;
+    "custom"     => Custom;
+    "datetime"   => Datetime;
+    "disk"       => DiskList, docs = Disk, example = DiskList::new().first_owned();
+    "gpu"        => Gpu;
+    "initsystem" => Initsystem;
+    "kernel"     => Kernel;
+    "locale"     => Locale;
+    "memory"     => Memory;
+    "os"         => Os;
+    "publicip"   => PublicIP;
+    "processes"  => Processes;
+    "separator"  => Separator;
+    "shell"      => Shell;
+    "title"      => Title;
+    "theme"      => Theme;
+    "uptime"     => Uptime;
+    "version"    => Version;
+    "wallpaper"  => Wallpaper;
+    "weather"    => Weather;
+}
 
 #[derive(Default, Clone, Copy)]
 pub struct FormatValue<'a> {
@@ -118,37 +155,6 @@ pub struct DocsVtable {
     pub format: fn() -> Option<&'static [DocString]>,
     pub lua: fn() -> Option<&'static [DocString]>,
     pub example: fn() -> Option<alloc::vec::Vec<Example>>
-}
-
-impl DocsVtable {
-    pub fn from_str(name: &str) -> Option<Self> {
-        match name {
-            "break"      => Some(Self { format: Break::strings_format,      lua: Break::strings_lua,      example: || Break::strings_example(Break::new())                 }),
-            "colors"     => Some(Self { format: Colors::strings_format,     lua: Colors::strings_lua,     example: || Colors::strings_example(Colors::new())               }),
-            "commit"     => Some(Self { format: Commit::strings_format,     lua: Commit::strings_lua,     example: || Commit::strings_example(Commit::new())               }),
-            "cpu"        => Some(Self { format: Cpu::strings_format,        lua: Cpu::strings_lua,        example: || Cpu::strings_example(Cpu::new())                     }),
-            "custom"     => Some(Self { format: Custom::strings_format,     lua: Custom::strings_lua,     example: || Custom::strings_example(Custom::new())               }),
-            "datetime"   => Some(Self { format: Datetime::strings_format,   lua: Datetime::strings_lua,   example: || Datetime::strings_example(Datetime::new())           }),
-            "disk"       => Some(Self { format: Disk::strings_format,       lua: Disk::strings_lua,       example: || Disk::strings_example(DiskList::new().first_owned()) }),
-            "gpu"        => Some(Self { format: Gpu::strings_format,        lua: Gpu::strings_lua,        example: || Gpu::strings_example(Gpu::new())                     }),
-            "initsystem" => Some(Self { format: Initsystem::strings_format, lua: Initsystem::strings_lua, example: || Initsystem::strings_example(Initsystem::new())       }),
-            "kernel"     => Some(Self { format: Kernel::strings_format,     lua: Kernel::strings_lua,     example: || Kernel::strings_example(Kernel::new())               }),
-            "locale"     => Some(Self { format: Locale::strings_format,     lua: Locale::strings_lua,     example: || Locale::strings_example(Locale::new())               }),
-            "memory"     => Some(Self { format: Memory::strings_format,     lua: Memory::strings_lua,     example: || Memory::strings_example(Memory::new())               }),
-            "os"         => Some(Self { format: Os::strings_format,         lua: Os::strings_lua,         example: || Os::strings_example(Os::new())                       }),
-            "publicip"   => Some(Self { format: PublicIP::strings_format,   lua: PublicIP::strings_lua,   example: || PublicIP::strings_example(PublicIP::new())           }),
-            "processes"  => Some(Self { format: Processes::strings_format,  lua: Processes::strings_lua,  example: || Processes::strings_example(Processes::new())         }),
-            "separator"  => Some(Self { format: Separator::strings_format,  lua: Separator::strings_lua,  example: || Separator::strings_example(Separator::new())         }),
-            "shell"      => Some(Self { format: Shell::strings_format,      lua: Shell::strings_lua,      example: || Shell::strings_example(Shell::new())                       }),
-            "title"      => Some(Self { format: Title::strings_format,      lua: Title::strings_lua,      example: || Title::strings_example(Title::new())                 }),
-            "theme"      => Some(Self { format: Theme::strings_format,      lua: Theme::strings_lua,      example: || Theme::strings_example(Theme::new())                 }),
-            "uptime"     => Some(Self { format: Uptime::strings_format,     lua: Uptime::strings_lua,     example: || Uptime::strings_example(Uptime::new())               }),
-            "version"    => Some(Self { format: Version::strings_format,    lua: Version::strings_lua,    example: || Version::strings_example(Version::new())             }),
-            "wallpaper"  => Some(Self { format: Wallpaper::strings_format,  lua: Wallpaper::strings_lua,  example: || Wallpaper::strings_example(Wallpaper::new())         }),
-            "weather"    => Some(Self { format: Weather::strings_format,    lua: Weather::strings_lua,    example: || Weather::strings_example(Weather::new())             }),
-            _ => None,
-        }
-    }
 }
 
 pub trait Module {
@@ -191,15 +197,21 @@ pub fn __eq_name_and_field(name: &str, field: &str) -> bool {
         .eq(name.chars())
 }
 
+#[cfg(target_os = "windows")]
 pub fn expand_env_in_module(s: String) -> Cow<'static, str> {
-    match env::expand_env(&s) {
+    match crate::windows::env::expand_env(&s) {
         Ok(alloc::borrow::Cow::Borrowed(_)) => s.into(),
         Ok(alloc::borrow::Cow::Owned(expanded)) => expanded.into(),
         Err(e) => {
-            warning!("Failed to convert Utf16: {e}");
+            crate::warning!("Failed to convert Utf16: {e}");
             s.into()
         }
     }
+}
+
+#[cfg(target_family = "unix")]
+pub const fn expand_env_in_module(s: String) -> Cow<'static, str> {
+    Cow::Owned(s)
 }
 
 #[macro_export]
