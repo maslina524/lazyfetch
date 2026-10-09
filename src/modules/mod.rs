@@ -17,7 +17,8 @@ pub mod processes; // 53) Processes     : Print number of running processes
 pub mod publicip; // 52) PublicIp      : Print your public IP address, etc
 pub mod separator; // 55) Separator     : Print a separator line
 pub mod shell; // 56) Shell         : Print the current shell name and version
-// pub mod swap;    // 58) Swap          : Print swap (paging file) space usage
+// pub mod swap; // 58) Swap          : Print swap (paging file) space usage
+pub mod terminal; // 59) Terminal      : Print the current terminal name and version
 pub mod theme; // 65) Theme         : Print the current desktop environment theme
 pub mod title; // 63) Title         : Print the title, including your username and hostname
 pub mod uptime; // 66) Uptime        : Print how long the system has been running
@@ -42,6 +43,7 @@ pub use processes::Processes;
 pub use publicip::PublicIP;
 pub use separator::Separator;
 pub use shell::Shell;
+pub use terminal::Terminal;
 pub use theme::Theme;
 pub use title::Title;
 pub use uptime::Uptime;
@@ -118,6 +120,7 @@ module_registry! {
     "processes"  => Processes;
     "separator"  => Separator;
     "shell"      => Shell;
+    "terminal"   => Terminal;
     "title"      => Title;
     "theme"      => Theme;
     "uptime"     => Uptime;
@@ -165,7 +168,7 @@ pub trait Module {
     fn format(
         &self,
         key: FormatValue,
-        format: FormatValue,
+        title: FormatValue,
         map: Option<&BTreeMap<String, Value>>,
     ) -> Option<Cow<'_, str>>;
     fn resolve_field(&self, name: &str) -> Option<&dyn core::fmt::Display>;
@@ -269,7 +272,7 @@ macro_rules! impl_module {
         fn format(
             &self,
             key: super::FormatValue,
-            format: super::FormatValue,
+            title: super::FormatValue,
             _map: Option<&alloc::collections::BTreeMap<alloc::string::String, super::Value>>
         ) -> Option<alloc::borrow::Cow<'_, str>> {
             use core::fmt::Write;
@@ -278,7 +281,7 @@ macro_rules! impl_module {
 
             let mut ret = String::with_capacity(128);
 
-            let title_raw = format.format.unwrap_or(self.title());
+            let title_raw = title.format.unwrap_or(self.title());
             // Proccess Lua
             let body: String = if let Some(code) = title_raw.strip_prefix("lua:") {
                 let code = $crate::lua::open_lua_file(code).into_owned();
