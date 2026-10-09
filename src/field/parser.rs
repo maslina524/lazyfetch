@@ -10,7 +10,10 @@ pub struct FormatParserIter<'fp> {
 
 impl<'fp> FormatParserIter<'fp> {
     pub const fn new(source: &'fp str) -> Self {
-        Self { source, rest: source }
+        Self {
+            source,
+            rest: source,
+        }
     }
 }
 

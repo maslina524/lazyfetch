@@ -1,7 +1,4 @@
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::cfg_if;
 
@@ -15,16 +12,13 @@ cfg_if! {
 
 #[derive(Debug)]
 pub enum AmPm {
-    Am, Pm
+    Am,
+    Pm,
 }
 
 impl AmPm {
     pub const fn from_hour(hour: u8) -> Self {
-        if hour < 12 {
-            Self::Am
-        } else {
-            Self::Pm
-        }
+        if hour < 12 { Self::Am } else { Self::Pm }
     }
 }
 
@@ -32,8 +26,9 @@ impl core::fmt::Display for AmPm {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let string = match self {
             Self::Am => "am",
-            Self::Pm => "pm"
-        }.to_owned();
+            Self::Pm => "pm",
+        }
+        .to_owned();
 
         write!(f, "{string}")
     }
@@ -58,6 +53,6 @@ pub struct DatetimeInfo {
     pub day_in_week: u16,
 
     pub offset_utc: String,
-    pub timezone_name: String, 
-    pub am_pm: AmPm
+    pub timezone_name: String,
+    pub am_pm: AmPm,
 }

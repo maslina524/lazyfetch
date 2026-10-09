@@ -1,35 +1,33 @@
-use core::{
-    mem,
-    ptr
-};
+use core::{mem, ptr};
 
 use alloc::{
     borrow::{Cow, ToOwned},
     string::String,
+    vec,
     vec::Vec,
-    vec
 };
 
 use crate::{
-    modules::cpu::Cpu,
     detect::cpu,
-    formats::Frequency, 
+    formats::Frequency,
+    modules::cpu::Cpu,
     windows::error::ErrorCode,
     windows::link::{
         GetActiveProcessorCount, GetLogicalProcessorInformation, GetNumaHighestNodeNumber,
-        SYSTEM_LOGICAL_PROCESSOR_INFORMATION
+        SYSTEM_LOGICAL_PROCESSOR_INFORMATION,
     },
-    windows::regedit::{Access, Hkey, Regedit}
+    windows::regedit::{Access, Hkey, Regedit},
 };
 
 type LogicalInfo = SYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
 pub fn get() -> Cpu {
     let cpu_regedit_handle = Regedit::open(
-        Hkey::LocalMachine, 
-        "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 
-        Access::Read
-    ).unwrap();
+        Hkey::LocalMachine,
+        "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+        Access::Read,
+    )
+    .unwrap();
 
     let logical_info = logical_info();
     let vendor = cpu::vendor();
@@ -50,42 +48,36 @@ pub fn get() -> Cpu {
         temperature: cpu::temperature(),
         freq_max: cpu::max_freq(),
         core_types: cpu::logical_grouped(),
-        march: cpu::micro_arch()
+        march: cpu::micro_arch(),
     }
 }
 
 fn logical_info() -> Vec<LogicalInfo> {
     let mut size = 0;
     // SAFETY: Completely safe
-    unsafe {
-        GetLogicalProcessorInformation(
-            ptr::null_mut(), 
-            &raw mut size
-        )
-    };
+    unsafe { GetLogicalProcessorInformation(ptr::null_mut(), &raw mut size) };
     let err = ErrorCode::last();
-    assert!(err.code() == 122 || err.code() == 0, "`GetLogicalProcessorInformation` (size) failed");
+    assert!(
+        err.code() == 122 || err.code() == 0,
+        "`GetLogicalProcessorInformation` (size) failed"
+    );
     let struct_size = mem::size_of::<SYSTEM_LOGICAL_PROCESSOR_INFORMATION>();
     let buf_size = size as usize / struct_size;
     let mut buf = vec![SYSTEM_LOGICAL_PROCESSOR_INFORMATION::default(); buf_size];
     // SAFETY: Completely safe
-    unsafe {
-        GetLogicalProcessorInformation(
-            buf.as_mut_ptr(), 
-            &raw mut size
-        )
-    };
-    assert!(ErrorCode::last().code() != 0, "`GetLogicalProcessorInformation` (info) failed");
+    unsafe { GetLogicalProcessorInformation(buf.as_mut_ptr(), &raw mut size) };
+    assert!(
+        ErrorCode::last().code() != 0,
+        "`GetLogicalProcessorInformation` (info) failed"
+    );
     buf
 }
 fn numa_nodes_count() -> usize {
     let mut highest = 0;
     // SAFETY: Completely safe
-    let ret = unsafe {
-        GetNumaHighestNodeNumber(&raw mut highest)
-    };
+    let ret = unsafe { GetNumaHighestNodeNumber(&raw mut highest) };
     if ret == 0 {
-        return 0
+        return 0;
     }
     highest as usize + 1
 }
@@ -128,10 +120,13 @@ fn online_cores_count() -> usize {
     (unsafe { GetActiveProcessorCount(0) }) as usize
 }
 fn base_freq(handle: &Regedit) -> Frequency {
-    let val = handle.read("~MHz").map_or_else(|_| 0, |key| {
-        let mhz = key.as_u32().unwrap_or(0);
-        mhz as u64 / 1000
-    });
+    let val = handle.read("~MHz").map_or_else(
+        |_| 0,
+        |key| {
+            let mhz = key.as_u32().unwrap_or(0);
+            mhz as u64 / 1000
+        },
+    );
     Frequency::from_hz(val)
 }
 fn name(handle: &Regedit) -> String {
@@ -143,8 +138,8 @@ fn name(handle: &Regedit) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        modules::{cpu::Cpu, Module}, 
-        formats::Frequency
+        formats::Frequency,
+        modules::{Module, cpu::Cpu},
     };
 
     #[test]

@@ -1,46 +1,34 @@
-use std::{
-    collections::HashMap, 
-    fs, 
-    path::Path, 
-    process::Command, 
-    sync::OnceLock
-};
+#![allow(clippy::cargo_common_metadata)]
+
+use std::{collections::HashMap, fs, path::Path, process::Command, sync::OnceLock};
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use serde::Deserialize;
 
-pub static TARGET_OS    : OnceLock<String> = OnceLock::new();
+pub static TARGET_OS: OnceLock<String> = OnceLock::new();
 pub static TARGET_FAMILY: OnceLock<String> = OnceLock::new();
-pub static TARGET_ENV   : OnceLock<String> = OnceLock::new();
-pub static TARGET_ARCH  : OnceLock<String> = OnceLock::new();
+pub static TARGET_ENV: OnceLock<String> = OnceLock::new();
+pub static TARGET_ARCH: OnceLock<String> = OnceLock::new();
 
 #[allow(clippy::missing_panics_doc)]
 pub fn target_os() -> &'static str {
-    TARGET_OS.get_or_init(|| {
-        std::env::var("CARGO_CFG_TARGET_OS").unwrap()
-    })
+    TARGET_OS.get_or_init(|| std::env::var("CARGO_CFG_TARGET_OS").unwrap())
 }
 
 #[allow(clippy::missing_panics_doc)]
 pub fn target_family() -> &'static str {
-    TARGET_FAMILY.get_or_init(|| {
-        std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap()
-    })
+    TARGET_FAMILY.get_or_init(|| std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap())
 }
 
 #[allow(clippy::missing_panics_doc)]
 pub fn target_env() -> &'static str {
-    TARGET_ENV.get_or_init(|| {
-        std::env::var("CARGO_CFG_TARGET_ENV").unwrap()
-    })
+    TARGET_ENV.get_or_init(|| std::env::var("CARGO_CFG_TARGET_ENV").unwrap())
 }
 
 #[allow(clippy::missing_panics_doc)]
 pub fn target_arch() -> &'static str {
-    TARGET_ARCH.get_or_init(|| {
-        std::env::var("CARGO_CFG_TARGET_ARCH").unwrap()
-    })
+    TARGET_ARCH.get_or_init(|| std::env::var("CARGO_CFG_TARGET_ARCH").unwrap())
 }
 
 pub struct Commit {
@@ -92,8 +80,12 @@ impl Commit {
         let numstat_raw = Command::new("git")
             .env("LC_ALL", "C")
             .args([
-                "log", "--shortstat", "-1",
-                "--first-parent", "-m", "--format=",
+                "log",
+                "--shortstat",
+                "-1",
+                "--first-parent",
+                "-m",
+                "--format=",
             ])
             .output()
             .ok()
@@ -228,8 +220,8 @@ mod setup {
                 println!("cargo:rustc-link-arg=-lc");
             }
             ("android", "aarch64") => {
-                let lua_dir =
-                    env::var("LUA_ANDROID_LIB_DIR").unwrap_or("bin/android-aarch64".to_owned());
+                let lua_dir = env::var("LUA_ANDROID_LIB_DIR")
+                    .unwrap_or_else(|_| "bin/android-aarch64".to_owned());
                 println!("cargo:rustc-link-search=native={lua_dir}");
                 println!("cargo:rustc-link-lib=static=lua5.4");
                 println!("cargo:rustc-link-arg=-Wl,--no-as-needed");
@@ -484,7 +476,7 @@ mod setup {
                         }
                     }
                     ("linux", "musl") => "musl".to_owned(),
-                      _ => String::new(),
+                    _ => String::new(),
                 }
             }
 
@@ -516,7 +508,7 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
         setup::windows_resource();
     }
-    
+
     setup::build_bypass();
     setup::lua_and_libc();
 

@@ -1,14 +1,9 @@
-use core::fmt::{
-    self, 
-    Display, 
-    Debug, 
-    Formatter
-};
+use core::fmt::{self, Debug, Display, Formatter};
 
 use crate::{
     format,
+    lua::{AsLua, LuaType},
     warning,
-    lua::{AsLua, LuaType}
 };
 
 #[repr(u8)]
@@ -39,12 +34,14 @@ impl TryFrom<u8> for Level {
 
 #[derive(Clone, Copy, Default)]
 pub struct MicroArch {
-    level: Option<Level>
+    level: Option<Level>,
 }
 
 impl MicroArch {
     pub fn new(level: u8) -> Self {
-        Self { level: Level::try_from(level).ok() }
+        Self {
+            level: Level::try_from(level).ok(),
+        }
     }
 }
 

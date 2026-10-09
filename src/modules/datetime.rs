@@ -3,11 +3,10 @@ use doc::Docs;
 
 use crate::{
     detect::datetime::{AmPm, DatetimeInfo},
-    impl_module,
-    impl_display_for_module,
-    modules::Module, 
+    formats::ZeroPaddedTwo,
+    impl_display_for_module, impl_module,
+    modules::Module,
     sync::OnceLock,
-    formats::ZeroPaddedTwo
 };
 
 static DATETIME: OnceLock<Datetime> = OnceLock::new();
@@ -61,7 +60,7 @@ pub struct Datetime {
     #[doc = "Day in month with leading zero"]
     pub day_pretty: ZeroPaddedTwo<u16>,
     #[doc = "AM or PM"]
-    pub am_pm: AmPm
+    pub am_pm: AmPm,
 }
 
 impl Module for Datetime {
@@ -91,14 +90,12 @@ impl Module for Datetime {
             offset_from_utc: time.offset_utc,
             timezone_name: time.timezone_name,
             day_pretty: ZeroPaddedTwo::new(time.day_in_month),
-            am_pm: time.am_pm
+            am_pm: time.am_pm,
         }
     }
 
     fn get() -> &'static Self {
-        DATETIME.get_or_init(|| {
-            Self::new()
-        })
+        DATETIME.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -114,14 +111,31 @@ impl Module for Datetime {
     }
 
     impl_module!(
-        year, year_short, month, month_pretty,
-        month_name, month_name_short, week, weekday,
-        weekday_short, day_in_year, day_in_month, day_in_week,
-        hour, hour_pretty, hour_12, hour_12_pretty,
-        minute, minute_pretty, second, second_pretty,
-        offset_from_utc, timezone_name, day_pretty, am_pm
+        year,
+        year_short,
+        month,
+        month_pretty,
+        month_name,
+        month_name_short,
+        week,
+        weekday,
+        weekday_short,
+        day_in_year,
+        day_in_month,
+        day_in_week,
+        hour,
+        hour_pretty,
+        hour_12,
+        hour_12_pretty,
+        minute,
+        minute_pretty,
+        second,
+        second_pretty,
+        offset_from_utc,
+        timezone_name,
+        day_pretty,
+        am_pm
     );
 }
 
 impl_display_for_module!(Datetime);
-

@@ -6,15 +6,15 @@ static TABLE: [u32; 256] = generate_table();
 const fn generate_table() -> [u32; 256] {
     let mut table = [0u32; 256];
 
-    let mut i = 0u32; 
+    let mut i = 0u32;
     while i < 256 {
         let mut c = i;
         let mut j = 0;
         while j < 8 {
-            c = if c & 1 != 0 { 
+            c = if c & 1 != 0 {
                 0xED_B8_83_20 ^ (c >> 1)
-            } else { 
-                c >> 1 
+            } else {
+                c >> 1
             };
 
             j += 1;

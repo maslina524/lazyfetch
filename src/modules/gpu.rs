@@ -2,19 +2,15 @@ use alloc::string::String;
 use doc::Docs;
 
 use crate::{
-    detect::gpu::{GpuInfo, GpuType, temperature, name, frequency},
+    detect::gpu::{GpuInfo, GpuType, frequency, name, temperature},
+    field::{cached::SessionCached, lazy::LazyField},
     formats::{Frequency, MemorySize, Percent, Temperature},
-    impl_display_for_module,
-    impl_module,
+    impl_display_for_module, impl_module,
     modules::Module,
     sync::OnceLock,
-    field::{
-        lazy::LazyField,
-        cached::SessionCached
-    }
 };
 
-static GPU   : OnceLock<Gpu> = OnceLock::new();
+static GPU: OnceLock<Gpu> = OnceLock::new();
 
 #[derive(Debug, Docs)]
 pub struct Gpu {
@@ -61,25 +57,21 @@ pub struct Gpu {
     #[doc = "`PCIe` maximum speed in gen and lanes"]
     pub pcie_max_speed: String,
     #[doc = "`PCIe` current speed in gen and lanes"]
-    pub pcie_curr_speed: String
+    pub pcie_curr_speed: String,
 }
 
 impl Module for Gpu {
     fn new() -> Self {
         let info = GpuInfo::new();
-        
+
         let vendor_id = info.vendor_id;
         let device_id = info.device_id;
 
         Self {
             vendor: info.vendor,
-            name: SessionCached::new(
-                "gpu.name", move || name(vendor_id, device_id)
-            ),
+            name: SessionCached::new("gpu.name", move || name(vendor_id, device_id)),
             driver: info.driver,
-            temperature: LazyField::new(
-                move || { temperature(vendor_id) }
-            ),
+            temperature: LazyField::new(move || temperature(vendor_id)),
             core_count: 0,
             r#type: info.typ,
             dedicated_total: info.memory_total,
@@ -87,9 +79,7 @@ impl Module for Gpu {
             shared_total: MemorySize::default(),
             shared_used: MemorySize::default(),
             platform_api: String::new(),
-            frequency: SessionCached::new(
-                "gpu.frequency", move || { frequency(vendor_id) }
-            ),
+            frequency: SessionCached::new("gpu.frequency", move || frequency(vendor_id)),
             index: info.device_id,
             dedicated_percentage_num: Percent::default(),
             dedicated_percentage_bar: String::new(),
@@ -104,9 +94,7 @@ impl Module for Gpu {
     }
 
     fn get() -> &'static Self {
-        GPU.get_or_init(|| {
-            Self::new()
-        })
+        GPU.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -126,12 +114,28 @@ impl Module for Gpu {
     }
 
     impl_module!(
-        vendor, name, driver, temperature, 
-        core_count, r#type, dedicated_total, dedicated_used, 
-        shared_total, shared_used, platform_api, frequency, 
-        index, dedicated_percentage_num, dedicated_percentage_bar, shared_percentage_num, 
-        shared_percentage_bar, core_usage_num, core_usage_bar, memory_type, 
-        pcie_max_speed, pcie_curr_speed
+        vendor,
+        name,
+        driver,
+        temperature,
+        core_count,
+        r#type,
+        dedicated_total,
+        dedicated_used,
+        shared_total,
+        shared_used,
+        platform_api,
+        frequency,
+        index,
+        dedicated_percentage_num,
+        dedicated_percentage_bar,
+        shared_percentage_num,
+        shared_percentage_bar,
+        core_usage_num,
+        core_usage_bar,
+        memory_type,
+        pcie_max_speed,
+        pcie_curr_speed
     );
 }
 

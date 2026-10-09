@@ -2,34 +2,33 @@
 
 use core::fmt::Write;
 
-use alloc::{
-    borrow::ToOwned,
-    string::String,
-    vec::Vec
-};
+use alloc::{borrow::ToOwned, string::String, vec::Vec};
 
 use crate::color;
 
+mod display;
 mod freq;
+mod march;
 mod mem;
 mod percent;
+mod splitted;
 mod temp;
 mod time;
-mod splitted;
-mod display;
-mod march;
 
+pub use display::ZeroPaddedTwo;
 pub use freq::Frequency;
+pub use march::MicroArch;
 pub use mem::MemorySize;
 pub use percent::Percent;
+pub use splitted::SplittedAnsiIter;
 pub use temp::Temperature;
 pub use time::Time;
-pub use splitted::SplittedAnsiIter;
-pub use display::ZeroPaddedTwo;
-pub use march::MicroArch;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum ColorPlan { FG, BG }
+pub enum ColorPlan {
+    FG,
+    BG,
+}
 
 pub struct StringFormatter<'a>(&'a mut String);
 
@@ -209,15 +208,15 @@ pub fn format_color(s: &str, plan: ColorPlan) -> String {
     // reset_, bright_, dim_, italic_, underline_,
     // blink_, inverse_, hidden_, strike_, light_
     if !prefixes.is_empty() {
-        add_prefix!(prefixes, ret, "reset",     color::MODE_RESET);
-        add_prefix!(prefixes, ret, "bold",      color::MODE_BOLD);
-        add_prefix!(prefixes, ret, "dim",       color::MODE_DIM);
-        add_prefix!(prefixes, ret, "italic",    color::MODE_ITALIC);
+        add_prefix!(prefixes, ret, "reset", color::MODE_RESET);
+        add_prefix!(prefixes, ret, "bold", color::MODE_BOLD);
+        add_prefix!(prefixes, ret, "dim", color::MODE_DIM);
+        add_prefix!(prefixes, ret, "italic", color::MODE_ITALIC);
         add_prefix!(prefixes, ret, "underline", color::MODE_UNDERLINE);
-        add_prefix!(prefixes, ret, "blink",     color::MODE_BLINK);
-        add_prefix!(prefixes, ret, "inverse",   color::MODE_INVERSE);
-        add_prefix!(prefixes, ret, "hidden",    color::MODE_HIDDEN);
-        add_prefix!(prefixes, ret, "strike",    color::MODE_STRIKETHROUGH);
+        add_prefix!(prefixes, ret, "blink", color::MODE_BLINK);
+        add_prefix!(prefixes, ret, "inverse", color::MODE_INVERSE);
+        add_prefix!(prefixes, ret, "hidden", color::MODE_HIDDEN);
+        add_prefix!(prefixes, ret, "strike", color::MODE_STRIKETHROUGH);
     }
 
     let is_light = prefixes.contains(&"light");

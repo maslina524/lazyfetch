@@ -1,12 +1,8 @@
 use doc::Docs;
 
 use crate::{
-    detect::theme, 
-    impl_display_for_module, 
-    impl_module, 
-    modules::Module, 
-    str::SmolStr, 
-    sync::OnceLock
+    detect::theme, impl_display_for_module, impl_module, modules::Module, str::SmolStr,
+    sync::OnceLock,
 };
 
 static THEME: OnceLock<Theme> = OnceLock::new();
@@ -16,7 +12,7 @@ pub struct Theme {
     #[doc = "Theme part 1"]
     pub theme1: SmolStr,
     #[doc = "Theme part 2"]
-    pub theme2: SmolStr
+    pub theme2: SmolStr,
 }
 
 impl Module for Theme {
@@ -25,9 +21,7 @@ impl Module for Theme {
     }
 
     fn get() -> &'static Self {
-        THEME.get_or_init(|| {
-            Self::new()
-        })
+        THEME.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -42,9 +36,7 @@ impl Module for Theme {
         "theme"
     }
 
-    impl_module!(
-        theme1, theme2
-    );
+    impl_module!(theme1, theme2);
 }
 
 impl_display_for_module!(Theme);

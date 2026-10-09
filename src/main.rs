@@ -19,6 +19,7 @@
 )]
 #![allow(clippy::cargo_common_metadata)]
 
+mod allocator;
 mod base64;
 mod color;
 mod config;
@@ -31,21 +32,20 @@ mod lua;
 mod lz77;
 mod macros;
 mod nvidia;
+mod parser;
 mod png;
+mod print;
 mod sync;
 mod url;
 mod zlib;
-mod print;
-mod parser;
-mod allocator;
 
 mod detect;
+mod field;
+mod formats;
 mod json;
 mod logo;
 mod modules;
-mod field;
 mod str;
-mod formats;
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -61,44 +61,31 @@ cfg_if! {
 
 extern crate alloc;
 
-use core::{
-    ffi::c_int, 
-    slice::Iter
-};
+use core::{ffi::c_int, slice::Iter};
 
-use alloc::{
-    string::String,
-    boxed::Box,
-    vec::Vec
-};
+use alloc::{boxed::Box, string::String, vec::Vec};
 
 use crate::{
-    config::{Config, ConfigModule}, 
-    formats::{SplittedAnsiIter, MemorySize}, 
-    image::Image, 
+    allocator::{AllocationReport, Allocator},
+    config::{Config, ConfigModule},
     detect::os,
-    allocator::{AllocationReport, Allocator}, 
-    imp::{
-        env, 
-        fs, 
-        http::Request
-    }, 
-    json::Json, 
+    field::cached,
+    formats::{MemorySize, SplittedAnsiIter},
+    image::Image,
+    imp::{env, fs, http::Request},
+    json::Json,
     logo::{LogoInfo, UILogo},
-    modules::{
-        Commit, DocsVtable, FormatValue, Module, Version
-    }, 
-    nvidia::NvidiaLib, 
-    png::Png, 
-    sync::OnceLock, 
-    url::Url,
+    modules::{Commit, DocsVtable, FormatValue, Module, Version},
+    nvidia::NvidiaLib,
+    png::Png,
     print::flush,
-    field::cached
+    sync::OnceLock,
+    url::Url,
 };
 
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator;
-static HELP     : &str      = concat!(
+static HELP: &str = concat!(
     "lazyfetch is a neofetch-like tool for beautiful system information display with flexible output customization\n",
     "\n",
     "\x1b[1mUsage: lazyfetch\x1b[22;3m <?options>\x1b[0m\n",
@@ -110,10 +97,10 @@ static HELP     : &str      = concat!(
     "  -c, --config              \tCustom preset (http url or file)",
 );
 
-const MIN_OFFSET        : usize = 24;
-const IMAGE_SIZE        : usize = 40;
-const CELL_ASPECT       : f64   = 2.0;
-const ALLOC_REP_BAR_SIZE: u128  = 64;
+const MIN_OFFSET: usize = 24;
+const IMAGE_SIZE: usize = 40;
+const CELL_ASPECT: f64 = 2.0;
+const ALLOC_REP_BAR_SIZE: u128 = 64;
 
 #[cfg(not(test))]
 mod panic_impl {
@@ -299,7 +286,6 @@ fn get_logo_name_and_custom(val: &str) -> (Box<str>, UILogo) {
                         (id, UILogo::Preset)
                     }
                 }
-                
             } else if let Ok(s) = String::from_utf8(b) {
                 (id, UILogo::Ascii(s))
             } else {
@@ -308,8 +294,8 @@ fn get_logo_name_and_custom(val: &str) -> (Box<str>, UILogo) {
             }
         }
         Err(e) if e.is_file_not_found() => (
-            val.to_lowercase().replace('_', " ").into_boxed_str(), 
-            UILogo::Preset
+            val.to_lowercase().replace('_', " ").into_boxed_str(),
+            UILogo::Preset,
         ),
         Err(e) => {
             warning!("Failed to use logo from fs: {e}");
@@ -452,23 +438,29 @@ fn print_alloc_report() {
 
     println!(
         "|\x1b[{};1m{}\x1b[{};1m{}\x1b[{};1m{}\x1b[0m|",
-        color::FG_YELLOW,        "=".repeat(alloc_len),
-        color::FG_CYAN,          "=".repeat(dealloc_len),
-        color::FG_LIGHT_MAGENTA, "=".repeat(realloc_len),
+        color::FG_YELLOW,
+        "=".repeat(alloc_len),
+        color::FG_CYAN,
+        "=".repeat(dealloc_len),
+        color::FG_LIGHT_MAGENTA,
+        "=".repeat(realloc_len),
     );
 
     println!(
         "\x1b[{}mAlloc: {}   \x1b[{}mDealloc: {}   \x1b[{}mRealloc: {}\x1b[0m\n",
-        color::FG_YELLOW,        rep.alloc,
-        color::FG_CYAN,          rep.dealloc,
-        color::FG_LIGHT_MAGENTA, rep.realloc,
+        color::FG_YELLOW,
+        rep.alloc,
+        color::FG_CYAN,
+        rep.dealloc,
+        color::FG_LIGHT_MAGENTA,
+        rep.realloc,
     );
 
     println!("Total Bytes:");
     println!(
-        "Allocated: {}   Deallocated: {}   Max In RT: {}", 
-        MemorySize::from_bytes(rep.alloc_total), 
-        MemorySize::from_bytes(rep.dealloc_total), 
+        "Allocated: {}   Deallocated: {}   Max In RT: {}",
+        MemorySize::from_bytes(rep.alloc_total),
+        MemorySize::from_bytes(rep.dealloc_total),
         MemorySize::from_bytes(rep.max_in_runtime)
     );
 }
@@ -624,23 +616,27 @@ fn lazyfetch_main() -> i32 {
     Config::get_or_init(config);
 
     // Logo init
-    let name_raw = args.iter()
+    let name_raw = args
+        .iter()
         .position(|a| a == "--logo" || a == "-l")
         .and_then(|pos| args.get(pos + 1).cloned())
         .or_else(|| Config::get().get_logo_name());
 
-    let (logo_name, custom) =
-        name_raw.map_or_else(|| {
+    let (logo_name, custom) = name_raw.map_or_else(
+        || {
             let id = crate::detect::os::get_id().as_boxed_str();
             (id, UILogo::Preset)
-        }, |name| if name == "null" {
+        },
+        |name| {
+            if name == "null" {
                 let id = crate::detect::os::get_id().as_boxed_str();
                 (id, UILogo::None)
             } else {
                 get_logo_name_and_custom(&name)
             }
-        );
-    
+        },
+    );
+
     // Print logo and info
     match custom {
         UILogo::None => print_none(),
@@ -659,7 +655,7 @@ fn lazyfetch_main() -> i32 {
     let _ = env::close_terminal_handle();
     NvidiaLib::drop_nvidia();
     cached::flush_to_file();
-    
+
     if args.iter().any(|a| a == "--wait" || a == "-w") {
         loop {
             // SAFETY: Just a nop

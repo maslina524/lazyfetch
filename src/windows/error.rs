@@ -1,14 +1,14 @@
 use core::fmt::Display;
 
 use crate::{
+    abort,
+    windows::encoding::{Utf16Len, utf16le_to_utf8},
     windows::link::{FormatMessageW, GetLastError},
-    windows::encoding::{utf16le_to_utf8, Utf16Len},
-    abort
 };
 
 pub type Result<T> = core::result::Result<T, ErrorCode>;
 
-const FORMAT_MESSAGE_FROM_SYSTEM   : u32 = 0x1000;
+const FORMAT_MESSAGE_FROM_SYSTEM: u32 = 0x1000;
 const FORMAT_MESSAGE_IGNORE_INSERTS: u32 = 0x0200;
 
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ impl ErrorCode {
     pub const fn new(code: u32) -> Self {
         Self(code)
     }
-    
+
     pub fn last() -> Self {
         // SAFETY: Completely safe
         let code = unsafe { GetLastError() };
@@ -52,13 +52,13 @@ impl Display for ErrorCode {
         // SAFETY: The buffer size is sufficient to hold any error.
         let len = unsafe {
             FormatMessageW(
-                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
-                core::ptr::null(), 
-                self.0, 
-                0, 
-                buf.as_mut_ptr(), 
-                256, 
-                core::ptr::null()
+                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                core::ptr::null(),
+                self.0,
+                0,
+                buf.as_mut_ptr(),
+                256,
+                core::ptr::null(),
             )
         };
 

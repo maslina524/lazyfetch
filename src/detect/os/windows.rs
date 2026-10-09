@@ -4,7 +4,9 @@ use alloc::{
 };
 
 use crate::{
-    detect::os::{OsInfo, get_id}, imp::{env, regedit::RegValue}, str::SmolStr,
+    detect::os::{OsInfo, get_id},
+    imp::{env, regedit::RegValue},
+    str::SmolStr,
 };
 
 const SYSNAME: &str = "WIN32_NT";

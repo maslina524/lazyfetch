@@ -1,8 +1,4 @@
-
-use crate::{
-    detect::wallpaper::WallpaperInfo, 
-    unix::path::Path
-};
+use crate::{detect::wallpaper::WallpaperInfo, unix::path::Path};
 
 impl WallpaperInfo {
     pub fn new() -> Self {

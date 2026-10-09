@@ -1,13 +1,10 @@
 use core::str::FromStr;
 
-use alloc::{
-    string::String,
-    vec::Vec,
-};
+use alloc::{string::String, vec::Vec};
 
 use crate::{
+    format,
     json::lexer::{Token, TokenStream},
-    format
 };
 
 #[derive(Debug, Clone)]
@@ -17,42 +14,42 @@ pub enum Value {
     Bool(bool),
     Array(Vec<Self>),
     Dict(Map),
-    Null
+    Null,
 }
 
 impl Value {
     pub const fn as_string(&self) -> Option<&String> {
         match self {
             Self::String(s) => Some(s),
-            _ => None
+            _ => None,
         }
     }
 
     pub const fn as_number(&self) -> Option<f64> {
         match self {
             Self::Number(s) => Some(*s),
-            _ => None
+            _ => None,
         }
     }
 
     pub const fn as_bool(&self) -> Option<bool> {
         match self {
             Self::Bool(s) => Some(*s),
-            _ => None
+            _ => None,
         }
     }
 
     pub const fn as_array(&self) -> Option<&Vec<Self>> {
         match self {
             Self::Array(s) => Some(s),
-            _ => None
+            _ => None,
         }
     }
 
     pub const fn as_object(&self) -> Option<&Map> {
         match self {
             Self::Dict(s) => Some(s),
-            _ => None
+            _ => None,
         }
     }
 
@@ -85,8 +82,8 @@ impl Value {
 pub struct Map(Vec<(String, Value)>);
 
 impl Map {
-    pub const fn new() -> Self { 
-        Self(Vec::new()) 
+    pub const fn new() -> Self {
+        Self(Vec::new())
     }
 
     pub fn insert(&mut self, key: String, value: Value) {
@@ -150,12 +147,8 @@ impl Parser {
 
     pub fn parse_value(&mut self) -> Result<Value, String> {
         match self.peek() {
-            Some(Token::LCurly) => {
-                Ok(Value::Dict(self.parse_object()?))
-            }
-            Some(Token::LBrace) => {
-                Ok(Value::Array(self.parse_array()?))
-            }
+            Some(Token::LCurly) => Ok(Value::Dict(self.parse_object()?)),
+            Some(Token::LBrace) => Ok(Value::Array(self.parse_array()?)),
             Some(Token::String(s)) => {
                 // The lexer already strips the surrounding quotes and
                 // resolves escape sequences (including \uXXXX), so the
@@ -167,8 +160,7 @@ impl Parser {
             Some(Token::Number(s)) => {
                 let s = s.clone();
                 self.next();
-                let num = f64::from_str(&s)
-                    .map_err(|_| "Invalid number format")?;
+                let num = f64::from_str(&s).map_err(|_| "Invalid number format")?;
                 Ok(Value::Number(num))
             }
             Some(Token::True) => {
@@ -198,8 +190,8 @@ impl Parser {
 
         loop {
             let key_token = self.next().ok_or("Expected object key")?;
-            let Token::String(key) = key_token else { 
-                return Err("Object key must be a string".into()) 
+            let Token::String(key) = key_token else {
+                return Err("Object key must be a string".into());
             };
 
             self.consume(&Token::Colon)?;
@@ -265,7 +257,7 @@ impl core::fmt::Display for Map {
 
         fn proc_map(f: &mut core::fmt::Formatter<'_>, map: &Map) -> core::fmt::Result {
             f.write_char('{')?;
-            
+
             for (i, (k, v)) in map.0.iter().enumerate() {
                 write!(f, "\"{k}\": ")?;
 
@@ -275,7 +267,7 @@ impl core::fmt::Display for Map {
                     Value::String(s) => proc_string(f, s)?,
                     Value::Bool(b) => proc_bool(f, *b)?,
                     Value::Dict(m) => proc_map(f, m)?,
-                    Value::Array(a) => proc_array(f, a)?
+                    Value::Array(a) => proc_array(f, a)?,
                 }
 
                 if i != map.0.len() - 1 {
@@ -289,7 +281,7 @@ impl core::fmt::Display for Map {
 
         fn proc_array(f: &mut core::fmt::Formatter<'_>, array: &[Value]) -> core::fmt::Result {
             f.write_char('[')?;
-            
+
             for (i, v) in array.iter().enumerate() {
                 match v {
                     Value::Null => write!(f, "null")?,
@@ -297,7 +289,7 @@ impl core::fmt::Display for Map {
                     Value::String(s) => proc_string(f, s)?,
                     Value::Bool(b) => proc_bool(f, *b)?,
                     Value::Dict(m) => proc_map(f, m)?,
-                    Value::Array(a) => proc_array(f, a)?
+                    Value::Array(a) => proc_array(f, a)?,
                 }
 
                 if i != array.len() - 1 {

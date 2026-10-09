@@ -1,25 +1,24 @@
 use core::{
     alloc::{GlobalAlloc, Layout},
     sync::atomic::{
-        AtomicUsize, 
-        AtomicU64,
-        Ordering::{Relaxed, Release}
-    }
+        AtomicU64, AtomicUsize,
+        Ordering::{Relaxed, Release},
+    },
 };
 
 use crate::imp::allocator::AllocatorInner;
 
-const HEAP_ZERO_MEMORY  : u32 = 0x08;
+const HEAP_ZERO_MEMORY: u32 = 0x08;
 
-static ALLOC_COUNTER    : AtomicUsize = AtomicUsize::new(0);
-static REALLOC_COUNTER  : AtomicUsize = AtomicUsize::new(0);
-static DEALLOC_COUNTER  : AtomicUsize = AtomicUsize::new(0);
+static ALLOC_COUNTER: AtomicUsize = AtomicUsize::new(0);
+static REALLOC_COUNTER: AtomicUsize = AtomicUsize::new(0);
+static DEALLOC_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
-static ALLOCATED_TOTAL  : AtomicU64   = AtomicU64::new(0);
-static DEALLOCATED_TOTAL: AtomicU64   = AtomicU64::new(0);
+static ALLOCATED_TOTAL: AtomicU64 = AtomicU64::new(0);
+static DEALLOCATED_TOTAL: AtomicU64 = AtomicU64::new(0);
 
-static CURRENT_ALLOCATED: AtomicU64   = AtomicU64::new(0);
-static MAX_IN_RUNTIME   : AtomicU64   = AtomicU64::new(0);
+static CURRENT_ALLOCATED: AtomicU64 = AtomicU64::new(0);
+static MAX_IN_RUNTIME: AtomicU64 = AtomicU64::new(0);
 
 fn allocated(size: usize) {
     ALLOCATED_TOTAL.fetch_add(size as u64, Relaxed);
@@ -41,9 +40,7 @@ pub struct Allocator;
 unsafe impl GlobalAlloc for Allocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         // SAFETY: Call in unsafe fn; see the comment in `AllocatorInner`
-        let ptr = unsafe { 
-            AllocatorInner::alloc(&AllocatorInner, layout) 
-        };
+        let ptr = unsafe { AllocatorInner::alloc(&AllocatorInner, layout) };
 
         ALLOC_COUNTER.fetch_add(1, Relaxed);
         allocated(layout.size());
@@ -52,7 +49,7 @@ unsafe impl GlobalAlloc for Allocator {
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         // SAFETY: Call in unsafe fn; see the comment in `AllocatorInner`
-        unsafe { 
+        unsafe {
             AllocatorInner::dealloc(&AllocatorInner, ptr, layout);
         }
 
@@ -62,9 +59,7 @@ unsafe impl GlobalAlloc for Allocator {
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
         // SAFETY: Call in unsafe fn; see the comment in `AllocatorInner`
-        let ptr = unsafe { 
-            AllocatorInner::alloc_zeroed(&AllocatorInner, layout) 
-        };
+        let ptr = unsafe { AllocatorInner::alloc_zeroed(&AllocatorInner, layout) };
 
         ALLOC_COUNTER.fetch_add(1, Relaxed);
         allocated(layout.size());
@@ -73,9 +68,7 @@ unsafe impl GlobalAlloc for Allocator {
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
         // SAFETY: Call in unsafe fn; see the comment in `AllocatorInner`
-        let new_ptr = unsafe { 
-            AllocatorInner::realloc(&AllocatorInner, ptr, layout, new_size) 
-        };
+        let new_ptr = unsafe { AllocatorInner::realloc(&AllocatorInner, ptr, layout, new_size) };
 
         REALLOC_COUNTER.fetch_add(1, Relaxed);
 
@@ -96,7 +89,7 @@ pub struct AllocationReport {
     pub dealloc: usize,
     pub alloc_total: u64,
     pub dealloc_total: u64,
-    pub max_in_runtime: u64
+    pub max_in_runtime: u64,
 }
 
 impl AllocationReport {
@@ -110,6 +103,13 @@ impl AllocationReport {
 
         let max_in_runtime = MAX_IN_RUNTIME.load(Relaxed);
 
-        Self { alloc, realloc, dealloc, alloc_total, dealloc_total, max_in_runtime }
+        Self {
+            alloc,
+            realloc,
+            dealloc,
+            alloc_total,
+            dealloc_total,
+            max_in_runtime,
+        }
     }
 }

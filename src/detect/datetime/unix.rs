@@ -1,17 +1,11 @@
-use core::{
-    ptr,
-    ffi::CStr
-};
+use core::{ffi::CStr, ptr};
 
-use alloc::{
-    borrow::ToOwned,
-    string::String
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
-    detect::datetime::{DatetimeInfo, AmPm},
-    unix::libc::{time, localtime},
-    format
+    detect::datetime::{AmPm, DatetimeInfo},
+    format,
+    unix::libc::{localtime, time},
 };
 
 impl DatetimeInfo {
@@ -48,14 +42,26 @@ impl DatetimeInfo {
             let tz_c_str = unsafe { CStr::from_ptr(info.tm_zone) };
             tz_c_str.to_string_lossy().into_owned()
         };
-        
+
         let am_pm = AmPm::from_hour(hour as u8);
 
         Self {
-            year, month, month_name, month_name_short,
-            hour, minute, second, week,
-            weekday, weekday_short, day_in_year, day_in_month,
-            day_in_week, offset_utc, timezone_name, am_pm
+            year,
+            month,
+            month_name,
+            month_name_short,
+            hour,
+            minute,
+            second,
+            week,
+            weekday,
+            weekday_short,
+            day_in_year,
+            day_in_month,
+            day_in_week,
+            offset_utc,
+            timezone_name,
+            am_pm,
         }
     }
 
@@ -70,20 +76,21 @@ impl DatetimeInfo {
 
     fn month_name(num: u16) -> String {
         match num {
-            0  => "January",
-            1  => "February",
-            2  => "March",
-            3  => "April",
-            4  => "May",
-            5  => "June",
-            6  => "July",
-            7  => "August",
-            8  => "September",
-            9  => "October",
+            0 => "January",
+            1 => "February",
+            2 => "March",
+            3 => "April",
+            4 => "May",
+            5 => "June",
+            6 => "July",
+            7 => "August",
+            8 => "September",
+            9 => "October",
             10 => "November",
             11 => "December",
-            _ => unreachable!()
-        }.to_owned()
+            _ => unreachable!(),
+        }
+        .to_owned()
     }
 
     fn day_of_week(num: u16) -> String {
@@ -95,7 +102,8 @@ impl DatetimeInfo {
             5 => "Friday",
             6 => "Saturday",
             7 => "Sunday",
-            _ => unreachable!()
-        }.to_owned()
+            _ => unreachable!(),
+        }
+        .to_owned()
     }
 }

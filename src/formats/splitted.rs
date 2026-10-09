@@ -1,9 +1,6 @@
 use core::ops::Range;
 
-use alloc::{
-    string::String,
-    vec::Vec
-};
+use alloc::{string::String, vec::Vec};
 
 #[derive(Clone)]
 pub struct SplittedAnsiIter {
@@ -43,14 +40,18 @@ impl SplittedAnsiIter {
                 for c in it.by_ref() {
                     current_ansi.push(c);
                     buf.push(c);
-                    if c == 'm' { break; }
+                    if c == 'm' {
+                        break;
+                    }
                 }
                 ansi_is_default = current_ansi == "\x1b[0m";
                 continue;
             }
 
             if ch == '\n' {
-                if !ansi_is_default { buf.push_str("\x1b[0m"); }
+                if !ansi_is_default {
+                    buf.push_str("\x1b[0m");
+                }
 
                 if build_len > 0 {
                     ranges.push(chunk_start..buf.len());
@@ -60,7 +61,9 @@ impl SplittedAnsiIter {
                 build_len = 0;
                 chunk_start = buf.len();
 
-                if !ansi_is_default { buf.push_str(&current_ansi); }
+                if !ansi_is_default {
+                    buf.push_str(&current_ansi);
+                }
                 continue;
             }
 
@@ -68,13 +71,17 @@ impl SplittedAnsiIter {
             build_len += 1;
 
             if build_len >= len {
-                if !ansi_is_default { buf.push_str("\x1b[0m"); }
+                if !ansi_is_default {
+                    buf.push_str("\x1b[0m");
+                }
 
                 ranges.push(chunk_start..buf.len());
                 build_len = 0;
                 chunk_start = buf.len();
 
-                if !ansi_is_default { buf.push_str(&current_ansi); }
+                if !ansi_is_default {
+                    buf.push_str(&current_ansi);
+                }
             }
         }
 

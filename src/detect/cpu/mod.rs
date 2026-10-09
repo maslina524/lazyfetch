@@ -1,19 +1,11 @@
 #[cfg(target_arch = "x86_64")]
-use core::arch::x86_64::{
-    __cpuid, 
-    __cpuid_count, 
-    _xgetbv
-};
+use core::arch::x86_64::{__cpuid, __cpuid_count, _xgetbv};
 
 use alloc::string::String;
 
 use crate::{
     cfg_if,
-    formats::{
-        Temperature,
-        Frequency,
-        MicroArch
-    }
+    formats::{Frequency, MicroArch, Temperature},
 };
 
 cfg_if! {
@@ -32,7 +24,7 @@ cfg_if! {
 #[cfg(target_arch = "x86_64")]
 fn vendor() -> String {
     use alloc::vec;
-    
+
     let ret = __cpuid(0);
     let (_, ebx, ecx, edx) = (ret.eax, ret.ebx, ret.ecx, ret.edx);
     let vendor = vec![
@@ -49,7 +41,7 @@ fn vendor() -> String {
         ((ecx >> 16) & 0xFF) as u8,
         ((ecx >> 24) & 0xFF) as u8,
     ];
-    
+
     String::from_utf8(vendor).unwrap()
 }
 #[cfg(not(target_arch = "x86_64"))]
@@ -62,7 +54,7 @@ fn get_family_and_model() -> (u32, u32) {
     let eax = info.eax;
     let base_family = (eax >> 8) & 0xF;
     let extended_family = (eax >> 20) & 0xFF;
-    let base_model  = (eax >> 4) & 0xF;
+    let base_model = (eax >> 4) & 0xF;
     let extended_model = (eax >> 16) & 0xF;
     let family = if base_family == 0xF {
         base_family + extended_family
@@ -84,11 +76,11 @@ fn code_name(vendor: &str, family: u32, model: u32) -> &'static str {
     if cfg!(not(any(target_arch = "x86_64", target_arch = "x86"))) {
         return "";
     }
-    
+
     match vendor {
         "GenuineIntel" => code_name_intel(family, model),
         "AuthenticAMD" => code_name_amd(family, model),
-        _ => ""
+        _ => "",
     }
 }
 const fn code_name_intel(family: u32, model: u32) -> &'static str {
@@ -108,7 +100,7 @@ const fn code_name_intel(family: u32, model: u32) -> &'static str {
         0xB7 | 0xBA | 0xBF => "Raptor Lake",
         0xCF | 0xAA => "Meteor Lake",
         0xBD | 0xAF => "Arrow Lake",
-        _ => ""
+        _ => "",
     }
 }
 
@@ -150,7 +142,7 @@ fn technology() -> &'static str {
         0x8E | 0x9E | 0xA7 => "Intel 14nm (Rocket Lake / Coffee Lake)",
         0x4E | 0x5E => "Intel 14nm (Skylake)",
         0x3C | 0x3D => "Intel 22nm (Haswell)",
-        _ => ""
+        _ => "",
     }
 }
 #[cfg(not(target_arch = "x86_64"))]
@@ -159,32 +151,76 @@ fn technology() -> &'static str {
 }
 #[cfg(target_arch = "x86_64")]
 fn level_x86_64() -> u8 {
-    if !cpuid_has_feature(1, 0, 2, 0) { return 1 }
-    if !cpuid_has_feature(1, 0, 2, 19) { return 1 }
-    if !cpuid_has_feature(1, 0, 2, 20) { return 1 }
-    if !cpuid_has_feature(1, 0, 2, 23) { return 1 }
-    if !cpuid_has_feature(0x8000_0001, 0, 2, 0) { return 1 }
-    if !cpuid_has_feature(1, 0, 2, 13) { return 1 }
-    if !os_supports_ymm() { return 2 }
-    if !cpuid_has_feature(1, 0, 2, 28) { return 2 }
-    if !cpuid_has_feature(1, 0, 2, 27) { return 2 }
-    
+    if !cpuid_has_feature(1, 0, 2, 0) {
+        return 1;
+    }
+    if !cpuid_has_feature(1, 0, 2, 19) {
+        return 1;
+    }
+    if !cpuid_has_feature(1, 0, 2, 20) {
+        return 1;
+    }
+    if !cpuid_has_feature(1, 0, 2, 23) {
+        return 1;
+    }
+    if !cpuid_has_feature(0x8000_0001, 0, 2, 0) {
+        return 1;
+    }
+    if !cpuid_has_feature(1, 0, 2, 13) {
+        return 1;
+    }
+    if !os_supports_ymm() {
+        return 2;
+    }
+    if !cpuid_has_feature(1, 0, 2, 28) {
+        return 2;
+    }
+    if !cpuid_has_feature(1, 0, 2, 27) {
+        return 2;
+    }
+
     let ret = __cpuid(7);
     let ebx = ret.ebx;
-    if ebx & (1 << 5) == 0 { return 2 }
-    if ebx & (1 << 3) == 0 { return 2 }
-    if ebx & (1 << 8) == 0 { return 2 }
-    if !cpuid_has_feature(1, 0, 2, 29) { return 2 }
-    if !cpuid_has_feature(1, 0, 2, 12) { return 2 }
-    
-    if !cpuid_has_feature(1, 0, 2, 22) { return 2 }
-    if !cpuid_has_feature(0x8000_0001, 0, 2, 5) { return 2 }
-    if !os_supports_zmm() { return 3 }
-    if ebx & (1 << 16) == 0 { return 3 }
-    if ebx & (1 << 30) == 0 { return 3 }
-    if ebx & (1 << 28) == 0 { return 3 }
-    if ebx & (1 << 17) == 0 { return 3 }
-    if ebx & (1 << 31) == 0 { return 3 }
+    if ebx & (1 << 5) == 0 {
+        return 2;
+    }
+    if ebx & (1 << 3) == 0 {
+        return 2;
+    }
+    if ebx & (1 << 8) == 0 {
+        return 2;
+    }
+    if !cpuid_has_feature(1, 0, 2, 29) {
+        return 2;
+    }
+    if !cpuid_has_feature(1, 0, 2, 12) {
+        return 2;
+    }
+
+    if !cpuid_has_feature(1, 0, 2, 22) {
+        return 2;
+    }
+    if !cpuid_has_feature(0x8000_0001, 0, 2, 5) {
+        return 2;
+    }
+    if !os_supports_zmm() {
+        return 3;
+    }
+    if ebx & (1 << 16) == 0 {
+        return 3;
+    }
+    if ebx & (1 << 30) == 0 {
+        return 3;
+    }
+    if ebx & (1 << 28) == 0 {
+        return 3;
+    }
+    if ebx & (1 << 17) == 0 {
+        return 3;
+    }
+    if ebx & (1 << 31) == 0 {
+        return 3;
+    }
     4
 }
 #[cfg(not(target_arch = "x86_64"))]

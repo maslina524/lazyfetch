@@ -3,12 +3,22 @@ use core::ptr;
 use alloc::{string::String, vec::Vec};
 
 use crate::{
-    format, formats::{MemorySize, Percent, Time}, modules::Disk, warning, windows::{error::ErrorCode, link::{GetDiskFreeSpaceExA, GetDriveTypeA, GetFileAttributesA, GetLogicalDrives, GetVolumeInformationA}},
+    format,
+    formats::{MemorySize, Percent, Time},
+    modules::Disk,
+    warning,
+    windows::{
+        error::ErrorCode,
+        link::{
+            GetDiskFreeSpaceExA, GetDriveTypeA, GetFileAttributesA, GetLogicalDrives,
+            GetVolumeInformationA,
+        },
+    },
 };
 
 const INVALID_FILE_ATTRIBUTES: u32 = 0xFF_FF_FF_FF;
-const FILE_ATTRIBUTE_HIDDEN  : u32 = 0x02;
-const DRIVE_REMOVABLE        : u32 = 1;
+const FILE_ATTRIBUTE_HIDDEN: u32 = 0x02;
+const DRIVE_REMOVABLE: u32 = 1;
 
 pub fn get_disks_windows() -> Vec<Disk> {
     let mut ret = Vec::new();
@@ -34,25 +44,29 @@ fn process_disk(letter: char) -> Disk {
     // SAFETY: Completely safe
     let ret = unsafe {
         GetDiskFreeSpaceExA(
-            mp_cstr.as_ptr(), 
-            &raw mut avaible, 
-            &raw mut total, 
-            &raw mut free
+            mp_cstr.as_ptr(),
+            &raw mut avaible,
+            &raw mut total,
+            &raw mut free,
         )
     };
     if ret == 0 {
         warning!("Failed to get {mountpoint} size");
     }
     let used = total - free;
-    #[allow(clippy::cast_precision_loss, reason = "Mantissa is 52 bits, 2^52 = 4 petabytes")]
+    #[allow(
+        clippy::cast_precision_loss,
+        reason = "Mantissa is 52 bits, 2^52 = 4 petabytes"
+    )]
     let percent = (used as f64 / total as f64).clamp(0.0, 1.0);
 
     // SAFETY: Completely safe
-    let attr = unsafe { 
-        GetFileAttributesA(mp_cstr.as_ptr()) 
-    };
+    let attr = unsafe { GetFileAttributesA(mp_cstr.as_ptr()) };
     let is_hidden = if attr == INVALID_FILE_ATTRIBUTES {
-        warning!("Failed to determine whether {mountpoint} is hidden or not: {}", ErrorCode::last());
+        warning!(
+            "Failed to determine whether {mountpoint} is hidden or not: {}",
+            ErrorCode::last()
+        );
         false
     } else {
         attr & FILE_ATTRIBUTE_HIDDEN != 0
@@ -66,22 +80,31 @@ fn process_disk(letter: char) -> Disk {
     // SAFETY: Completely safe
     let ret = unsafe {
         GetVolumeInformationA(
-            mp_cstr.as_ptr(), 
-            name_buf.as_mut_ptr(), 
-            256, 
-            ptr::null_mut(), 
-            ptr::null_mut(), 
-            ptr::null_mut(), 
-            fs_buf.as_mut_ptr(), 
-            64
+            mp_cstr.as_ptr(),
+            name_buf.as_mut_ptr(),
+            256,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            ptr::null_mut(),
+            fs_buf.as_mut_ptr(),
+            64,
         )
     };
     if ret == 0 {
-        warning!("Failed to get label & fs name of {mountpoint}: {}", ErrorCode::last());
+        warning!(
+            "Failed to get label & fs name of {mountpoint}: {}",
+            ErrorCode::last()
+        );
     }
-    let name_len = name_buf.iter().position(|&c| c == 0 || c == 10).unwrap_or(name_buf.len());
+    let name_len = name_buf
+        .iter()
+        .position(|&c| c == 0 || c == 10)
+        .unwrap_or(name_buf.len());
     let name = String::from_utf8_lossy(&name_buf[..name_len]).into_owned();
-    let fs_len = fs_buf.iter().position(|&c| c == 0 || c == 10).unwrap_or(fs_buf.len());
+    let fs_len = fs_buf
+        .iter()
+        .position(|&c| c == 0 || c == 10)
+        .unwrap_or(fs_buf.len());
     let filesystem = String::from_utf8_lossy(&fs_buf[..fs_len]).into_owned();
 
     Disk {

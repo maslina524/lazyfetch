@@ -1,13 +1,13 @@
 #![doc = include_str!("README.md")]
 
 pub mod allocator;
-pub mod link;
-pub mod io;
-pub mod encoding;
-pub mod error;
-pub mod env;
-pub mod http;
-pub mod path;
-pub mod fs;
-pub mod regedit;
 pub mod device;
+pub mod encoding;
+pub mod env;
+pub mod error;
+pub mod fs;
+pub mod http;
+pub mod io;
+pub mod link;
+pub mod path;
+pub mod regedit;

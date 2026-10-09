@@ -1,11 +1,6 @@
 use doc::Docs;
 
-use crate::{
-    impl_display_for_module, 
-    impl_module, 
-    modules::Module, 
-    sync::OnceLock
-};
+use crate::{impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
 
 static COMMIT: OnceLock<Commit> = OnceLock::new();
 
@@ -32,7 +27,7 @@ pub struct Commit {
     #[doc = "Number of deleted lines"]
     pub deleted: usize,
     #[doc = "Total number of changed lines"]
-    pub total: usize
+    pub total: usize,
 }
 
 impl Module for Commit {
@@ -47,15 +42,15 @@ impl Module for Commit {
             message: env!("COMMIT_MESSAGE"),
             files: env!("COMMIT_FILES").parse::<usize>().expect("Unreachable"),
             added: env!("COMMIT_ADDED").parse::<usize>().expect("Unreachable"),
-            deleted: env!("COMMIT_DELETED").parse::<usize>().expect("Unreachable"),
-            total: env!("COMMIT_TOTAL").parse::<usize>().expect("Unreachable")
+            deleted: env!("COMMIT_DELETED")
+                .parse::<usize>()
+                .expect("Unreachable"),
+            total: env!("COMMIT_TOTAL").parse::<usize>().expect("Unreachable"),
         }
     }
 
     fn get() -> &'static Self {
-        COMMIT.get_or_init(|| {
-            Self::new()
-        })
+        COMMIT.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -71,9 +66,7 @@ impl Module for Commit {
     }
 
     impl_module!(
-        author, email, date, date_small,
-        sha, sha_short, message, files, added,
-        deleted, total
+        author, email, date, date_small, sha, sha_short, message, files, added, deleted, total
     );
 }
 

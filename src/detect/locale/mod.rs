@@ -13,5 +13,5 @@ cfg_if! {
 }
 
 pub struct LocaleInfo {
-    pub locale: String
+    pub locale: String,
 }

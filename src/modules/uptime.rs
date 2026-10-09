@@ -1,36 +1,33 @@
 use doc::Docs;
 
 use crate::{
-    impl_module,
-    impl_display_for_module,
-    modules::Module,
+    detect::uptime::UptimeInfo, impl_display_for_module, impl_module, modules::Module,
     sync::OnceLock,
-    detect::uptime::UptimeInfo
 };
 
 static UPTIME: OnceLock<Uptime> = OnceLock::new();
 
 #[derive(Debug, Docs)]
 pub struct Uptime {
-    #[doc ="Days after boot"]
+    #[doc = "Days after boot"]
     pub days: u32,
-    #[doc ="Hours after boot"]
+    #[doc = "Hours after boot"]
     pub hours: u8,
-    #[doc ="Minutes after boot"]
+    #[doc = "Minutes after boot"]
     pub minutes: u8,
-    #[doc ="Seconds after boot"]
+    #[doc = "Seconds after boot"]
     pub seconds: u8,
-    #[doc ="Milliseconds after boot"]
+    #[doc = "Milliseconds after boot"]
     pub milliseconds: u16,
-    #[doc ="Boot time in local timezone"]
+    #[doc = "Boot time in local timezone"]
     pub boot_time: &'static str,
-    #[doc ="Years integer after boot"]
+    #[doc = "Years integer after boot"]
     pub years: u16,
-    #[doc ="Days of year after boot"]
+    #[doc = "Days of year after boot"]
     pub days_of_year: u32,
-    #[doc ="Years fraction after boot"]
+    #[doc = "Years fraction after boot"]
     pub years_fraction: f32,
-    #[doc ="Formatted uptime"]
+    #[doc = "Formatted uptime"]
     pub formatted: &'static str,
 }
 
@@ -52,9 +49,7 @@ impl Module for Uptime {
     }
 
     fn get() -> &'static Self {
-        UPTIME.get_or_init(|| {
-            Self::new()
-        })
+        UPTIME.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -70,9 +65,16 @@ impl Module for Uptime {
     }
 
     impl_module!(
-        days, hours, minutes, seconds, 
-        milliseconds, boot_time, years, days_of_year, 
-        years_fraction, formatted
+        days,
+        hours,
+        minutes,
+        seconds,
+        milliseconds,
+        boot_time,
+        years,
+        days_of_year,
+        years_fraction,
+        formatted
     );
 }
 

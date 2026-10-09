@@ -1,11 +1,8 @@
-use core::{
-    fmt::Display,
-    ffi::CStr
-};
+use core::{ffi::CStr, fmt::Display};
 
 use crate::{
+    abort,
     unix::libc::{errno, strerror},
-    abort
 };
 
 pub type Result<T> = core::result::Result<T, ErrorCode>;
@@ -17,7 +14,7 @@ impl ErrorCode {
     pub const fn new(code: i32) -> Self {
         Self(code)
     }
-    
+
     pub fn last() -> Self {
         let code = errno();
         Self::new(code)

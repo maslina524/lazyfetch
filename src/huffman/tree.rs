@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
-use alloc::vec::Vec;
 use alloc::vec;
+use alloc::vec::Vec;
 
 use crate::huffman::stream::Stream;
 
@@ -8,12 +8,16 @@ use crate::huffman::stream::Stream;
 pub struct HuffmanNode {
     left: Option<Box<Self>>,
     right: Option<Box<Self>>,
-    symb: Option<u32>
+    symb: Option<u32>,
 }
 
 impl HuffmanNode {
     pub const fn new() -> Self {
-        Self { left: None, right: None, symb: None }
+        Self {
+            left: None,
+            right: None,
+            symb: None,
+        }
     }
 }
 
@@ -24,13 +28,16 @@ pub struct HuffmanTree {
 
 impl HuffmanTree {
     pub const fn new() -> Self {
-        Self { root: HuffmanNode::new() }
+        Self {
+            root: HuffmanNode::new(),
+        }
     }
 
     pub fn from_alphabet_and_bl_list(alphabet: &[u32], bl_list: &[u8]) -> Self {
         assert_eq!(alphabet.len(), bl_list.len());
 
-        let mut pairs: Vec<(u8, u32)> = alphabet.iter()
+        let mut pairs: Vec<(u8, u32)> = alphabet
+            .iter()
             .zip(bl_list.iter())
             .filter(|&(_, &len)| len > 0)
             .map(|(&symb, &len)| (len, symb))

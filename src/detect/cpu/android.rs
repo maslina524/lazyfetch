@@ -1,23 +1,16 @@
 use core::ffi::CStr;
 
-use alloc::{
-    vec::Vec,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, vec::Vec};
 
 use crate::{
-    abort, 
-    modules::cpu::Cpu, 
-    detect::cpu, 
-    format, 
+    abort,
+    detect::cpu,
+    format,
     formats::Frequency,
+    modules::cpu::Cpu,
     parser::parse_range_notation,
-    unix::{
-        fs,
-        libc::__system_property_get,
-        path::Path
-    }, 
-    warning
+    unix::{fs, libc::__system_property_get, path::Path},
+    warning,
 };
 
 const PROP_VALUE_MAX: usize = 92;
@@ -55,7 +48,7 @@ fn max_freq_android() -> Frequency {
         Ok(c) => {
             let hz = c.trim().parse::<u64>().unwrap_or(0);
             Frequency::from_hz(hz)
-        },
+        }
         Err(e) => {
             warning!("Failed to read .../cpufreq/cpuinfo_max_freq: {e}");
             Frequency::default()
@@ -68,7 +61,7 @@ fn base_freq_android() -> Frequency {
         Ok(c) => {
             let hz = c.trim().parse::<u64>().unwrap_or(0);
             Frequency::from_hz(hz)
-        },
+        }
         Err(e) => {
             warning!("Failed to read .../cpufreq/scaling_cur_freq: {e}");
             Frequency::default()
@@ -78,14 +71,14 @@ fn base_freq_android() -> Frequency {
 
 fn tech_to_name(tech: &[u8]) -> &'static str {
     match tech {
-        b"SM6225" =>    "Snapdragon 680 4G",
+        b"SM6225" => "Snapdragon 680 4G",
         b"SM6225-AD" => "Snapdragon 685",
-        b"SM6115" =>    "Snapdragon 662/665/460",
-        b"SM4250" =>    "Snapdragon 460",
-        b"SM6375" =>    "Snapdragon 695 5G",
-        b"SM8450" =>    "Snapdragon 8 Gen 1",
-        b"SM8550" =>    "Snapdragon 8 Gen 2",
-        _ => "Unknown"
+        b"SM6115" => "Snapdragon 662/665/460",
+        b"SM4250" => "Snapdragon 460",
+        b"SM6375" => "Snapdragon 695 5G",
+        b"SM8450" => "Snapdragon 8 Gen 1",
+        b"SM8550" => "Snapdragon 8 Gen 2",
+        _ => "Unknown",
     }
 }
 
@@ -123,9 +116,9 @@ fn logical_cores_count() -> usize {
 }
 
 fn online_cores_count(logical_cores: usize) -> usize {
-    let content = match  fs::read_to_string("/sys/devices/system/cpu/online") {
+    let content = match fs::read_to_string("/sys/devices/system/cpu/online") {
         Ok(c) => c,
-        Err(e) => abort!("Failed to read /sys/devices/system/cpu/online: {e}")
+        Err(e) => abort!("Failed to read /sys/devices/system/cpu/online: {e}"),
     };
 
     let cores = parse_range_notation(&content, Some(logical_cores));
@@ -136,7 +129,9 @@ fn package_count() -> usize {
     let mut ret = Vec::with_capacity(24);
     let mut n = 0;
     loop {
-        let path = Path::from(format!("/sys/devices/system/cpu/cpu{n}/topology/physical_package_id"));
+        let path = Path::from(format!(
+            "/sys/devices/system/cpu/cpu{n}/topology/physical_package_id"
+        ));
         if !path.exists() {
             break;
         }

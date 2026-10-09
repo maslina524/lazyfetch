@@ -1,21 +1,16 @@
-use alloc::{
-    string::String,
-    collections::BTreeMap,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, collections::BTreeMap, string::String};
 use doc::Docs;
 
 use crate::{
-    format,
-    impl_display_for_module, 
+    format, impl_display_for_module,
+    json::Value,
     modules::{self, Module},
     sync::OnceLock,
-    json::Value
 };
 
-static COLORS        : OnceLock<Colors> = OnceLock::new();
-static RANGE_BLOCK   : &[usize]         = &[30, 90];
-static RANGE_NO_BLOCK: &[usize]         = &[30];
+static COLORS: OnceLock<Colors> = OnceLock::new();
+static RANGE_BLOCK: &[usize] = &[30, 90];
+static RANGE_NO_BLOCK: &[usize] = &[30];
 
 #[derive(Debug, Docs)]
 pub struct Colors;
@@ -26,9 +21,7 @@ impl Module for Colors {
     }
 
     fn get() -> &'static Self {
-        COLORS.get_or_init(|| {
-            Self::new()
-        })
+        COLORS.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -43,7 +36,12 @@ impl Module for Colors {
         "colors"
     }
 
-    fn format(&self, _key: super::FormatValue, _format: super::FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
+    fn format(
+        &self,
+        _key: super::FormatValue,
+        _format: super::FormatValue,
+        map: Option<&BTreeMap<String, Value>>,
+    ) -> Option<Cow<'_, str>> {
         let binding = BTreeMap::new();
         let map = map.unwrap_or(&binding);
 
@@ -63,7 +61,7 @@ impl Module for Colors {
         let symbol = match symbol_map {
             "block" => "███",
             "circle" => "● ",
-            _ => symbol_map
+            _ => symbol_map,
         };
 
         let ranges = if symbol_map == "block" {
@@ -73,7 +71,7 @@ impl Module for Colors {
         };
 
         let mut ret = String::with_capacity(8 * (symbol.len() + 5) * ranges.len());
-        
+
         for r in ranges {
             let r = *r;
             ret.push_str(&padding_left);
@@ -82,7 +80,7 @@ impl Module for Colors {
             }
             ret.push_str("\x1b[0m\n");
         }
-        
+
         Some(modules::expand_env_in_module(ret))
     }
 

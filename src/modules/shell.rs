@@ -1,13 +1,8 @@
 use doc::Docs;
 
 use crate::{
-    detect::shell, 
-    impl_display_for_module, 
-    impl_module, 
-    modules::Module, 
-    str::SmolStr, 
-    sync::OnceLock, 
-    imp::path::Path
+    detect::shell, imp::path::Path, impl_display_for_module, impl_module, modules::Module,
+    str::SmolStr, sync::OnceLock,
 };
 
 static SHELL: OnceLock<Shell> = OnceLock::new();
@@ -30,9 +25,7 @@ impl Module for Shell {
     }
 
     fn get() -> &'static Self {
-        SHELL.get_or_init(|| {
-            Self::new()
-        })
+        SHELL.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -48,8 +41,14 @@ impl Module for Shell {
     }
 
     impl_module!(
-        process_name, exe, exe_name, version, 
-        pid, pretty_name, exe_path, tty
+        process_name,
+        exe,
+        exe_name,
+        version,
+        pid,
+        pretty_name,
+        exe_path,
+        tty
     );
 }
 

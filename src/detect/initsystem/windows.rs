@@ -1,13 +1,10 @@
-use alloc::{
-    borrow::ToOwned,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, borrow::ToOwned};
 
 use crate::{
-    detect::initsystem::InitSystemInfo, 
-    str::SmolStr, 
-    warning, 
-    windows::{env, path::Path}
+    detect::initsystem::InitSystemInfo,
+    str::SmolStr,
+    warning,
+    windows::{env, path::Path},
 };
 
 const NAME: &str = "smss";
@@ -23,10 +20,10 @@ impl InitSystemInfo {
             }
         };
 
-        Self { 
+        Self {
             exe: Path::from(path),
-            name: Cow::Borrowed(NAME), 
-            version
+            name: Cow::Borrowed(NAME),
+            version,
         }
     }
 }

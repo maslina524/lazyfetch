@@ -1,8 +1,4 @@
-use crate::{
-    detect::memory::MemoryInfo, 
-    formats::MemorySize, 
-    unix::libc::get_sysinfo
-};
+use crate::{detect::memory::MemoryInfo, formats::MemorySize, unix::libc::get_sysinfo};
 
 impl MemoryInfo {
     pub fn new() -> Self {
@@ -20,10 +16,7 @@ impl MemoryInfo {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        detect::memory::MemoryInfo,
-        formats::MemorySize
-    };
+    use crate::{detect::memory::MemoryInfo, formats::MemorySize};
 
     #[test]
     fn ram_test() {

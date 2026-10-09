@@ -1,12 +1,8 @@
 use doc::Docs;
 
 use crate::{
-    impl_display_for_module, 
-    impl_module, 
-    modules::Module, 
+    detect::locale, impl_display_for_module, impl_module, modules::Module, str::SmolStr,
     sync::OnceLock,
-    detect::locale,
-    str::SmolStr
 };
 
 static LOCALE: OnceLock<Locale> = OnceLock::new();
@@ -14,20 +10,18 @@ static LOCALE: OnceLock<Locale> = OnceLock::new();
 #[derive(Debug, Docs)]
 pub struct Locale {
     #[doc = "Locale code"]
-    pub result: SmolStr
+    pub result: SmolStr,
 }
 
 impl Module for Locale {
     fn new() -> Self {
         Self {
-            result: locale::get()
+            result: locale::get(),
         }
     }
 
     fn get() -> &'static Self {
-        LOCALE.get_or_init(|| {
-            Self::new()
-        })
+        LOCALE.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -44,6 +38,5 @@ impl Module for Locale {
 
     impl_module!(result);
 }
-
 
 impl_display_for_module!(Locale);

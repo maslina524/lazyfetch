@@ -1,11 +1,6 @@
 use doc::Docs;
 
-use crate::{
-    impl_module,
-    impl_display_for_module,
-    modules::Module,
-    sync::OnceLock
-};
+use crate::{impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
 
 static VERSION: OnceLock<Version> = OnceLock::new();
 
@@ -36,7 +31,7 @@ pub struct Version {
     #[doc = "Cargo version, like `cargo 1.97.1`"]
     pub package_manager: &'static str,
     #[doc = "Link to the release of this version of lazyfetch"]
-    pub release_link: &'static str
+    pub release_link: &'static str,
 }
 
 impl Module for Version {
@@ -47,25 +42,26 @@ impl Module for Version {
             "release"
         };
         Self {
-            project_name: env!("CARGO_BIN_NAME"), 
-            version: env!("CARGO_PKG_VERSION"), 
-            version_tweak: "", 
-            build_type, 
+            project_name: env!("CARGO_BIN_NAME"),
+            version: env!("CARGO_PKG_VERSION"),
+            version_tweak: "",
+            build_type,
             sysname: env!("TARGET_OS"),
-            arch: env!("TARGET_ARCH"), 
-            cmake_built_type: "", 
-            compile_time: env!("COMPILE_TIME"), 
-            compiler: env!("RUSTC_VERSION"), 
+            arch: env!("TARGET_ARCH"),
+            cmake_built_type: "",
+            compile_time: env!("COMPILE_TIME"),
+            compiler: env!("RUSTC_VERSION"),
             libc: env!("LIBC_VERSION"),
             package_manager: env!("CARGO_VERSION"),
-            release_link: concat!("https://github.com/maslina524/lazyfetch/releases/tag/v", env!("CARGO_PKG_VERSION"))
+            release_link: concat!(
+                "https://github.com/maslina524/lazyfetch/releases/tag/v",
+                env!("CARGO_PKG_VERSION")
+            ),
         }
     }
 
     fn get() -> &'static Self {
-        VERSION.get_or_init(|| {
-            Self::new()
-        })
+        VERSION.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -81,9 +77,18 @@ impl Module for Version {
     }
 
     impl_module!(
-        project_name, version, version_tweak, build_type,
-        sysname, arch, cmake_built_type, compile_time,
-        compiler, libc, package_manager, release_link
+        project_name,
+        version,
+        version_tweak,
+        build_type,
+        sysname,
+        arch,
+        cmake_built_type,
+        compile_time,
+        compiler,
+        libc,
+        package_manager,
+        release_link
     );
 }
 

@@ -1,13 +1,13 @@
 use core::{
-    fmt::{Debug, Display}, 
-    marker::PhantomData, 
+    fmt::{Debug, Display},
+    marker::PhantomData,
     sync::atomic::{AtomicBool, Ordering},
 };
 
 use alloc::{
-    borrow::ToOwned, 
+    borrow::ToOwned,
     boxed::Box,
-    string::{String, ToString}
+    string::{String, ToString},
 };
 
 use crate::{
@@ -16,12 +16,12 @@ use crate::{
     formats::Frequency,
     imp::{
         fs::{Access, File, ReadError},
-        path::Path
+        path::Path,
     },
     lua::{AsLua, LuaType},
     parser::LineBased,
     sync::Mutex,
-    warning
+    warning,
 };
 
 static LOADED: AtomicBool = AtomicBool::new(false);
@@ -69,11 +69,11 @@ fn load_entries() {
         Err(ReadError::Utf8(e)) => {
             warning!("Failed to read cache/session: {e}");
             fallback()
-        },
+        }
         Err(ReadError::Code(e)) if !e.is_file_not_found() => {
             warning!("Failed to read cache/session: {e} ({:2X})", e.code());
             fallback()
-        },
+        }
         Err(_) => fallback(),
     };
 
@@ -112,11 +112,14 @@ impl<T: AsCached + Clone + Send + Sync + 'static> SessionCached<T> {
             self.save_value(&v);
             v
         })
-   }
+    }
 
     fn get_value(&self) -> Option<T> {
         load_entries();
-        ENTRIES.lock().get(&self.name).and_then(AsCached::from_cached)
+        ENTRIES
+            .lock()
+            .get(&self.name)
+            .and_then(AsCached::from_cached)
     }
 
     fn save_value(&self, val: &T) {
@@ -166,10 +169,13 @@ impl AsCached for u64 {
     }
 
     fn from_cached(cache: &str) -> Option<Self> {
-        cache.parse::<Self>().map_or_else(|_| {
-            warning!("Incorrect u64 in cache");
-            None
-        }, Some)
+        cache.parse::<Self>().map_or_else(
+            |_| {
+                warning!("Incorrect u64 in cache");
+                None
+            },
+            Some,
+        )
     }
 }
 
@@ -179,10 +185,13 @@ impl AsCached for u32 {
     }
 
     fn from_cached(cache: &str) -> Option<Self> {
-        cache.parse::<Self>().map_or_else(|_| {
-            warning!("Incorrect u32 in cache");
-            None
-        }, Some)
+        cache.parse::<Self>().map_or_else(
+            |_| {
+                warning!("Incorrect u32 in cache");
+                None
+            },
+            Some,
+        )
     }
 }
 
@@ -192,9 +201,12 @@ impl AsCached for Frequency {
     }
 
     fn from_cached(cache: &str) -> Option<Self> {
-        cache.parse::<u64>().map_or_else(|_| {
-            warning!("Incorrect u64 in cache");
-            None
-        }, |v| Some(Self::from_hz(v)))
+        cache.parse::<u64>().map_or_else(
+            |_| {
+                warning!("Incorrect u64 in cache");
+                None
+            },
+            |v| Some(Self::from_hz(v)),
+        )
     }
 }

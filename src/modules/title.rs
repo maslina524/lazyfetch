@@ -2,12 +2,8 @@ use alloc::string::String;
 use doc::Docs;
 
 use crate::{
-    detect::title::TitleInfo,
-    impl_module,
-    impl_display_for_module,
-    modules::Module,
-    imp::path::Path,
-    sync::OnceLock
+    detect::title::TitleInfo, imp::path::Path, impl_display_for_module, impl_module,
+    modules::Module, sync::OnceLock,
 };
 
 static TITLE: OnceLock<Title> = OnceLock::new();
@@ -37,13 +33,13 @@ pub struct Title {
     #[doc = "PID of current process"]
     pub pid: u32,
     #[doc = "CWD with home dir replaced by `~`"]
-    pub cwd: Path
+    pub cwd: Path,
 }
 
 impl Module for Title {
     fn new() -> Self {
         let info = TitleInfo::new();
-        Self { 
+        Self {
             user_name: info.user_name,
             host_name: info.host_name,
             home_dir: info.home_dir,
@@ -55,14 +51,12 @@ impl Module for Title {
             full_user_name: info.full_user_name,
             user_id: info.user_id,
             pid: info.pid,
-            cwd: info.cwd
+            cwd: info.cwd,
         }
     }
 
     fn get() -> &'static Self {
-        TITLE.get_or_init(|| {
-            Self::new()
-        })
+        TITLE.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -78,9 +72,18 @@ impl Module for Title {
     }
 
     impl_module!(
-        user_name, host_name, home_dir, exe_path, 
-        user_shell, user_name_colored, at_symbol_colored, host_name_colored, 
-        full_user_name, user_id, pid, cwd
+        user_name,
+        host_name,
+        home_dir,
+        exe_path,
+        user_shell,
+        user_name_colored,
+        at_symbol_colored,
+        host_name_colored,
+        full_user_name,
+        user_id,
+        pid,
+        cwd
     );
 }
 

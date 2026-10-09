@@ -1,16 +1,11 @@
-use alloc::{
-    string::String,
-    collections::BTreeMap,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, collections::BTreeMap, string::String};
 use doc::Docs;
 
 use crate::{
-    impl_display_for_module, 
-    modules::{self, Module, Title, FormatValue},
+    formats, impl_display_for_module,
+    json::Value,
+    modules::{self, FormatValue, Module, Title},
     sync::OnceLock,
-    formats,
-    json::Value
 };
 
 static SEPARATOR: OnceLock<Separator> = OnceLock::new();
@@ -24,9 +19,7 @@ impl Module for Separator {
     }
 
     fn get() -> &'static Self {
-        SEPARATOR.get_or_init(|| {
-            Self::new()
-        })
+        SEPARATOR.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -41,7 +34,12 @@ impl Module for Separator {
         "separator"
     }
 
-    fn format(&self, _key: super::FormatValue, _format: super::FormatValue, _map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
+    fn format(
+        &self,
+        _key: super::FormatValue,
+        _format: super::FormatValue,
+        _map: Option<&BTreeMap<String, Value>>,
+    ) -> Option<Cow<'_, str>> {
         let string = Title::get()
             .format(FormatValue::default(), FormatValue::default(), None)
             .map(|title| "-".repeat(formats::visible_len(&title)));

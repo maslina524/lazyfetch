@@ -1,25 +1,18 @@
-use core::{
-    ffi::c_int, 
-    ptr
-};
+use core::{ffi::c_int, ptr};
 
 use alloc::{
-    ffi::CString, 
-    string::{String, ToString}, 
+    ffi::CString,
+    string::{String, ToString},
     vec::Vec,
 };
 
 use crate::{
-    abort,
+    abort, format,
     unix::{
-        libc::{
-            AddrInfo, close, connect, freeaddrinfo, 
-            getaddrinfo, recv, send, socket
-        },
-        error::ErrorCode
+        error::ErrorCode,
+        libc::{AddrInfo, close, connect, freeaddrinfo, getaddrinfo, recv, send, socket},
     },
     url::{Response, Url},
-    format
 };
 
 const BUF_SIZE: usize = 1024;
@@ -35,9 +28,7 @@ pub struct Request {
 impl Request {
     pub fn new(url: impl Into<String>) -> Option<Self> {
         let url = Url::new(url.into())?;
-        Some(
-            Self { url }
-        )
+        Some(Self { url })
     }
 
     pub const fn from_url(url: Url) -> Self {
@@ -121,7 +112,7 @@ impl Request {
         req.push_str(&self.url.path);
         req.push_str(" HTTP/1.1\r\nHost: ");
         req.push_str(&full_domain);
-        if let Some(port) = self.url.port { 
+        if let Some(port) = self.url.port {
             use core::fmt::Write;
             let _ = write!(req, ":{port}");
         }

@@ -1,38 +1,34 @@
 use core::{
     ffi::c_void,
+    ptr,
     sync::atomic::{AtomicPtr, Ordering},
-    ptr
 };
 
-use alloc::{
-    string::String,
-    vec::Vec,
-    vec
-};
+use alloc::{string::String, vec, vec::Vec};
 
 use crate::{
-    windows::link::{RegQueryValueExW, RegCloseKey, RegCreateKeyExW, RegOpenKeyExW},
     windows::encoding::wide,
-    windows::error::{self, ErrorCode}
+    windows::error::{self, ErrorCode},
+    windows::link::{RegCloseKey, RegCreateKeyExW, RegOpenKeyExW, RegQueryValueExW},
 };
 
 pub type Handle = AtomicPtr<c_void>;
 
 #[repr(u32)]
 pub enum Hkey {
-    ClassesRoot   = 0x8000_0000,
-    CurrentUser   = 0x8000_0001,
-    LocalMachine  = 0x8000_0002,
-    Users         = 0x8000_0003,
-    CurrentConfig =	0x8000_0005
+    ClassesRoot = 0x8000_0000,
+    CurrentUser = 0x8000_0001,
+    LocalMachine = 0x8000_0002,
+    Users = 0x8000_0003,
+    CurrentConfig = 0x8000_0005,
 }
 
 #[repr(u32)]
 pub enum Access {
-    Read  = 0x20019,
-    Set   = 0x0002,
+    Read = 0x20019,
+    Set = 0x0002,
     Write = 0x20006,
-    All   = 0xF003F
+    All = 0xF003F,
 }
 
 #[derive(Debug, Clone)]
@@ -106,24 +102,22 @@ impl Regedit {
         // against the documentation, safe
         let ret = unsafe {
             RegCreateKeyExW(
-                root as u32 as *mut c_void, 
-                wide.as_ptr(), 
-                0, 
-                ptr::null(), 
-                0, 
-                access as u32, 
+                root as u32 as *mut c_void,
+                wide.as_ptr(),
+                0,
                 ptr::null(),
-                &raw mut handle, 
-                ptr::null_mut()
+                0,
+                access as u32,
+                ptr::null(),
+                &raw mut handle,
+                ptr::null_mut(),
             )
         };
         if ret != 0 {
             return Err(ErrorCode::last());
         }
 
-        Ok(Self(
-            AtomicPtr::new(handle)
-        ))
+        Ok(Self(AtomicPtr::new(handle)))
     }
 
     pub fn open(root: Hkey, subkey: &str, access: Access) -> error::Result<Self> {
@@ -134,10 +128,10 @@ impl Regedit {
         // against the documentation, safe
         let ret = unsafe {
             RegOpenKeyExW(
-                root as u32 as *mut c_void, 
-                wide.as_ptr(), 
-                0, 
-                access as u32, 
+                root as u32 as *mut c_void,
+                wide.as_ptr(),
+                0,
+                access as u32,
                 &raw mut handle,
             )
         };
@@ -145,9 +139,7 @@ impl Regedit {
             return Err(ErrorCode::last());
         }
 
-        Ok(Self(
-            AtomicPtr::new(handle)
-        ))
+        Ok(Self(AtomicPtr::new(handle)))
     }
 
     pub const fn from_handle(handle: Handle) -> Self {
@@ -162,29 +154,29 @@ impl Regedit {
         // SAFETY: Getting the buffer size and type, safe
         let ret = unsafe {
             RegQueryValueExW(
-                self.0.load(Ordering::Acquire), 
+                self.0.load(Ordering::Acquire),
                 wide.as_ptr(),
                 ptr::null(),
-                &raw mut typ, 
-                ptr::null_mut(), 
-                &raw mut size
+                &raw mut typ,
+                ptr::null_mut(),
+                &raw mut size,
             )
         };
         if ret != 0 {
             return Err(ErrorCode::last());
         }
-        
+
         let mut buf = vec![0u8; size as usize];
 
         // SAFETY: Completely safe
         unsafe {
             RegQueryValueExW(
-                self.0.load(Ordering::Acquire), 
+                self.0.load(Ordering::Acquire),
                 wide.as_ptr(),
                 ptr::null(),
-                &raw mut typ, 
-                buf.as_mut_ptr(), 
-                &raw mut size
+                &raw mut typ,
+                buf.as_mut_ptr(),
+                &raw mut size,
             )
         };
 
@@ -196,7 +188,11 @@ impl Regedit {
                     let len = buf.len() / 2;
                     core::slice::from_raw_parts(buf.as_ptr().cast(), len)
                 };
-                let chars = u16_slice.iter().take_while(|&&c| c != 0).copied().collect::<Vec<u16>>();
+                let chars = u16_slice
+                    .iter()
+                    .take_while(|&&c| c != 0)
+                    .copied()
+                    .collect::<Vec<u16>>();
                 let s = String::from_utf16_lossy(&chars);
                 Ok(RegValue::Sz(s))
             }
@@ -206,7 +202,11 @@ impl Regedit {
                     let len = buf.len() / 2;
                     core::slice::from_raw_parts(buf.as_ptr().cast(), len)
                 };
-                let chars = u16_slice.iter().take_while(|&&c| c != 0).copied().collect::<Vec<u16>>();
+                let chars = u16_slice
+                    .iter()
+                    .take_while(|&&c| c != 0)
+                    .copied()
+                    .collect::<Vec<u16>>();
                 let s = String::from_utf16_lossy(&chars);
                 Ok(RegValue::ExpandSz(s))
             }
@@ -230,7 +230,11 @@ impl Regedit {
                     let len = buf.len() / 2;
                     core::slice::from_raw_parts(buf.as_ptr().cast(), len)
                 };
-                let chars = u16_slice.iter().take_while(|&&c| c != 0).copied().collect::<Vec<u16>>();
+                let chars = u16_slice
+                    .iter()
+                    .take_while(|&&c| c != 0)
+                    .copied()
+                    .collect::<Vec<u16>>();
                 let s = String::from_utf16_lossy(&chars);
                 Ok(RegValue::Link(s))
             }
@@ -239,7 +243,7 @@ impl Regedit {
                 let u16_slice = unsafe {
                     let len = buf.len() / 2;
                     core::slice::from_raw_parts(buf.as_ptr().cast(), len)
-                }; 
+                };
 
                 let u16_slice_len = u16_slice.len();
                 let mut strings = Vec::with_capacity(u16_slice_len);
@@ -266,21 +270,18 @@ impl Regedit {
                     return Err(ErrorCode::new(13));
                 }
                 let val = u64::from_le_bytes([
-                    buf[0], buf[1], buf[2], buf[3],
-                    buf[4], buf[5], buf[6], buf[7],
+                    buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7],
                 ]);
                 Ok(RegValue::Qword(val))
             }
-            _ => Ok(RegValue::Binary(buf))
+            _ => Ok(RegValue::Binary(buf)),
         }
     }
 
     fn close(&mut self) -> error::Result<()> {
         // SAFETY: The handle is always valid,
         // the function is only used in `Drop`
-        let ret = unsafe {
-            RegCloseKey(self.0.load(Ordering::Acquire))
-        };
+        let ret = unsafe { RegCloseKey(self.0.load(Ordering::Acquire)) };
         if ret != 0 {
             return Err(ErrorCode::last());
         }
@@ -297,8 +298,8 @@ impl Drop for Regedit {
 #[cfg(test)]
 mod tests {
     use crate::{
-        modules::{cpu::Cpu, Module},
-        windows::regedit::{Access, Hkey, Regedit}
+        modules::{Module, cpu::Cpu},
+        windows::regedit::{Access, Hkey, Regedit},
     };
 
     extern crate std;
@@ -306,10 +307,11 @@ mod tests {
     #[test]
     fn open_test() {
         let handle = Regedit::open(
-            Hkey::LocalMachine, 
-            "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 
-            Access::Read
-        ).unwrap();
+            Hkey::LocalMachine,
+            "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+            Access::Read,
+        )
+        .unwrap();
         let key = handle.read("VendorIdentifier").unwrap();
 
         let reg_vendor = key.as_string().unwrap();

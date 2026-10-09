@@ -1,10 +1,11 @@
+#![allow(clippy::cargo_common_metadata)]
 #![cfg_attr(unstable, feature(proc_macro_diagnostic))]
 #![cfg_attr(unstable, feature(proc_macro_value))]
 
 #[cfg(unstable)]
 use {
     proc_macro::{Diagnostic, Level, Span, TokenTree},
-    std::sync::atomic::{AtomicU32, Ordering::Relaxed}
+    std::sync::atomic::{AtomicU32, Ordering::Relaxed},
 };
 
 use proc_macro::TokenStream;
@@ -18,8 +19,8 @@ fn get_message(attr: TokenStream) -> Option<String> {
         TokenTree::Literal(s) => {
             let string = s.str_value().ok()?;
             Some(format!("#{} TODO: {string}", COUNTER.load(Relaxed)))
-        },
-        _ => None
+        }
+        _ => None,
     })
 }
 

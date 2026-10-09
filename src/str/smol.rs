@@ -1,14 +1,6 @@
-use core::{
-    ops::Deref,
-    ffi::CStr,
-    mem
-};
+use core::{ffi::CStr, mem, ops::Deref};
 
-use alloc::{
-    borrow::Cow, 
-    string::String, 
-    sync::Arc
-};
+use alloc::{borrow::Cow, string::String, sync::Arc};
 
 const INLINE_CAP: usize = 23;
 
@@ -37,7 +29,7 @@ pub enum InlineLen {
     _V20 = 20,
     _V21 = 21,
     _V22 = 22,
-    _V23 = 23
+    _V23 = 23,
 }
 
 impl TryFrom<u8> for InlineLen {
@@ -57,11 +49,12 @@ impl TryFrom<u8> for InlineLen {
 pub enum Repr {
     #[default]
     Empty,
-    Inline { 
-        len: InlineLen, data: [u8; INLINE_CAP] 
+    Inline {
+        len: InlineLen,
+        data: [u8; INLINE_CAP],
     },
     Heap(Arc<str>),
-    Static(&'static str)
+    Static(&'static str),
 }
 
 /// [`SmolStr`] only stores the string, does not modify it
@@ -94,10 +87,10 @@ impl SmolStr {
             Repr::Empty => "",
             Repr::Heap(a) => a,
             // SAFETY: `SmolStr` is created only from `str`, utf8 is always valid.
-            Repr::Inline { len, data } => unsafe { 
-                str::from_utf8_unchecked(&data[..*len as usize]) 
+            Repr::Inline { len, data } => unsafe {
+                str::from_utf8_unchecked(&data[..*len as usize])
             },
-            Repr::Static(s) => s
+            Repr::Static(s) => s,
         }
     }
 }
@@ -113,11 +106,11 @@ impl Deref for SmolStr {
 fn str_to_arr(s: &str) -> [u8; INLINE_CAP] {
     let mut out = [0u8; INLINE_CAP];
     let mut len = s.len().min(INLINE_CAP);
-    
+
     while len > 0 && !s.is_char_boundary(len) {
         len -= 1;
     }
-    
+
     out[..len].copy_from_slice(&s.as_bytes()[..len]);
     out
 }
@@ -131,9 +124,9 @@ macro_rules! impl_from_string {
                 } else if value.len() > INLINE_CAP {
                     Repr::Heap(Arc::from(value))
                 } else {
-                    Repr::Inline { 
-                        len: (value.len() as u8).try_into().unwrap(), 
-                        data: str_to_arr(&value) 
+                    Repr::Inline {
+                        len: (value.len() as u8).try_into().unwrap(),
+                        data: str_to_arr(&value)
                     }
                 };
 
@@ -143,11 +136,7 @@ macro_rules! impl_from_string {
     )+};
 }
 
-impl_from_string!(
-    String,
-    &str,
-    Cow<'static, str>
-);
+impl_from_string!(String, &str, Cow<'static, str>);
 
 impl TryFrom<&CStr> for SmolStr {
     type Error = core::str::Utf8Error;
@@ -160,9 +149,9 @@ impl TryFrom<&CStr> for SmolStr {
             Repr::Heap(Arc::from(s))
         } else {
             let s = value.to_str()?;
-            Repr::Inline { 
-                len: (len as u8).try_into().unwrap(), 
-                data: str_to_arr(s) 
+            Repr::Inline {
+                len: (len as u8).try_into().unwrap(),
+                data: str_to_arr(s),
             }
         };
 

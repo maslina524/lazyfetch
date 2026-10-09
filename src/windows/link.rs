@@ -148,7 +148,7 @@ pub struct DXGI_ADAPTER_DESC {
 impl Default for DXGI_ADAPTER_DESC {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 pub const DXGI_ERROR_NOT_FOUND: HRESULT = 0x887A0002_u32 as _;
@@ -168,7 +168,7 @@ pub struct DYNAMIC_TIME_ZONE_INFORMATION {
 impl Default for DYNAMIC_TIME_ZONE_INFORMATION {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 pub type ENUM_DATE_FORMATS_FLAGS = u32;
@@ -314,7 +314,7 @@ pub struct OSVERSIONINFOW {
 impl Default for OSVERSIONINFOW {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -328,7 +328,7 @@ pub struct OVERLAPPED {
 impl Default for OVERLAPPED {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -340,7 +340,7 @@ pub union OVERLAPPED_0 {
 impl Default for OVERLAPPED_0 {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -368,7 +368,7 @@ pub struct PROCESSENTRY32 {
 impl Default for PROCESSENTRY32 {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 pub type PROCESSOR_ARCHITECTURE = u16;
@@ -387,7 +387,7 @@ pub struct RAWINPUTDEVICELIST {
 impl Default for RAWINPUTDEVICELIST {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 pub type RAW_INPUT_DEVICE_INFO_COMMAND = u32;
@@ -406,7 +406,7 @@ pub struct SECURITY_ATTRIBUTES {
 impl Default for SECURITY_ATTRIBUTES {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 pub type SETUP_DI_GET_CLASS_DEVS_FLAGS = u32;
@@ -470,7 +470,7 @@ pub struct SYSTEM_INFO {
 impl Default for SYSTEM_INFO {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -482,7 +482,7 @@ pub union SYSTEM_INFO_0 {
 impl Default for SYSTEM_INFO_0 {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -501,7 +501,7 @@ pub struct SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
 impl Default for SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -515,7 +515,7 @@ pub union SYSTEM_LOGICAL_PROCESSOR_INFORMATION_0 {
 impl Default for SYSTEM_LOGICAL_PROCESSOR_INFORMATION_0 {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 #[repr(C)]
@@ -545,7 +545,7 @@ pub struct TIME_ZONE_INFORMATION {
 impl Default for TIME_ZONE_INFORMATION {
     fn default() -> Self {
         // SAFETY: All types are guaranteed to be zeroable
-		unsafe { core::mem::zeroed() }
+        unsafe { core::mem::zeroed() }
     }
 }
 pub type TOKEN_ACCESS_MASK = u32;

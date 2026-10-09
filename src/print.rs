@@ -1,33 +1,39 @@
 use core::fmt::{Arguments, Write};
 
-use alloc::{
-    vec::Vec,
-    string::String
-};
+use alloc::{string::String, vec::Vec};
 
-use crate::{sync::Mutex, imp::io::{stdout, stderr, write}};
+use crate::{
+    imp::io::{stderr, stdout, write},
+    sync::Mutex,
+};
 
 const STRING_BASE_CAP: usize = 64;
 
 #[derive(Debug)]
 enum OutputType {
     Stdout,
-    Stderr
+    Stderr,
 }
 
 #[derive(Debug)]
 struct Output {
     typ: OutputType,
-    inner: String
+    inner: String,
 }
 
 impl Output {
     pub const fn stdout(inner: String) -> Self {
-        Self { typ: OutputType::Stdout, inner }
+        Self {
+            typ: OutputType::Stdout,
+            inner,
+        }
     }
 
     pub const fn stderr(inner: String) -> Self {
-        Self { typ: OutputType::Stderr, inner }
+        Self {
+            typ: OutputType::Stderr,
+            inner,
+        }
     }
 }
 

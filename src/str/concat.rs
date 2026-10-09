@@ -1,19 +1,15 @@
 use core::fmt::Write;
 
-use alloc::{
-    boxed::Box, 
-    string::String, 
-    vec::Vec
-};
+use alloc::{boxed::Box, string::String, vec::Vec};
 
 use crate::{
+    format,
     lua::{AsLua, LuaType},
-    format
 };
 
 #[derive(Clone, Copy)]
 pub struct ConcatStr<const N: usize> {
-    parts: [&'static str; N]
+    parts: [&'static str; N],
 }
 
 impl<const N: usize> ConcatStr<N> {

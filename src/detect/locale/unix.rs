@@ -1,9 +1,6 @@
 use core::{ffi::CStr, ptr};
 
-use crate::{
-    unix::libc::setlocale,
-    str::SmolStr
-};
+use crate::{str::SmolStr, unix::libc::setlocale};
 
 const LC_ALL: i32 = 0;
 

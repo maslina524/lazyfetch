@@ -1,38 +1,34 @@
-use core::{
-    ffi::c_void,
-    ptr
-};
+use core::{ffi::c_void, ptr};
 
 use alloc::{
-    string::{String, FromUtf8Error},
+    string::{FromUtf8Error, String},
+    vec,
     vec::Vec,
-    vec
 };
 
 use crate::{
     windows::error::{self, ErrorCode},
-    windows::path::Path,
     windows::link::{
-        CreateFileW, HANDLE, WriteFile, ReadFile,
-        GetFileSizeEx, CloseHandle, CreateDirectoryW
-    }
+        CloseHandle, CreateDirectoryW, CreateFileW, GetFileSizeEx, HANDLE, ReadFile, WriteFile,
+    },
+    windows::path::Path,
 };
 
-const FILE_SHARE_READ      : u32         = 0x0001;
-const FILE_ATTRIBUTE_NORMAL: u32         = 0x0080;
-const INVALID_HANDLE       : *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
-const CREATE_NEW           : u32         = 0x0001;
-const CREATE_ALWAYS        : u32         = 0x0002;
-const OPEN_EXISTING        : u32         = 0x0003;
+const FILE_SHARE_READ: u32 = 0x0001;
+const FILE_ATTRIBUTE_NORMAL: u32 = 0x0080;
+const INVALID_HANDLE: *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
+const CREATE_NEW: u32 = 0x0001;
+const CREATE_ALWAYS: u32 = 0x0002;
+const OPEN_EXISTING: u32 = 0x0003;
 
 type FileHandle = HANDLE;
 
 #[repr(u32)]
 pub enum Access {
-    Read      = 0x8000_0000,
-    Write     = 0x4000_0000,
+    Read = 0x8000_0000,
+    Write = 0x4000_0000,
     ReadWrite = 0x8000_0000 | 0x4000_0000,
-    All       = 0x1000_0000
+    All = 0x1000_0000,
 }
 
 #[derive(Debug)]
@@ -90,19 +86,19 @@ impl File {
         // SAFETY: Parameters are fully correct, return value is checked
         let handle = unsafe {
             CreateFileW(
-                path_wide.as_ptr(), 
-                access as u32, 
-                FILE_SHARE_READ, 
-                ptr::null(), 
-                cd, 
-                FILE_ATTRIBUTE_NORMAL, 
-                ptr::null_mut()
+                path_wide.as_ptr(),
+                access as u32,
+                FILE_SHARE_READ,
+                ptr::null(),
+                cd,
+                FILE_ATTRIBUTE_NORMAL,
+                ptr::null_mut(),
             )
         };
         if handle == INVALID_HANDLE {
             return Err(ErrorCode::last());
         }
-        
+
         Ok(Self(handle))
     }
 
@@ -110,30 +106,21 @@ impl File {
         let len = buf.len() as u32;
         let mut written = 0;
 
-        // SAFETY: The handle is always correct, 
+        // SAFETY: The handle is always correct,
         // errors are checked, the function is safe
-        let ret = unsafe {
-            WriteFile(
-                self.0, 
-                buf.as_ptr(), 
-                len, 
-                &raw mut written, 
-                ptr::null_mut()
-            )
-        };
+        let ret =
+            unsafe { WriteFile(self.0, buf.as_ptr(), len, &raw mut written, ptr::null_mut()) };
         if ret == 0 || written != len {
             return Err(ErrorCode::last());
         }
-        
+
         Ok(())
     }
 
     pub fn read(&self) -> error::Result<Vec<u8>> {
         let mut size = 0;
         // SAFETY: Completely safe
-        let ret = unsafe {
-            GetFileSizeEx(self.0, &raw mut size)
-        };
+        let ret = unsafe { GetFileSizeEx(self.0, &raw mut size) };
         if ret == 0 {
             return Err(ErrorCode::last());
         }
@@ -141,15 +128,15 @@ impl File {
         let mut buf = vec![0u8; size as usize];
         let mut readed = 0;
 
-        // SAFETY: The handle is always correct, 
+        // SAFETY: The handle is always correct,
         // errors are checked, the function is safe
         unsafe {
             ReadFile(
                 self.0,
-                buf.as_mut_ptr(), 
-                size as u32, 
-                &raw mut readed, 
-                ptr::null_mut()
+                buf.as_mut_ptr(),
+                size as u32,
+                &raw mut readed,
+                ptr::null_mut(),
             )
         };
 
@@ -182,12 +169,7 @@ pub fn create_dir(path: impl Into<Path>) -> error::Result<()> {
     let path_wide = path.as_wide_str();
 
     // SAFETY: Parameters are fully correct, return value is checked
-    let ret = unsafe {
-        CreateDirectoryW(
-            path_wide.as_ptr(),
-            ptr::null()
-        )
-    };
+    let ret = unsafe { CreateDirectoryW(path_wide.as_ptr(), ptr::null()) };
     if ret == 0 {
         return Err(ErrorCode::last());
     }
@@ -211,7 +193,7 @@ mod tests {
     use alloc::string::String;
 
     use crate::windows::fs::{self, Access, File};
-  
+
     extern crate std;
 
     #[test]

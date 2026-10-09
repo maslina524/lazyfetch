@@ -7,9 +7,7 @@ pub fn encode(input: &[u8]) -> String {
     let mut i = 0usize;
 
     while i + 3 <= input.len() {
-        let n = ((input[i] as u32) << 16)
-            | ((input[i + 1] as u32) << 8)
-            | (input[i + 2] as u32);
+        let n = ((input[i] as u32) << 16) | ((input[i + 1] as u32) << 8) | (input[i + 2] as u32);
         out.push(TBL[((n >> 18) & 0x3F) as usize] as char);
         out.push(TBL[((n >> 12) & 0x3F) as usize] as char);
         out.push(TBL[((n >> 6) & 0x3F) as usize] as char);

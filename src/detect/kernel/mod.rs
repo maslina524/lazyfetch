@@ -17,5 +17,5 @@ pub struct KernelInfo {
     pub release: String,
     pub version: String,
     pub display_version: String,
-    pub page_size: MemorySize
+    pub page_size: MemorySize,
 }

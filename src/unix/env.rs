@@ -1,31 +1,29 @@
 use core::{
     ffi::{CStr, c_char},
-    slice
+    slice,
 };
 
 use alloc::{
-    ffi::CString, 
-    string::{String, ToString}, 
-    vec::Vec
+    ffi::CString,
+    string::{String, ToString},
+    vec::Vec,
 };
 
 use crate::{
-    ARGS, 
-    abort, 
-    format, 
+    ARGS, abort, format,
     unix::{
-        fs, 
-        libc::{
-            Timespec, Winsize, clock_gettime, getenv, 
-            gmtime, ioctl, localtime, strftime
-        }
-    }, 
-    warning
+        fs,
+        libc::{Timespec, Winsize, clock_gettime, getenv, gmtime, ioctl, localtime, strftime},
+    },
+    warning,
 };
 
 const TIOCGWINSZ: u64 = 0x5413;
 
-#[allow(clippy::similar_names, reason = "that's what they're called in C, i don't give a fuck about clippy")]
+#[allow(
+    clippy::similar_names,
+    reason = "that's what they're called in C, i don't give a fuck about clippy"
+)]
 pub fn args_init(argc: usize, argv: *const *const u8) -> Vec<String> {
     let mut ret = Vec::with_capacity(argc);
     for i in 0..argc {
@@ -70,7 +68,7 @@ pub fn processes_count() -> usize {
         Ok(e) => e,
         Err(e) => {
             warning!("Failed to read /proc: {e}");
-            return 0
+            return 0;
         }
     };
 
@@ -122,7 +120,10 @@ pub fn terminal_size() -> (usize, usize) {
         let mut value = 0usize;
         for &b in bytes {
             if !b.is_ascii_digit() {
-                warning!("Failed to get {} (terminal_size)", str::from_utf8(name).unwrap());
+                warning!(
+                    "Failed to get {} (terminal_size)",
+                    str::from_utf8(name).unwrap()
+                );
                 return None;
             }
             value = value * 10 + (b - b'0') as usize;
@@ -139,7 +140,7 @@ pub fn terminal_size() -> (usize, usize) {
         if ret == -1 {
             abort!("failet to call ioctl");
         }
-        
+
         (info.ws_col as usize, info.ws_row as usize)
     } else {
         (cols, lines)
@@ -157,10 +158,10 @@ pub fn format_timestamp(time: u64, format: Option<&str>) -> String {
             defaut
         }
     }
-    
+
     let mut info;
     let mut buf = [c_char::default(); 128 + 1];
-    
+
     info = localtime((&raw const time).cast());
     if !info.is_null() {
         let c_format = into_cstring(format, c"%Y-%m-%d %H:%M:%S".into());
@@ -169,18 +170,18 @@ pub fn format_timestamp(time: u64, format: Option<&str>) -> String {
         // SAFETY: Libc always returns correct cstring
         return unsafe { CStr::from_ptr(buf.as_ptr()) }
             .to_string_lossy()
-            .into_owned()
+            .into_owned();
     }
-    
+
     info = gmtime((&raw const time).cast());
     if !info.is_null() {
         let c_format = into_cstring(format, c"%Y-%m-%d %H:%M:%S UTC".into());
         strftime(buf.as_mut_ptr(), 128, c_format.as_ptr(), info);
-        
+
         // SAFETY: Libc always returns correct cstring
         return unsafe { CStr::from_ptr(buf.as_ptr()) }
             .to_string_lossy()
-            .into_owned()
+            .into_owned();
     }
 
     warning!("Failed to format timestamp");

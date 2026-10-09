@@ -1,17 +1,15 @@
 use core::ffi::CStr;
 
-use alloc::{
-    vec::Vec,
-    string::String
-};
+use alloc::{string::String, vec::Vec};
 
 use crate::{
-    formats::{MemorySize, Percent, Time}, unix::{
-        error::ErrorCode, 
-        libc::{
-            Statvfs, Statx, getmntent, setmntent, statvfs, statx
-        }
-    }, modules::disk::Disk, warning
+    formats::{MemorySize, Percent, Time},
+    modules::disk::Disk,
+    unix::{
+        error::ErrorCode,
+        libc::{Statvfs, Statx, getmntent, setmntent, statvfs, statx},
+    },
+    warning,
 };
 
 const ST_RDONLY: u64 = 0b1;
@@ -22,49 +20,93 @@ const HOUR_SEC: u64 = 60 * 60;
 const MIN_SEC: u64 = 60;
 
 static SKIP_TYPES: [&CStr; 25] = [
-    c"proc", c"sysfs", c"tmpfs", c"devtmpfs", c"devpts",
-    c"cgroup", c"cgroup2", c"pstore", c"securityfs",
-    c"debugfs", c"tracefs", c"fusectl", c"mqueue",
-    c"hugetlbfs", c"bpf", c"configfs", c"autofs",
-    c"binfmt_misc", c"rpc_pipefs", c"nsfs", c"overlay",
-    c"squashfs", c"ramfs", c"fuse.gvfsd-fuse", c"fuse.portal"
+    c"proc",
+    c"sysfs",
+    c"tmpfs",
+    c"devtmpfs",
+    c"devpts",
+    c"cgroup",
+    c"cgroup2",
+    c"pstore",
+    c"securityfs",
+    c"debugfs",
+    c"tracefs",
+    c"fusectl",
+    c"mqueue",
+    c"hugetlbfs",
+    c"bpf",
+    c"configfs",
+    c"autofs",
+    c"binfmt_misc",
+    c"rpc_pipefs",
+    c"nsfs",
+    c"overlay",
+    c"squashfs",
+    c"ramfs",
+    c"fuse.gvfsd-fuse",
+    c"fuse.portal",
 ];
 
 #[cfg(not(target_os = "android"))]
 static SKIP_DIRS: [&CStr; 9] = [
-    c"/proc", c"/sys", c"/dev", c"/run", c"/tmp",
-    c"/var/lib/docker", c"/var/lib/containers",
-    c"/snap", c"/boot/efi"
+    c"/proc",
+    c"/sys",
+    c"/dev",
+    c"/run",
+    c"/tmp",
+    c"/var/lib/docker",
+    c"/var/lib/containers",
+    c"/snap",
+    c"/boot/efi",
 ];
 
 #[cfg(target_os = "android")]
 static SKIP_DIRS: [&CStr; 33] = [
-    c"/proc", c"/sys", c"/dev", c"/run", c"/tmp",
-    c"/var/lib/docker", c"/var/lib/containers",
-    c"/snap", c"/boot/efi",
-
+    c"/proc",
+    c"/sys",
+    c"/dev",
+    c"/run",
+    c"/tmp",
+    c"/var/lib/docker",
+    c"/var/lib/containers",
+    c"/snap",
+    c"/boot/efi",
     // Termux
-    c"/system", c"/vendor", c"/product", c"/odm",
-    c"/metadata", c"/apex", c"/mnt",
-    c"/data", c"/cache", c"/efs", c"/persist",
-    c"/firmware", c"/bt_firmware", c"/dsp",
-    c"/config", c"/acct", c"/patch_hn", c"/cust",
-    c"/version", c"/preload", c"/preas", c"/preavs",
-    c"/bootstrap", c"/log",
+    c"/system",
+    c"/vendor",
+    c"/product",
+    c"/odm",
+    c"/metadata",
+    c"/apex",
+    c"/mnt",
+    c"/data",
+    c"/cache",
+    c"/efs",
+    c"/persist",
+    c"/firmware",
+    c"/bt_firmware",
+    c"/dsp",
+    c"/config",
+    c"/acct",
+    c"/patch_hn",
+    c"/cust",
+    c"/version",
+    c"/preload",
+    c"/preas",
+    c"/preavs",
+    c"/bootstrap",
+    c"/log",
 ];
 
 fn is_skipped(typ: &CStr, mount: &CStr) -> bool {
     let m = mount.to_bytes();
-    if SKIP_DIRS
-        .iter()
-        .any(|v| {
-            let v = v.to_bytes();
-            !v.is_empty() && m.windows(v.len()).any(|w| w == v)
-        })
-    {
+    if SKIP_DIRS.iter().any(|v| {
+        let v = v.to_bytes();
+        !v.is_empty() && m.windows(v.len()).any(|w| w == v)
+    }) {
         return true;
     }
-    
+
     SKIP_TYPES.contains(&typ)
 }
 
@@ -92,7 +134,7 @@ pub fn get_disks_linux() -> Vec<Disk> {
         if is_skipped(fs_cstr, mount_cstr) {
             continue;
         }
-        
+
         // SAFETY: Libc is guaranteed to return a valid c string
         let mount_from_cstr = unsafe { CStr::from_ptr(data.mnt_fsnameL) };
         // SAFETY: Libc is guaranteed to return a valid c string
@@ -120,7 +162,11 @@ fn process_mount(mount: &CStr, mount_from: &CStr, mount_fs: &CStr) -> Disk {
         );
     }
 
-    let fr = if statv.f_frsize == 0 { statv.f_bsize } else { statv.f_frsize };
+    let fr = if statv.f_frsize == 0 {
+        statv.f_bsize
+    } else {
+        statv.f_frsize
+    };
     let total = statv.f_blocks.saturating_mul(fr);
 
     let free = statv.f_bfree.saturating_mul(fr);
@@ -132,7 +178,10 @@ fn process_mount(mount: &CStr, mount_from: &CStr, mount_fs: &CStr) -> Disk {
 
     let mut stx = Statx::default();
     let ret = statx(0, mount, 0, STATX_BTIME, &raw mut stx);
-    let ct_int = if ret == 0 && (stx.stx_mask & STATX_BTIME) == STATX_BTIME && stx.stx_btime.tv_sec > 685_065_600 {
+    let ct_int = if ret == 0
+        && (stx.stx_mask & STATX_BTIME) == STATX_BTIME
+        && stx.stx_btime.tv_sec > 685_065_600
+    {
         stx.stx_btime.tv_sec
     } else {
         0
@@ -142,7 +191,7 @@ fn process_mount(mount: &CStr, mount_from: &CStr, mount_fs: &CStr) -> Disk {
         size_used: MemorySize::from_bytes(used),
         size_total: MemorySize::from_bytes(total),
         size_percentage: Percent::new((percent * 100.0) as u8),
-        files_used: 0, 
+        files_used: 0,
         files_total: 0,
         files_percentage: Percent::default(),
         is_external: false,
@@ -159,6 +208,6 @@ fn process_mount(mount: &CStr, mount_from: &CStr, mount_fs: &CStr) -> Disk {
         seconds: (ct_int % MIN_SEC) as u8,
         milliseconds: 0,
         mountpoint: mountpoint_str,
-        mount_from: mount_from_str
+        mount_from: mount_from_str,
     }
 }

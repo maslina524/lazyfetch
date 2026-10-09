@@ -2,12 +2,11 @@ use doc::Docs;
 
 use crate::{
     detect::weather,
-    impl_module, 
-    formats::{Percent, Temperature}, 
-    impl_display_for_module, 
-    str::ConcatStr, 
-    modules::Module, 
-    sync::OnceLock
+    formats::{Percent, Temperature},
+    impl_display_for_module, impl_module,
+    modules::Module,
+    str::ConcatStr,
+    sync::OnceLock,
 };
 
 static WEATHER: OnceLock<Weather> = OnceLock::new();
@@ -79,7 +78,7 @@ pub struct Weather {
     #[doc = "Weather detection time, like `16:45:01+0300`"]
     pub time: &'static str,
     #[doc = "Timezone, like `Europe/Moscow`"]
-    pub timezone: &'static str
+    pub timezone: &'static str,
 }
 
 impl Module for Weather {
@@ -88,9 +87,7 @@ impl Module for Weather {
     }
 
     fn get() -> &'static Self {
-        WEATHER.get_or_init(|| {
-            Self::new()
-        })
+        WEATHER.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -106,11 +103,26 @@ impl Module for Weather {
     }
 
     impl_module!(
-        result, condition_emoji, condition, condition_symbol, 
-        humidity, temperature_actual, temperature_feels, wind, 
-        location, moon_emoji, moon_day, precipitation, 
-        pressure, uv_index, dawn, sunrise, 
-        zenith, sunset, dusk, time, 
+        result,
+        condition_emoji,
+        condition,
+        condition_symbol,
+        humidity,
+        temperature_actual,
+        temperature_feels,
+        wind,
+        location,
+        moon_emoji,
+        moon_day,
+        precipitation,
+        pressure,
+        uv_index,
+        dawn,
+        sunrise,
+        zenith,
+        sunset,
+        dusk,
+        time,
         timezone
     );
 }

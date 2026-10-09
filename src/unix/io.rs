@@ -17,9 +17,7 @@ pub fn write(handle: isize, s: &[u8]) {
 #[cfg(test)]
 #[allow(clippy::print_with_newline, clippy::print_literal)]
 mod tests {
-    use crate::{
-        unix::io::{stdout, write}
-    };
+    use crate::unix::io::{stdout, write};
 
     #[test]
     fn write_test() {

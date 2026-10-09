@@ -1,7 +1,4 @@
-use alloc::{
-    vec::Vec,
-    vec
-};
+use alloc::{vec, vec::Vec};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorType {
@@ -30,7 +27,7 @@ impl TryFrom<u8> for ColorType {
             2 => Ok(Self::Rgb),
             4 => Ok(Self::GrayscaleAlpha),
             6 => Ok(Self::Rgba),
-            _ => Err(ColorTypeError(value))
+            _ => Err(ColorTypeError(value)),
         }
     }
 }
@@ -41,7 +38,8 @@ pub struct ColorTypeError(u8);
 impl core::fmt::Display for ColorTypeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
-            f, "ColorTypeError: Failed to get ColorType from index ({}); file is corrupted or lazyfetch does not support the type, try converting the file to another type",
+            f,
+            "ColorTypeError: Failed to get ColorType from index ({}); file is corrupted or lazyfetch does not support the type, try converting the file to another type",
             self.0
         )
     }
@@ -52,13 +50,14 @@ impl core::error::Error for ColorTypeError {}
 #[derive(Debug)]
 pub struct RgbaConvertError {
     pub typ: ColorType,
-    pub bits: u8
+    pub bits: u8,
 }
 
 impl core::fmt::Display for RgbaConvertError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
-            f, "RgbaConvertError: lazyfetch does not support {:?} with {}-bit color depth, try converting the image to another format",
+            f,
+            "RgbaConvertError: lazyfetch does not support {:?} with {}-bit color depth, try converting the image to another format",
             self.typ, self.bits
         )
     }
@@ -72,19 +71,20 @@ pub struct Rgba(pub u8, pub u8, pub u8, pub u8);
 impl Rgba {
     pub const fn from(data: &[u8], typ: ColorType, bits: u8) -> Result<Self, RgbaConvertError> {
         match (typ, bits) {
-            (ColorType::Rgba, 8) => {
-                Ok(Self(data[0], data[1], data[2], data[3]))
-            }
+            (ColorType::Rgba, 8) => Ok(Self(data[0], data[1], data[2], data[3])),
             (ColorType::Rgba, 16) => {
                 let r = u16::from_be_bytes([data[0], data[1]]);
                 let g = u16::from_be_bytes([data[2], data[3]]);
                 let b = u16::from_be_bytes([data[4], data[5]]);
                 let a = u16::from_be_bytes([data[6], data[7]]);
-                Ok(Self((r >> 8) as u8, (g >> 8) as u8, (b >> 8) as u8, (a >> 8) as u8))
+                Ok(Self(
+                    (r >> 8) as u8,
+                    (g >> 8) as u8,
+                    (b >> 8) as u8,
+                    (a >> 8) as u8,
+                ))
             }
-            (ColorType::Rgb, 8) => {
-                Ok(Self(data[0], data[1], data[2], 255))
-            }
+            (ColorType::Rgb, 8) => Ok(Self(data[0], data[1], data[2], 255)),
             (ColorType::Rgb, 16) => {
                 let r = u16::from_be_bytes([data[0], data[1]]);
                 let g = u16::from_be_bytes([data[2], data[3]]);
@@ -103,7 +103,13 @@ impl Rgba {
             (ColorType::Grayscale, 1 | 2 | 4) => {
                 let val = data[0];
                 let g = match bits {
-                    1 => if val == 0 { 0 } else { 255 },
+                    1 => {
+                        if val == 0 {
+                            0
+                        } else {
+                            255
+                        }
+                    }
                     2 => val * 85,
                     4 => val * 17,
                     _ => unreachable!(),
@@ -132,12 +138,16 @@ impl Rgba {
 pub struct Image {
     w: usize,
     h: usize,
-    data: Vec<Rgba>
+    data: Vec<Rgba>,
 }
 
 impl Image {
     pub fn new(w: usize, h: usize) -> Self {
-        Self { w, h, data: vec![Rgba::default(); w * h] }
+        Self {
+            w,
+            h,
+            data: vec![Rgba::default(); w * h],
+        }
     }
 
     pub const fn size(&self) -> (usize, usize) {

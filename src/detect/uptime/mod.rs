@@ -1,10 +1,6 @@
 use alloc::string::String;
 
-use crate::{
-    cfg_if, 
-    format, 
-    sync::OnceLock
-};
+use crate::{cfg_if, format, sync::OnceLock};
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -28,7 +24,7 @@ pub struct UptimeInfo {
     pub boot_time: String,
     pub days_of_year: u32,
     pub years_fraction: f32,
-    pub formatted: String
+    pub formatted: String,
 }
 
 impl UptimeInfo {

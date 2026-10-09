@@ -1,13 +1,9 @@
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
-    cfg_if, 
-    format, 
-    formats::{Frequency, MemorySize, Temperature}, 
-    nvidia::NvidiaLib
+    cfg_if, format,
+    formats::{Frequency, MemorySize, Temperature},
+    nvidia::NvidiaLib,
 };
 
 cfg_if! {
@@ -25,15 +21,15 @@ pub enum GpuType {
     #[default]
     Unknown,
     Discrete,
-    BuiltIn
+    BuiltIn,
 }
 
 impl core::fmt::Debug for GpuType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Unknown  => write!(f, "\"Unknown\""),
+            Self::Unknown => write!(f, "\"Unknown\""),
             Self::Discrete => write!(f, "\"Discrete\""),
-            Self::BuiltIn  => write!(f, "\"Built-in\""),
+            Self::BuiltIn => write!(f, "\"Built-in\""),
         }
     }
 }
@@ -46,18 +42,19 @@ impl GpuType {
             0x1002 => {
                 if pci_address.starts_with("0000:00:") {
                     let dev_str = format!("{:04x}", device_id);
-                    if dev_str.starts_with("67") || 
-                    dev_str.starts_with("68") ||
-                    dev_str.starts_with("69") ||
-                    dev_str.starts_with("73") ||
-                    dev_str.starts_with("74") {
+                    if dev_str.starts_with("67")
+                        || dev_str.starts_with("68")
+                        || dev_str.starts_with("69")
+                        || dev_str.starts_with("73")
+                        || dev_str.starts_with("74")
+                    {
                         return Self::Discrete;
                     }
                     return Self::BuiltIn;
                 }
                 Self::Discrete
-            },
-            _ => Self::Unknown
+            }
+            _ => Self::Unknown,
         }
     }
 
@@ -73,9 +70,9 @@ impl GpuType {
 impl core::fmt::Display for GpuType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Unknown  => write!(f, "Unknown"),
+            Self::Unknown => write!(f, "Unknown"),
             Self::Discrete => write!(f, "Discrete"),
-            Self::BuiltIn  => write!(f, "Built-in")
+            Self::BuiltIn => write!(f, "Built-in"),
         }
     }
 }
@@ -87,7 +84,7 @@ pub struct GpuInfo {
     pub device_id: u32,
     pub driver: String,
     pub typ: GpuType,
-    pub memory_total: MemorySize
+    pub memory_total: MemorySize,
 }
 
 impl GpuInfo {
@@ -95,7 +92,7 @@ impl GpuInfo {
         match device_id {
             0xBEEF => "VirtualBox Graphics Adapter",
             0xCAFE => "VirtualBox Guest Service",
-            _ => "Unknown"
+            _ => "Unknown",
         }
     }
 
@@ -117,7 +114,7 @@ impl GpuInfo {
             0x164E => "Raphael",
             0x1681 => "Rembrandt",
             0x1900 | 0x1901 => "HawkPoint",
-            _ => "Unknown"
+            _ => "Unknown",
         }
     }
 
@@ -142,7 +139,7 @@ impl GpuInfo {
         match device_id {
             0x0405 => "SVGA II",
             0x0710 => "SVGA",
-            _ => "Unknown"
+            _ => "Unknown",
         }
     }
 
@@ -174,7 +171,10 @@ pub fn name(vendor_id: u32, device_id: u32) -> String {
         0x15ad => format!("VMware {}", GpuInfo::vmware_name(device_id)),
         0x1002 => format!("AMD {}", GpuInfo::amd_name(device_id)),
         0x8086 => format!("Intel {}", GpuInfo::intel_name(device_id)),
-        0x80EE => format!("InnoTek Systemberatung GmbH {}", GpuInfo::innotek_name(device_id)),
+        0x80EE => format!(
+            "InnoTek Systemberatung GmbH {}",
+            GpuInfo::innotek_name(device_id)
+        ),
         _ => "Unknown".to_owned(),
     }
 }

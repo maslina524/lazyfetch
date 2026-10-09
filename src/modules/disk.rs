@@ -1,26 +1,20 @@
-use alloc::{
-    string::String,
-    collections::BTreeMap,
-    vec::Vec,
-    borrow::Cow
-};
+use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 
 use doc::Docs;
 
 use crate::{
-    detect::disk::get_disks, 
-    impl_module, 
-    formats::{MemorySize, Percent, Time}, 
-    impl_display_for_module, 
-    json::Value, 
-    modules::{self, Module}, 
-    sync::OnceLock
+    detect::disk::get_disks,
+    formats::{MemorySize, Percent, Time},
+    impl_display_for_module, impl_module,
+    json::Value,
+    modules::{self, Module},
+    sync::OnceLock,
 };
 
 static DISK_LIST: OnceLock<DiskList> = OnceLock::new();
 
 pub struct DiskList {
-    pub list: Vec<Disk>
+    pub list: Vec<Disk>,
 }
 
 impl DiskList {
@@ -31,15 +25,11 @@ impl DiskList {
 
 impl Module for DiskList {
     fn new() -> Self {
-        Self {
-            list: get_disks()
-        }
+        Self { list: get_disks() }
     }
 
     fn get() -> &'static Self {
-        DISK_LIST.get_or_init(|| {
-            Self::new()
-        })
+        DISK_LIST.get_or_init(|| Self::new())
     }
 
     fn title(&self) -> &'static str {
@@ -54,8 +44,15 @@ impl Module for DiskList {
         "disk"
     }
 
-    fn format(&self, key: super::FormatValue, format: super::FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
-        let s = self.list.iter()
+    fn format(
+        &self,
+        key: super::FormatValue,
+        format: super::FormatValue,
+        map: Option<&BTreeMap<String, Value>>,
+    ) -> Option<Cow<'_, str>> {
+        let s = self
+            .list
+            .iter()
             .filter_map(|d| d.format(key, format, map))
             .collect::<Vec<_>>()
             .join("\n");
@@ -90,7 +87,7 @@ pub struct Disk {
     pub seconds: u8,
     pub milliseconds: u16,
     pub mountpoint: String,
-    pub mount_from: String
+    pub mount_from: String,
 }
 
 #[allow(clippy::unused_self)]
@@ -104,11 +101,26 @@ impl Disk {
     }
 
     impl_module!(
-        size_used, size_total, size_percentage, files_used, 
-        files_total, files_percentage, is_external, is_hidden, 
-        filesystem, name, is_readonly, create_time, 
-        size_percentage_bar, files_percentage_bar, days, hours, 
-        minutes, seconds, milliseconds, mountpoint, 
+        size_used,
+        size_total,
+        size_percentage,
+        files_used,
+        files_total,
+        files_percentage,
+        is_external,
+        is_hidden,
+        filesystem,
+        name,
+        is_readonly,
+        create_time,
+        size_percentage_bar,
+        files_percentage_bar,
+        days,
+        hours,
+        minutes,
+        seconds,
+        milliseconds,
+        mountpoint,
         mount_from
     );
 }

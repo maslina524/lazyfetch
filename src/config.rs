@@ -1,18 +1,12 @@
-use alloc::{
-    string::String,
-    borrow::ToOwned,
-    vec::Vec,
-    collections::BTreeMap,
-    vec
-};
+use alloc::{borrow::ToOwned, collections::BTreeMap, string::String, vec, vec::Vec};
 
 use crate::{
-    modules::Module, 
-    sync::OnceLock,
-    json::{Map, Value},
+    format,
     formats::{ColorPlan, Percent, Temperature, format_color},
+    json::{Map, Value},
+    modules::Module,
+    sync::OnceLock,
     warning,
-    format
 };
 
 static PRESET: OnceLock<Config> = OnceLock::new();
@@ -26,125 +20,141 @@ pub struct Config {
 
 impl Config {
     pub fn get_or_init(config: Self) -> &'static Self {
-        PRESET.get_or_init(|| {
-            config
-        })
+        PRESET.get_or_init(|| config)
     }
 
     pub fn from_json(json: &Map) -> Self {
         // Build modules
-        let modules = json.get_array("modules").map_or_else(ConfigModuleArray::default, |map_modules| {
-            let mut inner = Vec::with_capacity(map_modules.len());
+        let modules =
+            json.get_array("modules")
+                .map_or_else(ConfigModuleArray::default, |map_modules| {
+                    let mut inner = Vec::with_capacity(map_modules.len());
 
-            for m in map_modules {
-                if let Some(obj) = m.as_object() {
-                    let Some(typ) = obj.get_string("type") else {
-                        continue;
-                    };
-                    let format = obj.get_string("format").map(String::to_owned);
-                    let key = obj.get_string("key").map(String::to_owned);
-                    let key_color = obj.get_string("keyColor").map(String::to_owned);
+                    for m in map_modules {
+                        if let Some(obj) = m.as_object() {
+                            let Some(typ) = obj.get_string("type") else {
+                                continue;
+                            };
+                            let format = obj.get_string("format").map(String::to_owned);
+                            let key = obj.get_string("key").map(String::to_owned);
+                            let key_color = obj.get_string("keyColor").map(String::to_owned);
 
-                    let mut map = BTreeMap::new();
-                    if typ.as_str() == "colors" {
-                        let symbol = obj.get("symbol").unwrap_or(&Value::Null).clone();
-                        map.insert("symbol".to_owned(), symbol);
+                            let mut map = BTreeMap::new();
+                            if typ.as_str() == "colors" {
+                                let symbol = obj.get("symbol").unwrap_or(&Value::Null).clone();
+                                map.insert("symbol".to_owned(), symbol);
 
-                        let padding_left = obj.get("paddingLeft").unwrap_or(&Value::Null).clone();
-                        map.insert("paddingLeft".to_owned(), padding_left);
+                                let padding_left =
+                                    obj.get("paddingLeft").unwrap_or(&Value::Null).clone();
+                                map.insert("paddingLeft".to_owned(), padding_left);
+                            }
+
+                            let preset_mod = ConfigModule::new(typ, format, key, key_color, map);
+                            inner.push(preset_mod);
+                        } else if let Some(typ) = m.as_string() {
+                            let preset_mod = ConfigModule::from_str(typ);
+                            inner.push(preset_mod);
+                        }
                     }
-
-                    let preset_mod = ConfigModule::new(typ, format, key, key_color, map);
-                    inner.push(preset_mod);
-                } else if let Some(typ) = m.as_string() {
-                    let preset_mod = ConfigModule::from_str(typ);
-                    inner.push(preset_mod);
-                }
-            }
-            ConfigModuleArray { inner }
-        });
-
-        // Display
-        let display = json.get_object("display").map_or_else(ConfigDisplay::default, |dspl_obj| {
-            let separator = dspl_obj
-                .get_string("separator").map_or_else(|| ": ".to_owned(), ToOwned::to_owned);
-
-            let percent = dspl_obj
-                .get_object("percent")
-                .and_then(|o| o.get_object("color"))
-                .map_or_else(ConfigPercent::default, |color_obj|
-            {
-                let red = color_obj
-                    .get_string("red").map_or_else(|| "red".to_owned(), ToOwned::to_owned);
-
-                let yellow = color_obj
-                    .get_string("yellow").map_or_else(|| "yellow".to_owned(), ToOwned::to_owned);
-
-                let green = color_obj
-                    .get_string("green").map_or_else(|| "green".to_owned(), ToOwned::to_owned);
-
-                ConfigPercent { 
-                    green: format_color(&green, ColorPlan::FG), 
-                    yellow: format_color(&yellow, ColorPlan::FG), 
-                    red: format_color(&red, ColorPlan::FG)
-                }
-            });
-
-            let temperature = dspl_obj.get_object("temperature").map_or_else(ConfigTemperature::default, |o| {
-                // Color
-                let (red, yellow, green) = o.get_object("color").map_or(("red", "yellow", "green"), |color_obj| {
-                    let red = color_obj
-                        .get_string("red").map_or_else(|| "red", String::as_str);
-
-                    let yellow = color_obj
-                        .get_string("yellow").map_or_else(|| "yellow", String::as_str);
-
-                    let green = color_obj
-                        .get_string("green").map_or_else(|| "green", String::as_str);
-
-                    (red, yellow, green)
+                    ConfigModuleArray { inner }
                 });
 
-                let typ = o.get_string("type").map_or_else(|| "celsius", String::as_str);
+        // Display
+        let display = json
+            .get_object("display")
+            .map_or_else(ConfigDisplay::default, |dspl_obj| {
+                let separator = dspl_obj
+                    .get_string("separator")
+                    .map_or_else(|| ": ".to_owned(), ToOwned::to_owned);
 
-                ConfigTemperature { 
-                    green: format_color(green, ColorPlan::FG), 
-                    yellow: format_color(yellow, ColorPlan::FG), 
-                    red: format_color(red, ColorPlan::FG),
-                    typ: TemperatureType::from_str(typ)
+                let percent = dspl_obj
+                    .get_object("percent")
+                    .and_then(|o| o.get_object("color"))
+                    .map_or_else(ConfigPercent::default, |color_obj| {
+                        let red = color_obj
+                            .get_string("red")
+                            .map_or_else(|| "red".to_owned(), ToOwned::to_owned);
+
+                        let yellow = color_obj
+                            .get_string("yellow")
+                            .map_or_else(|| "yellow".to_owned(), ToOwned::to_owned);
+
+                        let green = color_obj
+                            .get_string("green")
+                            .map_or_else(|| "green".to_owned(), ToOwned::to_owned);
+
+                        ConfigPercent {
+                            green: format_color(&green, ColorPlan::FG),
+                            yellow: format_color(&yellow, ColorPlan::FG),
+                            red: format_color(&red, ColorPlan::FG),
+                        }
+                    });
+
+                let temperature = dspl_obj.get_object("temperature").map_or_else(
+                    ConfigTemperature::default,
+                    |o| {
+                        // Color
+                        let (red, yellow, green) =
+                            o.get_object("color")
+                                .map_or(("red", "yellow", "green"), |color_obj| {
+                                    let red = color_obj
+                                        .get_string("red")
+                                        .map_or_else(|| "red", String::as_str);
+
+                                    let yellow = color_obj
+                                        .get_string("yellow")
+                                        .map_or_else(|| "yellow", String::as_str);
+
+                                    let green = color_obj
+                                        .get_string("green")
+                                        .map_or_else(|| "green", String::as_str);
+
+                                    (red, yellow, green)
+                                });
+
+                        let typ = o
+                            .get_string("type")
+                            .map_or_else(|| "celsius", String::as_str);
+
+                        ConfigTemperature {
+                            green: format_color(green, ColorPlan::FG),
+                            yellow: format_color(yellow, ColorPlan::FG),
+                            red: format_color(red, ColorPlan::FG),
+                            typ: TemperatureType::from_str(typ),
+                        }
+                    },
+                );
+
+                ConfigDisplay {
+                    separator,
+                    percent,
+                    temperature,
                 }
             });
-
-            ConfigDisplay { separator, percent, temperature }
-
-        });
 
         // Logo
         #[allow(clippy::option_if_let_else)]
         let logo = if let Some(logo_val) = json.get("logo") {
             if let Some(obj) = logo_val.as_object() {
-                let padding = obj.get_object("padding").map_or_else(ConfigPadding::default, |p| 
-                    ConfigPadding {
+                let padding = obj
+                    .get_object("padding")
+                    .map_or_else(ConfigPadding::default, |p| ConfigPadding {
                         top: p.get_number("top").unwrap_or(0.0) as usize,
                         bottom: p.get_number("bottom").unwrap_or(2.0) as usize,
                         right: p.get_number("right").unwrap_or(3.0) as usize,
                         left: p.get_number("left").unwrap_or(0.0) as usize,
-                    }
-                );
+                    });
 
-                ConfigLogo {
-                    typ: None,
-                    padding
-                }
+                ConfigLogo { typ: None, padding }
             } else if let Some(typ) = logo_val.as_string() {
                 ConfigLogo {
                     typ: Some(typ.clone()),
-                    padding: ConfigPadding::default()
+                    padding: ConfigPadding::default(),
                 }
             } else if logo_val.is_null() {
                 ConfigLogo {
                     typ: Some("null".to_owned()),
-                    padding: ConfigPadding::default()
+                    padding: ConfigPadding::default(),
                 }
             } else {
                 ConfigLogo::default()
@@ -156,7 +166,7 @@ impl Config {
         Self {
             modules,
             display,
-            logo
+            logo,
         }
     }
 
@@ -170,7 +180,7 @@ impl Config {
     pub fn module_by_typ(&self, string: &str) -> Option<&ConfigModule> {
         for m in self.modules.as_inner() {
             if m.typ == string {
-                return Some(m)
+                return Some(m);
             }
         }
         None
@@ -211,7 +221,7 @@ impl Config {
             i if (0..=50).contains(&i) => self.display.percent.green.as_str(),
             i if (50..=75).contains(&i) => self.display.percent.yellow.as_str(),
             i if (75..=100).contains(&i) => self.display.percent.red.as_str(),
-            _ => "0"
+            _ => "0",
         };
 
         format!("\x1b[{color}m{val}%\x1b[0m")
@@ -228,7 +238,7 @@ impl Config {
             i if (0.0..50.0).contains(&i) => self.display.percent.green.as_str(),
             i if (50.0..75.0).contains(&i) => self.display.percent.yellow.as_str(),
             i if (75.0..100.0).contains(&i) => self.display.percent.red.as_str(),
-            _ => "0"
+            _ => "0",
         };
 
         format!("\x1b[{color}m{}°{}\x1b[0m", val.get(), val.symbol())
@@ -242,7 +252,7 @@ impl Config {
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct ConfigModuleArray {
-    pub inner: Vec<ConfigModule>
+    pub inner: Vec<ConfigModule>,
 }
 
 impl ConfigModuleArray {
@@ -279,7 +289,7 @@ impl Default for ConfigModuleArray {
             ConfigModule::from_str("commit"),
             ConfigModule::from_str("version"),
             ConfigModule::from_str("break"),
-            ConfigModule::from_str("colors")
+            ConfigModule::from_str("colors"),
         ];
         Self { inner }
     }
@@ -291,17 +301,35 @@ pub struct ConfigModule {
     pub format: Option<String>,
     pub key: Option<String>,
     pub key_color: Option<String>,
-    pub map: BTreeMap<String, Value>
+    pub map: BTreeMap<String, Value>,
 }
 
 impl ConfigModule {
     pub fn from_str(typ: &str) -> Self {
-        Self { typ: typ.to_owned(), format: None, key: None, key_color: None, map: BTreeMap::new() }
+        Self {
+            typ: typ.to_owned(),
+            format: None,
+            key: None,
+            key_color: None,
+            map: BTreeMap::new(),
+        }
     }
 
-    pub fn new(typ: &str, format: Option<String>, key: Option<String>, key_color: Option<String>, map: BTreeMap<String, Value>) -> Self {
+    pub fn new(
+        typ: &str,
+        format: Option<String>,
+        key: Option<String>,
+        key_color: Option<String>,
+        map: BTreeMap<String, Value>,
+    ) -> Self {
         let key_color = key_color.map(|s| format_color(&s, ColorPlan::FG));
-        Self { typ: typ.to_owned(), format, key, key_color, map }
+        Self {
+            typ: typ.to_owned(),
+            format,
+            key,
+            key_color,
+            map,
+        }
     }
 }
 
@@ -309,15 +337,15 @@ impl ConfigModule {
 pub struct ConfigDisplay {
     pub separator: String,
     pub percent: ConfigPercent,
-    pub temperature: ConfigTemperature
+    pub temperature: ConfigTemperature,
 }
 
 impl Default for ConfigDisplay {
     fn default() -> Self {
-        Self { 
+        Self {
             separator: String::from(": "),
             percent: ConfigPercent::default(),
-            temperature: ConfigTemperature::default()
+            temperature: ConfigTemperature::default(),
         }
     }
 }
@@ -332,7 +360,12 @@ pub struct ConfigPadding {
 
 impl Default for ConfigPadding {
     fn default() -> Self {
-        Self { top: 0, bottom: 2, right: 3, left: 0 }
+        Self {
+            top: 0,
+            bottom: 2,
+            right: 3,
+            left: 0,
+        }
     }
 }
 
@@ -345,16 +378,20 @@ pub struct ConfigPercent {
 
 impl Default for ConfigPercent {
     fn default() -> Self {
-        Self { green: "32".to_owned(), yellow: "33".to_owned(), red: "31".to_owned() }
+        Self {
+            green: "32".to_owned(),
+            yellow: "33".to_owned(),
+            red: "31".to_owned(),
+        }
     }
 }
 
 #[derive(Debug, Default)]
-pub enum TemperatureType { 
+pub enum TemperatureType {
     #[default]
     Celsius,
     Fahrenheit,
-    Kelvin
+    Kelvin,
 }
 
 impl TemperatureType {
@@ -385,7 +422,7 @@ impl Default for ConfigTemperature {
             green: "32".to_owned(),
             yellow: "33".to_owned(),
             red: "31".to_owned(),
-            typ: TemperatureType::default()
+            typ: TemperatureType::default(),
         }
     }
 }
@@ -393,5 +430,5 @@ impl Default for ConfigTemperature {
 #[derive(Default, Debug)]
 pub struct ConfigLogo {
     pub typ: Option<String>,
-    pub padding: ConfigPadding
+    pub padding: ConfigPadding,
 }

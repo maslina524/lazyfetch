@@ -1,11 +1,7 @@
-use alloc::borrow::{ToOwned, Cow};
+use alloc::borrow::{Cow, ToOwned};
 
 use crate::{
-    warning,
-    unix::fs,
-    unix::path::Path,
-    detect::initsystem::InitSystemInfo,
-    str::SmolStr
+    detect::initsystem::InitSystemInfo, str::SmolStr, unix::fs, unix::path::Path, warning,
 };
 
 impl InitSystemInfo {
@@ -16,24 +12,27 @@ impl InitSystemInfo {
             .trim()
             .to_owned();
 
-        let exe = fs::read_to_string("/proc/1/cmdline").map_or_else(|_| {
-            warning!("Failed to read /proc/1/cmdline");
-            Path::new()
-        }, |cmdline| {
-            let first_arg = cmdline.split('\0').next().unwrap_or("");
-            if first_arg.is_empty() {
+        let exe = fs::read_to_string("/proc/1/cmdline").map_or_else(
+            |_| {
+                warning!("Failed to read /proc/1/cmdline");
                 Path::new()
-            } else {
-                fs::read_link(first_arg, 64).map_or(Path::new(), Path::from)
-            }
-        });
+            },
+            |cmdline| {
+                let first_arg = cmdline.split('\0').next().unwrap_or("");
+                if first_arg.is_empty() {
+                    Path::new()
+                } else {
+                    fs::read_link(first_arg, 64).map_or(Path::new(), Path::from)
+                }
+            },
+        );
 
         let version = SmolStr::from_static("0.0.0.0");
 
-        Self { 
+        Self {
             exe,
-            name: Cow::Owned(name), 
-            version
+            name: Cow::Owned(name),
+            version,
         }
     }
 }

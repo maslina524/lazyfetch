@@ -1,15 +1,15 @@
 use core::fmt::Write;
 
-use crate::{
-    base64, 
-    format, 
-    image::Image, 
-    print::Stdout
-};
+use crate::{base64, format, image::Image, print::Stdout};
 
 const CHUNK: usize = 4096;
 
-pub fn print_image(image: &Image, cols: Option<usize>, rows: Option<usize>, image_id: u32) -> core::fmt::Result {
+pub fn print_image(
+    image: &Image,
+    cols: Option<usize>,
+    rows: Option<usize>,
+    image_id: u32,
+) -> core::fmt::Result {
     let (w, h) = image.get_size();
 
     let raw = image.as_rgba_bytes();

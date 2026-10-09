@@ -1,25 +1,20 @@
 use core::fmt::Display;
 
-use alloc::{
-    collections::BTreeMap,
-    string::String,
-    borrow::ToOwned,
-    vec::Vec
-};
+use alloc::{borrow::ToOwned, collections::BTreeMap, string::String, vec::Vec};
 
-use crate::imp::{
-    fs,
-    path::Path
-};
+use crate::imp::{fs, path::Path};
 
 pub struct LineBased<'lb> {
     inner: BTreeMap<&'lb str, &'lb str>,
-    splitter: char
+    splitter: char,
 }
 
 impl<'lb> LineBased<'lb> {
     pub const fn new() -> Self {
-        Self { inner: BTreeMap::new(), splitter: '=' }
+        Self {
+            inner: BTreeMap::new(),
+            splitter: '=',
+        }
     }
 
     pub fn parse_os_release() -> Result<Self, fs::ReadError> {
@@ -60,22 +55,18 @@ impl<'lb> LineBased<'lb> {
             ret.insert(k, v.trim());
         }
 
-        Self { inner: ret, splitter: split }
+        Self {
+            inner: ret,
+            splitter: split,
+        }
     }
 
     pub fn get_default(&self, key: &str, default: &'lb str) -> &'lb str {
-        self
-            .inner
-            .get(key)
-            .copied()
-            .unwrap_or(default)
+        self.inner.get(key).copied().unwrap_or(default)
     }
 
     pub fn get(&self, key: &str) -> Option<&'lb str> {
-        self
-            .inner
-            .get(key)
-            .map(|s| s.trim())
+        self.inner.get(key).map(|s| s.trim())
     }
 
     pub fn insert(&mut self, key: &str, value: &str) -> Option<&'lb str> {
@@ -89,7 +80,7 @@ pub fn parse_range_notation(s: &str, capacity: Option<usize>) -> Vec<usize> {
     if s.trim().is_empty() {
         return Vec::new();
     }
-    
+
     let mut ret = capacity.map_or_else(Vec::new, Vec::with_capacity);
 
     for part in s.split(',').map(str::trim) {
@@ -97,7 +88,8 @@ pub fn parse_range_notation(s: &str, capacity: Option<usize>) -> Vec<usize> {
             if let (Ok(start), Ok(end)) = (
                 part[..pos].parse::<usize>(),
                 part[pos + 1..].parse::<usize>(),
-            ) && start <= end {
+            ) && start <= end
+            {
                 ret.extend(start..=end);
             }
         } else if let Ok(n) = part.parse::<usize>() {

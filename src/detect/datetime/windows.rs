@@ -1,16 +1,13 @@
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
+    detect::datetime::{AmPm, DatetimeInfo},
     format,
     windows::error::ErrorCode,
     windows::link::{
         DYNAMIC_TIME_ZONE_INFORMATION, GetDynamicTimeZoneInformation, GetLocalTime,
-        GetTimeZoneInformation, SYSTEMTIME, TIME_ZONE_INFORMATION
+        GetTimeZoneInformation, SYSTEMTIME, TIME_ZONE_INFORMATION,
     },
-    detect::datetime::{DatetimeInfo, AmPm}
 };
 
 impl DatetimeInfo {
@@ -41,29 +38,42 @@ impl DatetimeInfo {
         let am_pm = AmPm::from_hour(hour as u8);
 
         Self {
-            year, month, month_name, month_name_short,
-            hour, minute, second, week,
-            weekday, weekday_short, day_in_year, day_in_month,
-            day_in_week, offset_utc, timezone_name, am_pm
+            year,
+            month,
+            month_name,
+            month_name_short,
+            hour,
+            minute,
+            second,
+            week,
+            weekday,
+            weekday_short,
+            day_in_year,
+            day_in_month,
+            day_in_week,
+            offset_utc,
+            timezone_name,
+            am_pm,
         }
     }
 
     fn month_name(num: u16) -> String {
         match num {
-            1  => "January",
-            2  => "February",
-            3  => "March",
-            4  => "April",
-            5  => "May",
-            6  => "June",
-            7  => "July",
-            8  => "August",
-            9  => "September",
+            1 => "January",
+            2 => "February",
+            3 => "March",
+            4 => "April",
+            5 => "May",
+            6 => "June",
+            7 => "July",
+            8 => "August",
+            9 => "September",
             10 => "October",
             11 => "November",
             12 => "December",
-            _ => unreachable!()
-        }.to_owned()
+            _ => unreachable!(),
+        }
+        .to_owned()
     }
 
     fn day_of_week(num: u16) -> String {
@@ -75,25 +85,26 @@ impl DatetimeInfo {
             4 => "Thursday",
             5 => "Friday",
             6 => "Saturday",
-            _ => unreachable!()
-        }.to_owned()
+            _ => unreachable!(),
+        }
+        .to_owned()
     }
-    
+
     fn day_in_year(time: &SYSTEMTIME) -> u16 {
         let mut days_in_month: [u8; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        let is_leap = time.wYear.is_multiple_of(400) || 
-                    (time.wYear.is_multiple_of(4) && time.wYear.is_multiple_of(100));
-        
+        let is_leap = time.wYear.is_multiple_of(400)
+            || (time.wYear.is_multiple_of(4) && time.wYear.is_multiple_of(100));
+
         if is_leap {
             days_in_month[1] = 29;
         }
-        
-        let mut  day_os_year = 0u16;
+
+        let mut day_os_year = 0u16;
         for i in days_in_month.iter().take(time.wMonth as usize - 1) {
             day_os_year += *i as u16;
         }
         day_os_year += time.wDay;
-        
+
         day_os_year
     }
 
@@ -101,9 +112,7 @@ impl DatetimeInfo {
         let mut tzi = TIME_ZONE_INFORMATION::default();
 
         // SAFETY: Completely safe
-        let ret = unsafe {
-            GetTimeZoneInformation(&raw mut tzi)
-        };
+        let ret = unsafe { GetTimeZoneInformation(&raw mut tzi) };
         if ret == 0xFFFF_FFFF {
             ErrorCode::last().panic()
         }
@@ -131,28 +140,25 @@ impl DatetimeInfo {
         let mut tzi = TIME_ZONE_INFORMATION::default();
 
         // SAFETY: Completely safe
-        let ret = unsafe {
-            GetTimeZoneInformation(&raw mut tzi)
-        };
+        let ret = unsafe { GetTimeZoneInformation(&raw mut tzi) };
         if ret == 0xFFFF_FFFF {
             ErrorCode::last().panic()
         }
 
-        let current_bias = tzi.Bias + if tzi.DaylightBias != 0 {
-            tzi.DaylightBias
-        } else {
-            tzi.StandardBias
-        };
-        
-        tzi.DaylightBias != 0 &&current_bias != (tzi.Bias + tzi.StandardBias)
+        let current_bias = tzi.Bias
+            + if tzi.DaylightBias != 0 {
+                tzi.DaylightBias
+            } else {
+                tzi.StandardBias
+            };
+
+        tzi.DaylightBias != 0 && current_bias != (tzi.Bias + tzi.StandardBias)
     }
 
     fn time_zone_string() -> String {
         let mut tzi = DYNAMIC_TIME_ZONE_INFORMATION::default();
         // SAFETY: Completely safe
-        unsafe {
-            GetDynamicTimeZoneInformation(&raw mut tzi)
-        };
+        unsafe { GetDynamicTimeZoneInformation(&raw mut tzi) };
 
         let is_daylight = Self::is_daylight();
         let buf = if is_daylight {

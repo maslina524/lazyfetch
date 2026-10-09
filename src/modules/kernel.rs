@@ -2,12 +2,8 @@ use alloc::string::String;
 use doc::Docs;
 
 use crate::{
-    detect::kernel::KernelInfo,
-    impl_module, 
-    formats::MemorySize, 
-    impl_display_for_module, 
-    modules::Module, 
-    sync::OnceLock
+    detect::kernel::KernelInfo, formats::MemorySize, impl_display_for_module, impl_module,
+    modules::Module, sync::OnceLock,
 };
 
 static KERNEL: OnceLock<Kernel> = OnceLock::new();
@@ -25,7 +21,7 @@ pub struct Kernel {
     #[doc = "Display version"]
     pub display_version: String, // Exists in fastfetch, but not supported (?)
     #[doc = "Page size"]
-    pub page_size: MemorySize
+    pub page_size: MemorySize,
 }
 
 impl Module for Kernel {
@@ -38,14 +34,12 @@ impl Module for Kernel {
             version: info.version,
             arch: env!("TARGET_ARCH"),
             display_version: info.display_version,
-            page_size: info.page_size
+            page_size: info.page_size,
         }
     }
 
     fn get() -> &'static Self {
-        KERNEL.get_or_init(|| {
-            Self::new()
-        })
+        KERNEL.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -60,10 +54,7 @@ impl Module for Kernel {
         "kernel"
     }
 
-    impl_module!(
-        sysname, release, version, arch,
-        display_version, page_size
-    );
+    impl_module!(sysname, release, version, arch, display_version, page_size);
 }
 
 impl_display_for_module!(Kernel);

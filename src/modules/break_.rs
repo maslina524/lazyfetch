@@ -1,16 +1,16 @@
 use alloc::{
-    string::String,
+    borrow::{Cow, ToOwned},
     collections::BTreeMap,
-    borrow::{ToOwned, Cow}
+    string::String,
 };
 
 use doc::Docs;
 
 use crate::{
-    impl_display_for_module, 
-    modules::{self, Module}, 
+    impl_display_for_module,
+    json::Value,
+    modules::{self, Module},
     sync::OnceLock,
-    json::Value
 };
 
 static BREAK: OnceLock<Break> = OnceLock::new();
@@ -24,9 +24,7 @@ impl Module for Break {
     }
 
     fn get() -> &'static Self {
-        BREAK.get_or_init(|| {
-            Self::new()
-        })
+        BREAK.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -41,7 +39,12 @@ impl Module for Break {
         "break"
     }
 
-    fn format(&self, _key: super::FormatValue, format: super::FormatValue, _map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>> {
+    fn format(
+        &self,
+        _key: super::FormatValue,
+        format: super::FormatValue,
+        _map: Option<&BTreeMap<String, Value>>,
+    ) -> Option<Cow<'_, str>> {
         let title_str = format.format.unwrap_or_else(|| self.title());
         Some(modules::expand_env_in_module(title_str.to_owned()))
     }

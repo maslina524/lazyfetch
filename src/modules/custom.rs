@@ -1,11 +1,6 @@
 use doc::Docs;
 
-use crate::{
-    impl_display_for_module,
-    impl_module,
-    modules::Module, 
-    sync::OnceLock
-};
+use crate::{impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
 
 static CUSTOM: OnceLock<Custom> = OnceLock::new();
 
@@ -18,9 +13,7 @@ impl Module for Custom {
     }
 
     fn get() -> &'static Self {
-        CUSTOM.get_or_init(|| {
-            Self::new()
-        })
+        CUSTOM.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {

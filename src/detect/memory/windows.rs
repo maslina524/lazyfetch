@@ -1,22 +1,20 @@
 use core::mem;
 
 use crate::{
-    windows::link::{GlobalMemoryStatusEx, MEMORYSTATUSEX},
     detect::memory::MemoryInfo,
-    formats::MemorySize
+    formats::MemorySize,
+    windows::link::{GlobalMemoryStatusEx, MEMORYSTATUSEX},
 };
 
 impl MemoryInfo {
     pub fn new() -> Self {
         let mut mem_status = MEMORYSTATUSEX {
             dwLength: mem::size_of::<MEMORYSTATUSEX>() as u32,
-            .. MEMORYSTATUSEX::default()
+            ..MEMORYSTATUSEX::default()
         };
 
         // SAFETY: Completely safe
-        let ret = unsafe {
-            GlobalMemoryStatusEx(&raw mut mem_status)
-        };
+        let ret = unsafe { GlobalMemoryStatusEx(&raw mut mem_status) };
         if ret == 0 {
             return Self::default();
         }
@@ -33,10 +31,7 @@ impl MemoryInfo {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        detect::memory::MemoryInfo,
-        formats::MemorySize
-    };
+    use crate::{detect::memory::MemoryInfo, formats::MemorySize};
 
     #[test]
     fn ram_test() {

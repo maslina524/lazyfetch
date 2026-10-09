@@ -1,10 +1,6 @@
 use alloc::borrow::Cow;
 
-use crate::{
-    cfg_if, 
-    imp::path::Path, 
-    str::SmolStr
-};
+use crate::{cfg_if, imp::path::Path, str::SmolStr};
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -19,7 +15,7 @@ cfg_if! {
 pub struct InitSystemInfo {
     pub exe: Path,
     pub name: Cow<'static, str>,
-    pub version: SmolStr
+    pub version: SmolStr,
 }
 
 #[cfg(target_os = "windows")]
@@ -28,4 +24,6 @@ pub fn pid() -> u32 {
 }
 
 #[cfg(not(target_os = "windows"))]
-pub const fn pid() -> u32 { 1 }
+pub const fn pid() -> u32 {
+    1
+}

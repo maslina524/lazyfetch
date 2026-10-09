@@ -1,29 +1,27 @@
-use alloc::{
-    borrow::ToOwned,
-    string::String
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
-    detect::gpu::{GpuInfo, GpuType}, 
-    unix::fs::{self, ItemType},
-    parser::LineBased,
+    detect::gpu::{GpuInfo, GpuType},
+    format,
     formats::MemorySize,
+    parser::LineBased,
+    unix::fs::{self, ItemType},
     warning,
-    format
 };
 
-const GPU_CLASSES: [&str; 6] = ["0x030000", "0x030100", "0x030200", "0x038000", "0x038100", "0x038200"];
+const GPU_CLASSES: [&str; 6] = [
+    "0x030000", "0x030100", "0x030200", "0x038000", "0x038100", "0x038200",
+];
 
 impl GpuInfo {
     pub fn new() -> Self {
         let Some(pci_address) = Self::pci_address() else {
-            return Self::default()
+            return Self::default();
         };
 
         let vendor_id = Self::vendor_id(&pci_address);
         let device_id = Self::device_id(&pci_address);
-        let driver = Self::driver(&pci_address)
-            .map_or_else(String::new, ToOwned::to_owned);
+        let driver = Self::driver(&pci_address).map_or_else(String::new, ToOwned::to_owned);
         let memory_total = Self::memory_total();
 
         Self {
@@ -32,11 +30,11 @@ impl GpuInfo {
             device_id,
             driver,
             typ: GpuType::get_by_vendor_and_bus(vendor_id, device_id, &pci_address),
-            memory_total
+            memory_total,
         }
     }
 
-    #[todo::todo("Hard to implement on a VM, will be implemented later")]    
+    #[todo::todo("Hard to implement on a VM, will be implemented later")]
     fn memory_total() -> MemorySize {
         MemorySize::default()
     }
@@ -52,8 +50,7 @@ impl GpuInfo {
         };
         let trimmed = content.trim_start_matches("0x").trim();
 
-        u32::from_str_radix(trimmed, 16)
-            .unwrap_or(0)
+        u32::from_str_radix(trimmed, 16).unwrap_or(0)
     }
 
     fn driver(pci_address: &str) -> Option<&'static str> {
@@ -97,13 +94,12 @@ impl GpuInfo {
 
     fn vendor_id(pci_address: &str) -> u32 {
         let content = fs::read_to_string(format!("/sys/bus/pci/devices/{pci_address}/vendor"))
-            .unwrap_or_else(|e| { 
+            .unwrap_or_else(|e| {
                 warning!("Failed to read /sys/class/drm/card0/device/vendor: {e}");
                 "0x0".to_owned()
             });
         let trimmed = content.trim_start_matches("0x").trim();
 
-        u32::from_str_radix(trimmed, 16)
-            .unwrap_or(0)
+        u32::from_str_radix(trimmed, 16).unwrap_or(0)
     }
 }

@@ -1,21 +1,18 @@
-use alloc::{
-    borrow::Cow, 
-    vec::Vec
-};
+use alloc::{borrow::Cow, vec::Vec};
 
 use crate::{
     abort,
-    modules::cpu::Cpu,
     detect::cpu,
     format,
     formats::Frequency,
     imp::{fs, path::Path},
+    modules::cpu::Cpu,
     parser::{LineBased, parse_range_notation},
 };
 
 pub fn get() -> Cpu {
-    let info = LineBased::parse_cpu_info()
-        .unwrap_or_else(|e| abort!("Failed to open /proc/cpuinfo: {e}"));
+    let info =
+        LineBased::parse_cpu_info().unwrap_or_else(|e| abort!("Failed to open /proc/cpuinfo: {e}"));
 
     let name = info.get_default("model name", "Unknown");
     let base_freq_raw = info

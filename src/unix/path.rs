@@ -1,26 +1,23 @@
 use core::ffi::CStr;
 
-use alloc::{
-    borrow::ToOwned, 
-    ffi::CString, 
-    string::String, 
-    vec::Vec
-};
+use alloc::{borrow::ToOwned, ffi::CString, string::String, vec::Vec};
 
 use crate::{
-    abort, 
-    unix::libc::{getenv, access}
+    abort,
+    unix::libc::{access, getenv},
 };
 
 #[repr(transparent)]
 #[derive(Clone)]
 pub struct Path {
-    inner: String
+    inner: String,
 }
 
 impl Path {
     pub const fn new() -> Self {
-        Self { inner: String::new() }
+        Self {
+            inner: String::new(),
+        }
     }
 
     // ONLY FOR LINUX
@@ -49,7 +46,9 @@ impl Path {
     }
 
     pub fn with_capacity(cap: usize) -> Self {
-        Self { inner: String::with_capacity(cap) }
+        Self {
+            inner: String::with_capacity(cap),
+        }
     }
 
     fn clear(mut self) -> Self {
@@ -58,7 +57,7 @@ impl Path {
         self.inner = self.inner.replace('\\', "/");
         let parts: Vec<&str> = self.inner.split('/').filter(|x| !x.is_empty()).collect();
         let mut new_inner = String::with_capacity(cap + 8);
-        
+
         if is_absolute {
             new_inner.push('/');
         }
@@ -108,7 +107,7 @@ impl Path {
         parts.extend(path_parts);
         Self::from(parts)
     }
-    
+
     pub fn exists(&self) -> bool {
         let c_str = self.as_c_str();
         // SAFETY: Completely safe
@@ -134,31 +133,46 @@ impl From<String> for Path {
 
 impl From<&String> for Path {
     fn from(value: &String) -> Self {
-        Self { inner: value.to_owned() }.clear()
+        Self {
+            inner: value.to_owned(),
+        }
+        .clear()
     }
 }
 
 impl From<&str> for Path {
     fn from(value: &str) -> Self {
-        Self { inner: value.to_owned() }.clear()
+        Self {
+            inner: value.to_owned(),
+        }
+        .clear()
     }
 }
 
 impl From<Vec<String>> for Path {
     fn from(value: Vec<String>) -> Self {
-        Self { inner: value.join("/") }.clear()
+        Self {
+            inner: value.join("/"),
+        }
+        .clear()
     }
 }
 
 impl From<Vec<&str>> for Path {
     fn from(value: Vec<&str>) -> Self {
-        Self { inner: value.join("/") }.clear()
+        Self {
+            inner: value.join("/"),
+        }
+        .clear()
     }
 }
 
 impl From<&Self> for Path {
     fn from(value: &Self) -> Self {
-        Self { inner: value.as_str().to_owned() }.clear()
+        Self {
+            inner: value.as_str().to_owned(),
+        }
+        .clear()
     }
 }
 

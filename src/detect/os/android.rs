@@ -1,22 +1,19 @@
 use core::ffi::CStr;
 
 use alloc::{
-    borrow::{ToOwned, Cow},
-    string::String
+    borrow::{Cow, ToOwned},
+    string::String,
 };
 
 use crate::{
+    detect::os::{OsInfo, get_id},
     str::SmolStr,
-    unix::{
-        fs,
-        libc::__system_property_get
-    },
-    detect::os::{OsInfo, get_id}
+    unix::{fs, libc::__system_property_get},
 };
 
 const PROP_VALUE_MAX: usize = 92;
-const SYSNAME       : &str  = "Linux";
-const ID            : &str  = "android";
+const SYSNAME: &str = "Linux";
+const ID: &str = "android";
 
 impl OsInfo {
     pub fn new() -> Self {
@@ -31,7 +28,7 @@ impl OsInfo {
 
         let name = Cow::Borrowed("Android");
 
-        Self { 
+        Self {
             sysname: SYSNAME,
             name,
             id: get_id(),
@@ -41,10 +38,10 @@ impl OsInfo {
             codename: Cow::Borrowed(""),
             variant: Cow::Borrowed(""),
             variant_id: Cow::Borrowed(""),
-            nerd: '\u{f17b}'
+            nerd: '\u{f17b}',
         }
     }
-    
+
     fn get_version(id: &str) -> Option<String> {
         match id {
             "debian" => fs::read_to_string("/etc/debian_version").ok(),
@@ -52,13 +49,13 @@ impl OsInfo {
             "rhel" | "centos" | "fedora" | "rocky" | "almalinux" => {
                 let content = fs::read_to_string("/etc/redhat-release").ok()?;
                 Some(Self::extract_version(&content))
-            },
+            }
             "gentoo" => {
                 let content = fs::read_to_string("/etc/gentoo-release").ok()?;
                 Some(Self::extract_version(&content))
-            },
+            }
             "arch" => Some("Rolling".to_owned()),
-            _ => None // os-release -> VERSION_ID
+            _ => None, // os-release -> VERSION_ID
         }
     }
 
@@ -79,7 +76,7 @@ impl OsInfo {
             }
             break;
         }
-        
+
         ret
     }
 }

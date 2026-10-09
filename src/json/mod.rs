@@ -9,10 +9,7 @@ pub use parser::{Map, Value};
 
 use alloc::string::{String, ToString};
 
-use crate::{
-    imp::path::Path,
-    imp::fs,
-};
+use crate::{imp::fs, imp::path::Path};
 
 #[derive(Debug)]
 pub struct Json;
@@ -21,7 +18,7 @@ impl Json {
     pub fn from_file(path: impl Into<Path>) -> Result<Map, String> {
         let string = match fs::read_to_string(path.into()) {
             Ok(c) => c,
-            Err(e) => return Err(e.to_string())
+            Err(e) => return Err(e.to_string()),
         };
         let map = Self::from_str(&string)?;
         Ok(map)
@@ -50,7 +47,7 @@ mod tests {
             "nullable": null,
             "boolean": true
         }"#;
-        
+
         let json = Json::from_str(source);
         println!("{json:#?}");
     }

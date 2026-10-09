@@ -1,13 +1,13 @@
 use alloc::{
-    borrow::{ToOwned, Cow},
-    string::String
+    borrow::{Cow, ToOwned},
+    string::String,
 };
 
 use crate::{
-    parser::LineBased,
-    imp::fs,
     detect::os::OsInfo,
-    str::{ConcatStr, SmolStr}
+    imp::fs,
+    parser::LineBased,
+    str::{ConcatStr, SmolStr},
 };
 
 const SYSNAME: &str = "Linux";
@@ -16,9 +16,7 @@ impl OsInfo {
     pub fn new() -> Self {
         let os_release = LineBased::parse_os_release().unwrap();
 
-        let name_raw = os_release
-            .get_default("NAME", "Unknown")
-            .to_owned();
+        let name_raw = os_release.get_default("NAME", "Unknown").to_owned();
         let name = Cow::Owned(name_raw);
 
         let codename = os_release.get_default("VERSION_CODENAME", "");
@@ -26,15 +24,13 @@ impl OsInfo {
         let variant_id = os_release.get_default("VARIANT_ID", "");
         let id = os_release.get_default("ID", "Unknown");
 
-        let version_raw = Self::get_version(id).unwrap_or_else(|| {
-            os_release.get_default("VERSION_ID", "Unknown").to_owned()
-        });
+        let version_raw = Self::get_version(id)
+            .unwrap_or_else(|| os_release.get_default("VERSION_ID", "Unknown").to_owned());
         let version = SmolStr::from(version_raw);
-
 
         let nerd = Self::nerd(id);
 
-        Self { 
+        Self {
             sysname: SYSNAME,
             name,
             id: ConcatStr::new([id, ""]),
@@ -44,7 +40,7 @@ impl OsInfo {
             codename: Cow::Borrowed(codename),
             variant: Cow::Borrowed(variant),
             variant_id: Cow::Borrowed(variant_id),
-            nerd
+            nerd,
         }
     }
 
@@ -71,24 +67,32 @@ impl OsInfo {
             "zorin" => '\u{f32f}',
             "cachyos" => '\u{f385}',
             "void" => '\u{f32e}',
-            _ => '\u{ebc6}'
+            _ => '\u{ebc6}',
         }
     }
-    
+
     fn get_version(id: &str) -> Option<String> {
         match id {
-            "debian" => fs::read_to_string("/etc/debian_version").map(|s| s.trim().to_owned()).ok(),
-            "alpine" => fs::read_to_string("/etc/alpine-version").map(|s| s.trim().to_owned()).ok(),
+            "debian" => fs::read_to_string("/etc/debian_version")
+                .map(|s| s.trim().to_owned())
+                .ok(),
+            "alpine" => fs::read_to_string("/etc/alpine-version")
+                .map(|s| s.trim().to_owned())
+                .ok(),
             "rhel" | "centos" | "fedora" | "rocky" | "almalinux" => {
-                let content = fs::read_to_string("/etc/redhat-release").map(|s| s.trim().to_owned()).ok()?;
+                let content = fs::read_to_string("/etc/redhat-release")
+                    .map(|s| s.trim().to_owned())
+                    .ok()?;
                 Some(Self::extract_version(&content))
-            },
+            }
             "gentoo" => {
-                let content = fs::read_to_string("/etc/gentoo-release").map(|s| s.trim().to_owned()).ok()?;
+                let content = fs::read_to_string("/etc/gentoo-release")
+                    .map(|s| s.trim().to_owned())
+                    .ok()?;
                 Some(Self::extract_version(&content))
-            },
+            }
             "arch" => Some("Rolling".to_owned()),
-            _ => None // os-release -> VERSION_ID
+            _ => None, // os-release -> VERSION_ID
         }
     }
 
@@ -109,7 +113,7 @@ impl OsInfo {
             }
             break;
         }
-        
+
         ret
     }
 }

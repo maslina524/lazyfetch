@@ -17,7 +17,7 @@ pub type Dir = *mut c_void;
 pub type c_size = usize;
 pub type c_ssize = isize;
 pub type c_mode = c_uint;
-pub type c_time = c_long;   // i64
+pub type c_time = c_long; // i64
 pub type c_clockid = c_int; // WORK ONLY IN LINUX
 pub type c_uid = u32;
 pub type c_gid = u32;
@@ -59,7 +59,12 @@ unsafe extern "C" {
     pub safe fn getmntent(stream: FileHandle) -> *mut Mntent;
     pub safe fn fclose(stream: FileHandle) -> c_int;
     pub safe fn strerror(errnum: c_int) -> *mut c_char;
-    pub safe fn fwrite(ptr: *const c_void, size: c_size, nmemb: c_size, stream: FileHandle) -> c_size;
+    pub safe fn fwrite(
+        ptr: *const c_void,
+        size: c_size,
+        nmemb: c_size,
+        stream: FileHandle,
+    ) -> c_size;
     pub safe fn fread(ptr: *mut c_void, size: c_size, nmemb: c_size, stream: FileHandle) -> c_size;
     pub safe fn rewind(stream: FileHandle);
     pub safe fn mkdir(pathname: *const c_char, mode: c_mode) -> c_int;
@@ -82,7 +87,12 @@ unsafe extern "C" {
     pub safe fn sysconf(name: c_int) -> c_long;
     pub safe fn localtime(timep: *const c_time) -> *mut Tm;
     pub safe fn time(tloc: *mut c_time) -> c_time;
-    pub safe fn getaddrinfo(node: *const c_char, service: *const c_char, hints: *const AddrInfo, res: *mut *mut AddrInfo) -> c_int;
+    pub safe fn getaddrinfo(
+        node: *const c_char,
+        service: *const c_char,
+        hints: *const AddrInfo,
+        res: *mut *mut AddrInfo,
+    ) -> c_int;
     pub safe fn socket(domain: c_int, type_: c_int, protocol: c_int) -> c_int;
     pub safe fn connect(sockfd: c_int, addr: *const SockAddr, addrlen: c_socklen) -> c_int;
     pub safe fn send(sockfd: c_int, buf: *const c_void, len: c_size, flags: c_int) -> c_ssize;
@@ -99,7 +109,12 @@ unsafe extern "C" {
     pub safe fn fgets(s: *mut c_char, size: c_int, stream: FileHandle) -> *mut c_char;
     pub safe fn uname(st: *mut Utsname) -> c_int;
     pub safe fn statvfs(path: *const c_char, buf: *mut Statvfs) -> c_int;
-    pub safe fn strftime(s: *mut c_char, max: c_size, format: *const c_char, tm: *const Tm) -> c_size;
+    pub safe fn strftime(
+        s: *mut c_char,
+        max: c_size,
+        format: *const c_char,
+        tm: *const Tm,
+    ) -> c_size;
     pub safe fn gmtime(timep: *const c_time) -> *mut Tm;
 }
 
@@ -219,23 +234,23 @@ pub struct Mntent {
 
 #[repr(C)]
 pub struct Utsname {
-    pub sysname:    [u8; 65],
-    pub nodename:   [u8; 65],
-    pub release:    [u8; 65],
-    pub version:    [u8; 65],
-    pub machine:    [u8; 65],
+    pub sysname: [u8; 65],
+    pub nodename: [u8; 65],
+    pub release: [u8; 65],
+    pub version: [u8; 65],
+    pub machine: [u8; 65],
     pub domainname: [u8; 65],
 }
 
 impl Default for Utsname {
     fn default() -> Self {
-        Self { 
-            sysname: [0u8; 65], 
-            nodename: [0u8; 65], 
-            release: [0u8; 65], 
-            version: [0u8; 65], 
-            machine: [0u8; 65], 
-            domainname: [0u8; 65] 
+        Self {
+            sysname: [0u8; 65],
+            nodename: [0u8; 65],
+            release: [0u8; 65],
+            version: [0u8; 65],
+            machine: [0u8; 65],
+            domainname: [0u8; 65],
         }
     }
 }
@@ -260,7 +275,13 @@ pub struct LinuxDirent64 {
 
 impl Default for LinuxDirent64 {
     fn default() -> Self {
-        Self { d_ino: 0, d_off: 0, d_reclen: 0, d_type: 0, d_name: [c_char::default(); 256] }
+        Self {
+            d_ino: 0,
+            d_off: 0,
+            d_reclen: 0,
+            d_type: 0,
+            d_name: [c_char::default(); 256],
+        }
     }
 }
 
@@ -302,7 +323,7 @@ pub struct InAddr {
 #[derive(Default)]
 pub struct SockAddr {
     pub sa_family: c_sa_family,
-    pub sa_data: [c_char; 14]
+    pub sa_data: [c_char; 14],
 }
 
 #[repr(C)]
@@ -378,12 +399,12 @@ pub struct Dirent {
 
 impl Default for Dirent {
     fn default() -> Self {
-        Self { 
-            d_ino: Default::default(), 
-            d_off: Default::default(), 
-            d_reclen: Default::default(), 
-            d_type: Default::default(), 
-            d_name: [0; 256]
+        Self {
+            d_ino: Default::default(),
+            d_off: Default::default(),
+            d_reclen: Default::default(),
+            d_type: Default::default(),
+            d_name: [0; 256],
         }
     }
 }

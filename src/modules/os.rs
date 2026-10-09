@@ -4,14 +4,12 @@ use doc::Docs;
 use alloc::borrow::Cow;
 
 use crate::{
-    detect::os::OsInfo, 
-    format, 
-    impl_module, 
-    impl_display_for_module, 
-    str::{ConcatStr, SmolStr}, 
-    logo::LogoInfo, 
-    modules::Module, 
-    sync::OnceLock
+    detect::os::OsInfo,
+    format, impl_display_for_module, impl_module,
+    logo::LogoInfo,
+    modules::Module,
+    str::{ConcatStr, SmolStr},
+    sync::OnceLock,
 };
 
 static OS: OnceLock<Os> = OnceLock::new();
@@ -45,7 +43,7 @@ pub struct Os {
     #[doc = "Logo as a nerd emoji"]
     pub nerd_emoji: char,
     #[doc = "Logo as a colored nerd emoji"]
-    pub colored_nerd_emoji: String
+    pub colored_nerd_emoji: String,
 }
 
 impl Module for Os {
@@ -57,31 +55,30 @@ impl Module for Os {
         // #[cfg(target_family = "unix")]
         let pretty_name = format!("{} {}", info.name, info.version);
 
-        Self { 
-            sysname: info.sysname, 
-            name: info.name, 
-            pretty_name, 
-            id: info.id, 
-            id_like: info.id_like, 
-            variant: info.variant, 
-            variant_id: info.variant_id, 
-            version: info.version, 
-            version_id: info.version_id, 
-            codename: info.codename, 
-            build_id: String::new(), 
+        Self {
+            sysname: info.sysname,
+            name: info.name,
+            pretty_name,
+            id: info.id,
+            id_like: info.id_like,
+            variant: info.variant,
+            variant_id: info.variant_id,
+            version: info.version,
+            version_id: info.version_id,
+            codename: info.codename,
+            build_id: String::new(),
             arch: env!("TARGET_ARCH"),
             nerd_emoji: info.nerd,
             colored_nerd_emoji: format!(
-                "\x1b[{}m{}\x1b[0m", 
-                LogoInfo::get().expect("Unreachable").color_keys, info.nerd
+                "\x1b[{}m{}\x1b[0m",
+                LogoInfo::get().expect("Unreachable").color_keys,
+                info.nerd
             ),
         }
     }
 
     fn get() -> &'static Self {
-        OS.get_or_init(|| {
-            Self::new()
-        })
+        OS.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -97,9 +94,18 @@ impl Module for Os {
     }
 
     impl_module!(
-        sysname, name, pretty_name, id,
-        id_like, variant, variant_id, version,
-        version_id, codename, build_id, arch,
+        sysname,
+        name,
+        pretty_name,
+        id,
+        id_like,
+        variant,
+        variant_id,
+        version,
+        version_id,
+        codename,
+        build_id,
+        arch,
         nerd_emoji
     );
 }

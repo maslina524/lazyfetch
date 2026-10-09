@@ -1,16 +1,11 @@
 use core::error::Error;
 
-use alloc::{
-    vec::Vec,
-    vec
-};
+use alloc::{vec, vec::Vec};
 
 use crate::{
+    crc32,
     deflate::{self, DeflateError},
-    image::{
-        ColorType, ColorTypeError, Image, Rgba, RgbaConvertError
-    },
-    crc32
+    image::{ColorType, ColorTypeError, Image, Rgba, RgbaConvertError},
 };
 
 const PNG_SIG: &[u8] = b"\x89PNG\x0D\x0A\x1A\x0A";
@@ -30,24 +25,26 @@ pub enum PngError {
     IncorrectCrc32,
     DeflateError(DeflateError),
     ColorTypeError(ColorTypeError),
-    RgbaConvertError(RgbaConvertError)
+    RgbaConvertError(RgbaConvertError),
 }
 
 impl core::fmt::Display for PngError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::InvalidSignature                       => write!(f, "Png: Invalid signature"),
-            Self::IncorrectDataLen                       => write!(f, "Png: Incorrect data len"),
-            Self::FirstChunkIsNotIHDR                    => write!(f, "Png: First chunk is not IHDR"),
-            Self::IncorrectIHDRLen                       => write!(f, "Png: Incorrect IHDR len"),
-            Self::IncorrectIHDRName                      => write!(f, "Png: Incorrect IHDR name"),
-            Self::UnsupportedCompression                 => write!(f, "Png: Unsupported compression method (only Deflate)"),
-            Self::UnsupportedFilter                      => write!(f, "Png: Unsupported filter method (only 0)"),
-            Self::UnsupportedInterlace                   => write!(f, "Png: Unsupported interlace method (only 0)"),
-            Self::UnexpectedEof                          => write!(f, "Png: Unexpected end of data"),
-            Self::IncorrectCrc32                         => write!(f, "Png: Chunk has invalid crc32, file is corrupted"),
-            Self::DeflateError(e)         => write!(f, "{e}"),
-            Self::ColorTypeError(e)     => write!(f, "{e}"),
+            Self::InvalidSignature => write!(f, "Png: Invalid signature"),
+            Self::IncorrectDataLen => write!(f, "Png: Incorrect data len"),
+            Self::FirstChunkIsNotIHDR => write!(f, "Png: First chunk is not IHDR"),
+            Self::IncorrectIHDRLen => write!(f, "Png: Incorrect IHDR len"),
+            Self::IncorrectIHDRName => write!(f, "Png: Incorrect IHDR name"),
+            Self::UnsupportedCompression => {
+                write!(f, "Png: Unsupported compression method (only Deflate)")
+            }
+            Self::UnsupportedFilter => write!(f, "Png: Unsupported filter method (only 0)"),
+            Self::UnsupportedInterlace => write!(f, "Png: Unsupported interlace method (only 0)"),
+            Self::UnexpectedEof => write!(f, "Png: Unexpected end of data"),
+            Self::IncorrectCrc32 => write!(f, "Png: Chunk has invalid crc32, file is corrupted"),
+            Self::DeflateError(e) => write!(f, "{e}"),
+            Self::ColorTypeError(e) => write!(f, "{e}"),
             Self::RgbaConvertError(e) => write!(f, "{e}"),
         }
     }
@@ -202,11 +199,20 @@ const fn paeth_predictor(a: u8, b: u8, c: u8) -> u8 {
     }
 }
 
-fn unfilter_scanline(filter: u8, current: &mut [u8], previous: Option<&[u8]>, bpp: usize) -> Result<(), PngError> {
+fn unfilter_scanline(
+    filter: u8,
+    current: &mut [u8],
+    previous: Option<&[u8]>,
+    bpp: usize,
+) -> Result<(), PngError> {
     for i in 0..current.len() {
         let a = if i >= bpp { current[i - bpp] } else { 0 };
         let b = previous.map_or(0, |p| p[i]);
-        let c = if i >= bpp { previous.map_or(0, |p| p[i - bpp]) } else { 0 };
+        let c = if i >= bpp {
+            previous.map_or(0, |p| p[i - bpp])
+        } else {
+            0
+        };
 
         current[i] = match filter {
             0 => current[i],
@@ -244,7 +250,7 @@ pub fn is_png(content: &[u8]) -> bool {
 pub struct Png {
     image: Image,
     typ: ColorType,
-    depth: u8
+    depth: u8,
 }
 
 impl Png {
@@ -254,7 +260,7 @@ impl Png {
         if safe_take(&mut iter, PNG_SIG.len())? != PNG_SIG {
             return Err(PngError::InvalidSignature);
         }
-    
+
         let ihdr = Ihdr::new(&mut iter)?;
         // crate::println!("IHDR: {:?}", ihdr);
 
@@ -265,10 +271,10 @@ impl Png {
             match &chunk.name {
                 b"IEND" => {
                     break;
-                },
+                }
                 b"IDAT" => {
                     idat_data.extend_from_slice(&chunk.data);
-                },
+                }
                 _ => {}
             }
         }
@@ -300,7 +306,11 @@ impl Png {
             prev_row = Some(row);
         }
 
-        Ok(Self { image, typ: ihdr.color_type, depth: ihdr.depth })
+        Ok(Self {
+            image,
+            typ: ihdr.color_type,
+            depth: ihdr.depth,
+        })
     }
 
     pub const fn as_image(&self) -> &Image {
@@ -323,7 +333,7 @@ mod tests {
         let data = fs::read("test/png/rgba8.png").unwrap();
         let png = Png::decode(&data).unwrap();
         let size = png.as_image().size();
-        
+
         println!("{png:#?}");
         assert_eq!(size, (3, 3));
         assert_eq!(png.depth, 8);
@@ -335,7 +345,7 @@ mod tests {
         let data = fs::read("test/png/graya16.png").unwrap();
         let png = Png::decode(&data).unwrap();
         let size = png.as_image().size();
-        
+
         println!("{png:#?}");
         assert_eq!(size, (2, 2));
         assert_eq!(png.depth, 16);
@@ -347,7 +357,7 @@ mod tests {
         let data = fs::read("test/png/gray8.png").unwrap();
         let png = Png::decode(&data).unwrap();
         let size = png.as_image().size();
-        
+
         println!("{png:#?}");
         assert_eq!(size, (2, 2));
         assert_eq!(png.depth, 8);

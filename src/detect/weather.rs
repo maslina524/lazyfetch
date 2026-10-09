@@ -1,25 +1,23 @@
-use core::str::{SplitN, FromStr};
+use core::str::{FromStr, SplitN};
 
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
-    format, 
-    formats::{Percent, Temperature}, 
+    format,
+    formats::{Percent, Temperature},
     imp::{
-        env, 
-        fs::{self, Access, File}, 
-        http::Request, 
-        path::Path
-    }, 
-    str::ConcatStr, 
-    modules::weather::Weather, 
-    warning
+        env,
+        fs::{self, Access, File},
+        http::Request,
+        path::Path,
+    },
+    modules::weather::Weather,
+    str::ConcatStr,
+    warning,
 };
 
-const WTTR_URL: &str = "http://wttr.in/?lang=en&format=%c;%C;%x;%h;%t;%f;%w;%l;%m;%M;%p;%P;%u;%D;%S;%z;%s;%d;%T;%Z";
+const WTTR_URL: &str =
+    "http://wttr.in/?lang=en&format=%c;%C;%x;%h;%t;%f;%w;%l;%m;%M;%p;%P;%u;%D;%S;%z;%s;%d;%T;%Z";
 
 pub fn get() -> Weather {
     let cur_hour = env::timestamp_hours();
@@ -68,29 +66,29 @@ pub fn get() -> Weather {
     Weather {
         result: ConcatStr::new([temperature_actual, " — ", condition, " (", location, ")"]),
         condition_emoji,
-        condition, 
-        condition_symbol, 
-        humidity: Percent::from_str(humidity).expect("Unreachable"), 
-        temperature_actual: Temperature::from_str(temperature_actual).expect("Unreachable"), 
-        temperature_feels: Temperature::from_str(temperature_feels).expect("Unreachable"), 
-        wind, 
-        location, 
-        moon_emoji, 
+        condition,
+        condition_symbol,
+        humidity: Percent::from_str(humidity).expect("Unreachable"),
+        temperature_actual: Temperature::from_str(temperature_actual).expect("Unreachable"),
+        temperature_feels: Temperature::from_str(temperature_feels).expect("Unreachable"),
+        wind,
+        location,
+        moon_emoji,
         moon_day: moon_day
             .parse::<u8>()
-            .expect("Strange response from wttr.is"), 
-        precipitation, 
-        pressure, 
+            .expect("Strange response from wttr.is"),
+        precipitation,
+        pressure,
         uv_index: uv_index
             .parse::<u8>()
-            .expect("Strange response from wttr.is"), 
-        dawn, 
-        sunrise, 
-        zenith, 
-        sunset, 
-        dusk, 
-        time, 
-        timezone
+            .expect("Strange response from wttr.is"),
+        dawn,
+        sunrise,
+        zenith,
+        sunset,
+        dusk,
+        time,
+        timezone,
     }
 }
 
@@ -99,7 +97,7 @@ fn request() -> Option<String> {
         Ok(r) => r,
         Err(e) => {
             warning!("Failed to connect to server (weather): {}", e.code());
-            return None
+            return None;
         }
     };
     if response.is_success() {
@@ -112,10 +110,13 @@ fn request() -> Option<String> {
 
 fn read_cache() -> Option<(u64, String)> {
     fn next_item<'iter>(parts: &mut SplitN<'iter, char>) -> Option<&'iter str> {
-        parts.next().map_or_else(|| {
-            warning!("Strange response from ip-api.com");
-            None
-        }, Some)
+        parts.next().map_or_else(
+            || {
+                warning!("Strange response from ip-api.com");
+                None
+            },
+            Some,
+        )
     }
 
     let path = Path::cache().join("weather");

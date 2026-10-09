@@ -6,14 +6,18 @@ use crate::{
         error::{self, ErrorCode},
         fs::{self, ReadError},
         libc::{c_pid, getppid},
-        path::Path
+        path::Path,
     },
-    warning
+    warning,
 };
 
 static BLACKLIST: [&str; 6] = [
-    "python", "python3", "lazyfetch",
-    "fastfetch", "neofetch", "cargo"
+    "python",
+    "python3",
+    "lazyfetch",
+    "fastfetch",
+    "neofetch",
+    "cargo",
 ];
 
 #[derive(Default)]
@@ -22,7 +26,7 @@ struct Process {
     name: SmolStr,
     arg: Path,
     exe_path: Path,
-    tty: i32
+    tty: i32,
 }
 
 impl Process {
@@ -43,16 +47,20 @@ impl Process {
 
         let exe = fs::read_link(format!("/proc/{pid}/exe"), 1024).unwrap_or_default();
         let exe_path = Path::from(exe);
-        
+
         let tty_path = fs::read_link(format!("/proc/{pid}/fd/0"), 512).unwrap_or_default();
         let tty = Path::from(tty_path)
             .last()
             .and_then(|s| s.parse::<i32>().ok())
             .unwrap_or(-1);
 
-        Ok(
-            Self { pid, name: SmolStr::from(name), arg, exe_path, tty }
-        )
+        Ok(Self {
+            pid,
+            name: SmolStr::from(name),
+            arg,
+            exe_path,
+            tty,
+        })
     }
 }
 
@@ -65,12 +73,13 @@ fn get_terminal_process() -> Result<Process, ReadError> {
         let mut item_iter = item_iter.skip(1); // pid
         let raw = item_iter.next().expect("Strange unix /proc/pid/state");
 
-        let name = if raw.starts_with('(') && raw.ends_with(')') { // Valid unix format
+        let name = if raw.starts_with('(') && raw.ends_with(')') {
+            // Valid unix format
             &raw[1..raw.len() - 1]
         } else {
             raw
         };
-        
+
         if (0..=1).contains(&pid) || name.eq_ignore_ascii_case("MainThread") {
             return Process::new(pid, name).map_err(ErrorCode::into);
         }
@@ -88,30 +97,27 @@ fn get_terminal_process() -> Result<Process, ReadError> {
 }
 
 pub fn get() -> Shell {
-    let terminal = get_terminal_process()
-        .unwrap_or_else(|e| {
-            warning!("Failed to read /proc/pid/stat: {e}");
-            Process::default()
-        });
-    
-    let exe_name = terminal.arg
+    let terminal = get_terminal_process().unwrap_or_else(|e| {
+        warning!("Failed to read /proc/pid/stat: {e}");
+        Process::default()
+    });
+
+    let exe_name = terminal.arg.last().map(SmolStr::from).unwrap_or_default();
+
+    let pretty_name = terminal
+        .exe_path
         .last()
         .map(SmolStr::from)
         .unwrap_or_default();
 
-    let pretty_name = terminal.exe_path
-        .last()
-        .map(SmolStr::from)
-        .unwrap_or_default();
-
-    Shell { 
-        process_name: terminal.name, 
-        exe: terminal.arg, 
-        exe_name, 
-        version: SmolStr::default(), 
-        pid: terminal.pid as u32, 
-        pretty_name, 
-        exe_path: terminal.exe_path, 
-        tty: terminal.tty
+    Shell {
+        process_name: terminal.name,
+        exe: terminal.arg,
+        exe_name,
+        version: SmolStr::default(),
+        pid: terminal.pid as u32,
+        pretty_name,
+        exe_path: terminal.exe_path,
+        tty: terminal.tty,
     }
 }

@@ -3,15 +3,10 @@ use doc::Docs;
 
 use crate::{
     detect::cpu,
-    impl_module,
-    formats::{
-        Frequency,
-        Temperature,
-        MicroArch
-    },
-    impl_display_for_module,
+    formats::{Frequency, MicroArch, Temperature},
+    impl_display_for_module, impl_module,
     modules::Module,
-    sync::OnceLock
+    sync::OnceLock,
 };
 
 static CPU: OnceLock<Cpu> = OnceLock::new();
@@ -45,7 +40,7 @@ pub struct Cpu {
     #[doc = "Code name, like \"Raptor Lake\""]
     pub code_name: &'static str,
     #[doc = "Technology"]
-    pub technology: &'static str
+    pub technology: &'static str,
 }
 
 impl Module for Cpu {
@@ -54,9 +49,7 @@ impl Module for Cpu {
     }
 
     fn get() -> &'static Self {
-        CPU.get_or_init(|| {
-            Self::new()
-        })
+        CPU.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -74,12 +67,22 @@ impl Module for Cpu {
     fn string_name(&self) -> &'static str {
         "cpu"
     }
-    
+
     impl_module!(
-        name, vendor, cores_physical, cores_logical,
-        cores_online, freq_base, freq_max, temperature,
-        core_types, packages, march, numa_nodes,
-        code_name, technology
+        name,
+        vendor,
+        cores_physical,
+        cores_logical,
+        cores_online,
+        freq_base,
+        freq_max,
+        temperature,
+        core_types,
+        packages,
+        march,
+        numa_nodes,
+        code_name,
+        technology
     );
 }
 

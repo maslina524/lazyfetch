@@ -42,12 +42,11 @@ macro_rules! abort {
 macro_rules! get_fn {
     ($handle:tt, $name:expr, $typ:ident) => {{
         // SAFETY: Completely safe
-        let addr = $crate::windows::link::GetProcAddress($handle, $name.as_ptr().cast()).unwrap_or_else(
-            || {
+        let addr = $crate::windows::link::GetProcAddress($handle, $name.as_ptr().cast())
+            .unwrap_or_else(|| {
                 unload($handle);
                 $crate::abort!(concat!(stringify!($name), " not found in dll"));
-            }
-        );
+            });
         core::mem::transmute::<ApiBaseFn, $typ>(addr)
     }};
 }
@@ -66,10 +65,9 @@ macro_rules! get_fn {
     }};
 }
 
-
 #[macro_export]
 /// Copied from `cfg_if`
-/// 
+///
 /// Source link: <https://docs.rs/cfg-if/latest/src/cfg_if/lib.rs.html#1-212>
 macro_rules! cfg_if {
     (
@@ -201,7 +199,9 @@ macro_rules! w {
             out[o] = 0;
             out
         }
-        const fn count(s: &str) -> usize { s.as_bytes().len() + 1 }
+        const fn count(s: &str) -> usize {
+            s.as_bytes().len() + 1
+        }
         to_utf16::<{ count($s) }>($s)
     }};
 }

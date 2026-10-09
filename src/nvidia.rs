@@ -1,17 +1,8 @@
 use core::ffi::{CStr, c_char, c_uint, c_void};
 
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
-use crate::{
-    abort, 
-    sync::OnceLock, 
-    warning,
-    get_fn,
-    cfg_if
-};
+use crate::{abort, cfg_if, get_fn, sync::OnceLock, warning};
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -41,13 +32,20 @@ type nvmlInit = unsafe extern "C" fn() -> nvmlReturn;
 #[allow(non_camel_case_types)]
 type nvmlShutdown = unsafe extern "C" fn() -> nvmlReturn;
 #[allow(non_camel_case_types)]
-type nvmlDeviceGetHandleByIndex = unsafe extern "C" fn(index: c_uint, device: *mut nvmlDevice) -> nvmlReturn;
+type nvmlDeviceGetHandleByIndex =
+    unsafe extern "C" fn(index: c_uint, device: *mut nvmlDevice) -> nvmlReturn;
 #[allow(non_camel_case_types)]
-type nvmlDeviceGetTemperature = unsafe extern "C" fn(device: nvmlDevice, sensor: nvmlTemperatureSensors, temp: *mut c_uint) -> nvmlReturn;
+type nvmlDeviceGetTemperature = unsafe extern "C" fn(
+    device: nvmlDevice,
+    sensor: nvmlTemperatureSensors,
+    temp: *mut c_uint,
+) -> nvmlReturn;
 #[allow(non_camel_case_types)]
-type nvmlDeviceGetClockInfo = unsafe extern "C" fn(device: nvmlDevice, typ: nvmlClockType, clock: *mut u32) -> nvmlReturn;
+type nvmlDeviceGetClockInfo =
+    unsafe extern "C" fn(device: nvmlDevice, typ: nvmlClockType, clock: *mut u32) -> nvmlReturn;
 #[allow(non_camel_case_types)]
-type nvmlDeviceGetName = unsafe extern "C" fn(device: nvmlDevice, name: *mut c_char, length: c_uint) -> nvmlReturn;
+type nvmlDeviceGetName =
+    unsafe extern "C" fn(device: nvmlDevice, name: *mut c_char, length: c_uint) -> nvmlReturn;
 #[allow(non_camel_case_types)]
 type nvmlErrorString = unsafe extern "C" fn(result: nvmlReturn) -> *const c_char;
 
@@ -64,7 +62,7 @@ pub struct NvidiaLib {
     device_get_handle_by_index: nvmlDeviceGetHandleByIndex,
     device_get_temperature: nvmlDeviceGetTemperature,
     get_clock_info: nvmlDeviceGetClockInfo,
-    get_name: nvmlDeviceGetName
+    get_name: nvmlDeviceGetName,
 }
 
 // SAFETY: Fields are never mutated after initialization
@@ -81,11 +79,19 @@ impl NvidiaLib {
             // SAFETY: See above
             let shutdown = unsafe { get_fn!(lib, c"nvmlShutdown", nvmlShutdown) };
             // SAFETY: See above
-            let device_get_handle_by_index = unsafe { get_fn!(lib, c"nvmlDeviceGetHandleByIndex_v2", nvmlDeviceGetHandleByIndex) };
+            let device_get_handle_by_index = unsafe {
+                get_fn!(
+                    lib,
+                    c"nvmlDeviceGetHandleByIndex_v2",
+                    nvmlDeviceGetHandleByIndex
+                )
+            };
             // SAFETY: See above
-            let device_get_temperature = unsafe { get_fn!(lib, c"nvmlDeviceGetTemperature", nvmlDeviceGetTemperature) };
+            let device_get_temperature =
+                unsafe { get_fn!(lib, c"nvmlDeviceGetTemperature", nvmlDeviceGetTemperature) };
             // SAFETY: See above
-            let get_clock_info = unsafe { get_fn!(lib, c"nvmlDeviceGetClockInfo", nvmlDeviceGetClockInfo) };
+            let get_clock_info =
+                unsafe { get_fn!(lib, c"nvmlDeviceGetClockInfo", nvmlDeviceGetClockInfo) };
             // SAFETY: See above
             let get_name = unsafe { get_fn!(lib, c"nvmlDeviceGetName", nvmlDeviceGetName) };
 
@@ -107,14 +113,16 @@ impl NvidiaLib {
             Self {
                 handle: lib,
                 device,
-                init, shutdown, 
-                device_get_handle_by_index, device_get_temperature,
+                init,
+                shutdown,
+                device_get_handle_by_index,
+                device_get_temperature,
                 get_clock_info,
-                get_name
+                get_name,
             }
         })
     }
-    
+
     pub fn drop_nvidia() {
         if let Some(lib) = NVIDIA.get() {
             // SAFETY: FFI call, valid fn pointer resolved above
@@ -138,7 +146,8 @@ impl NvidiaLib {
     pub fn device_name(&self) -> String {
         let mut buf = [c_char::default(); NAME_BUFFER_SIZE + 1];
         // SAFETY: FFI call with a buffer of the declared size
-        let ret = unsafe { (self.get_name)(self.device, buf.as_mut_ptr(), NAME_BUFFER_SIZE as u32) };
+        let ret =
+            unsafe { (self.get_name)(self.device, buf.as_mut_ptr(), NAME_BUFFER_SIZE as u32) };
         if ret != 0 {
             warning!("Failed to get gpu name (nvml)");
             return "Unknown".to_owned();
@@ -153,10 +162,8 @@ impl NvidiaLib {
         let mut clock = 0;
 
         // SAFETY: FFI call with a valid out pointer
-        let ret = unsafe {
-            (self.get_clock_info)(self.device, NVML_CLOCK_SM, &raw mut clock)
-        };
-        
+        let ret = unsafe { (self.get_clock_info)(self.device, NVML_CLOCK_SM, &raw mut clock) };
+
         if ret == 0 {
             clock as f64 / 100.0
         } else {

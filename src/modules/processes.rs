@@ -1,34 +1,24 @@
 use doc::Docs;
 
-use crate::{
-    impl_module, 
-    imp::env, 
-    impl_display_for_module, 
-    modules::Module, 
-    sync::OnceLock
-};
+use crate::{imp::env, impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
 
 static PROCESSES: OnceLock<Processes> = OnceLock::new();
 
 #[derive(Debug, Docs)]
 pub struct Processes {
     #[doc = "Process count"]
-    pub result: usize
+    pub result: usize,
 }
 
 impl Module for Processes {
     fn new() -> Self {
         let result = env::processes_count();
 
-        Self {
-            result
-        }
+        Self { result }
     }
 
     fn get() -> &'static Self {
-        PROCESSES.get_or_init(|| {
-            Self::new()
-        })
+        PROCESSES.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {

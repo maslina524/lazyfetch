@@ -1,11 +1,6 @@
-use alloc::{
-    vec::Vec
-};
+use alloc::vec::Vec;
 
-use crate::{
-    cfg_if, 
-    modules::Disk
-};
+use crate::{cfg_if, modules::Disk};
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -24,4 +19,3 @@ pub fn get_disks() -> Vec<Disk> {
         }
     }
 }
-

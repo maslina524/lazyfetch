@@ -1,7 +1,4 @@
-use crate::{
-    cfg_if, 
-    imp::path::Path
-};
+use crate::{cfg_if, imp::path::Path};
 
 cfg_if! {
     if #[cfg(target_os = "windows")] {
@@ -14,5 +11,5 @@ cfg_if! {
 }
 
 pub struct WallpaperInfo {
-    pub full_path: Path
+    pub full_path: Path,
 }

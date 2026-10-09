@@ -2,19 +2,9 @@
 
 use core::fmt::Write;
 
-use alloc::{
-    string::String, 
-    vec::Vec
-};
+use alloc::{string::String, vec::Vec};
 
-use crate::{
-    abort, 
-    color, 
-    formats::char_width, 
-    image::Image, 
-    sync::OnceLock, 
-    zlib
-};
+use crate::{abort, color, formats::char_width, image::Image, sync::OnceLock, zlib};
 
 macro_rules! logo_mod {
     ($($letter:ident),* $(,)?) => {

@@ -3,11 +3,10 @@ use doc::Docs;
 
 use crate::{
     detect::memory::MemoryInfo,
-    impl_module, 
-    formats::{MemorySize, Percent}, 
-    impl_display_for_module, 
-    modules::Module, 
-    sync::OnceLock
+    formats::{MemorySize, Percent},
+    impl_display_for_module, impl_module,
+    modules::Module,
+    sync::OnceLock,
 };
 
 static MEMORY: OnceLock<Memory> = OnceLock::new();
@@ -40,9 +39,7 @@ impl Module for Memory {
     }
 
     fn get() -> &'static Self {
-        MEMORY.get_or_init(|| {
-            Self::new()
-        })
+        MEMORY.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -57,9 +54,7 @@ impl Module for Memory {
         "cpu"
     }
 
-    impl_module!(
-        used, total, percentage, percentage_bar
-    );
+    impl_module!(used, total, percentage, percentage_bar);
 }
 
 impl_display_for_module!(Memory);

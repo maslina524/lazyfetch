@@ -1,8 +1,4 @@
-use alloc::{
-    string::String,
-    borrow::ToOwned,
-    vec::Vec
-};
+use alloc::{borrow::ToOwned, string::String, vec::Vec};
 
 use crate::format;
 
@@ -45,8 +41,11 @@ impl Url {
             None
         };
 
-        let mut parts = base.split('.').map(ToOwned::to_owned).collect::<Vec<String>>();
-        
+        let mut parts = base
+            .split('.')
+            .map(ToOwned::to_owned)
+            .collect::<Vec<String>>();
+
         // Tld
         let tld = parts.pop()?;
         // Domain
@@ -54,16 +53,21 @@ impl Url {
         // Subdomains
         let subdomains = parts;
 
-        Some(
-            Self { protocol, subdomains, domain, tld, port, path }
-        )
+        Some(Self {
+            protocol,
+            subdomains,
+            domain,
+            tld,
+            port,
+            path,
+        })
     }
 
     pub fn port(&self) -> u16 {
         self.port.unwrap_or(match self.protocol.as_str() {
-            "http"  => 80,
+            "http" => 80,
             "https" => 443,
-            _ => 0
+            _ => 0,
         })
     }
 }
@@ -96,7 +100,7 @@ impl core::fmt::Display for Url {
 #[derive(Debug)]
 pub struct Response {
     code: u16,
-    content: Vec<u8>
+    content: Vec<u8>,
 }
 
 impl Response {
@@ -125,9 +129,7 @@ impl Response {
         let code_str = parts.next();
         let _reason = parts.next();
 
-        let code = code_str
-            .and_then(|s| s.parse::<u16>().ok())
-            .unwrap_or(0);
+        let code = code_str.and_then(|s| s.parse::<u16>().ok()).unwrap_or(0);
 
         Self { code, content }
     }

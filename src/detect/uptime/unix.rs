@@ -1,10 +1,10 @@
 use alloc::string::String;
 
 use crate::{
-    detect::uptime::{UptimeInfo, UPTIME_INFO}, 
+    detect::uptime::{UPTIME_INFO, UptimeInfo},
     format,
     imp::env,
-    unix::libc::{Tm, c_time, get_sysinfo, localtime_r, time}
+    unix::libc::{Tm, c_time, get_sysinfo, localtime_r, time},
 };
 
 const DAY_MS: u64 = 1000 * 60 * 60 * 24;
@@ -59,7 +59,7 @@ impl UptimeInfo {
     fn boot_time(uptime_secs: u64) -> String {
         let mut now_ts: c_time = 0;
         time(&raw mut now_ts);
-        
+
         let boot_ts = now_ts as u64 - uptime_secs;
 
         let mut tm = Tm::default();

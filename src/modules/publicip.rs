@@ -3,11 +3,7 @@ use doc::Docs;
 use alloc::string::String;
 
 use crate::{
-    impl_module,
-    impl_display_for_module,
-    detect::publicip,
-    modules::Module, 
-    sync::OnceLock
+    detect::publicip, impl_display_for_module, impl_module, modules::Module, sync::OnceLock,
 };
 
 static PUBLICIP: OnceLock<PublicIP> = OnceLock::new();
@@ -26,9 +22,7 @@ impl Module for PublicIP {
     }
 
     fn get() -> &'static Self {
-        PUBLICIP.get_or_init(|| {
-            Self::new()
-        })
+        PUBLICIP.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -43,9 +37,7 @@ impl Module for PublicIP {
         "publicip"
     }
 
-    impl_module!(
-        ip, location
-    );
+    impl_module!(ip, location);
 }
 
 impl_display_for_module!(PublicIP);

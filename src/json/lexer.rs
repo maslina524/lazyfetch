@@ -1,7 +1,4 @@
-use alloc::{
-    string::String,
-    vec::Vec,
-};
+use alloc::{string::String, vec::Vec};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Token {
@@ -13,22 +10,27 @@ pub enum Token {
     Null,
 
     // Paren
-    LCurly, RCurly,
-    LBrace, RBrace,
+    LCurly,
+    RCurly,
+    LBrace,
+    RBrace,
 
     Comma,
-    Colon
+    Colon,
 }
 
 #[derive(Clone)]
 pub struct TokenStream {
     chars: Vec<char>,
-    pos: usize
+    pos: usize,
 }
 
 impl TokenStream {
     pub fn new(source: &str) -> Self {
-        Self { chars: source.chars().collect(), pos: 0 }
+        Self {
+            chars: source.chars().collect(),
+            pos: 0,
+        }
     }
 
     fn skip_whitespace(&mut self) {
@@ -51,7 +53,7 @@ impl TokenStream {
             ']' => Some(Token::RBrace),
             ',' => Some(Token::Comma),
             ':' => Some(Token::Colon),
-            _ => None
+            _ => None,
         }
     }
 
@@ -59,10 +61,10 @@ impl TokenStream {
         // skip opening quote
         self.pos += 1;
         let mut ret = String::with_capacity(24);
- 
+
         while self.pos < self.chars.len() && self.chars[self.pos] != '"' {
             let ch = self.chars[self.pos];
- 
+
             if ch == '\\' && self.pos + 1 < self.chars.len() {
                 self.pos += 1;
                 match self.chars[self.pos] {
@@ -76,10 +78,9 @@ impl TokenStream {
                     'f' => ret.push('\u{000C}'),
                     'u' => {
                         if self.pos + 4 < self.chars.len() {
-                            let hex: String = self.chars[self.pos + 1..self.pos + 5]
-                                .iter()
-                                .collect();
- 
+                            let hex: String =
+                                self.chars[self.pos + 1..self.pos + 5].iter().collect();
+
                             if let Ok(code) = u32::from_str_radix(&hex, 16)
                                 && let Some(c) = char::from_u32(code)
                             {
@@ -99,18 +100,16 @@ impl TokenStream {
         if self.pos < self.chars.len() {
             self.pos += 1;
         }
- 
+
         Token::String(ret)
     }
 
     fn read_number(&mut self) -> Token {
         let mut ret = String::with_capacity(8);
-        
+
         loop {
             let ch = self.chars[self.pos];
-            if self.pos >= self.chars.len()
-                || (ch != '-' && ch != '.' && !ch.is_numeric())
-            {
+            if self.pos >= self.chars.len() || (ch != '-' && ch != '.' && !ch.is_numeric()) {
                 break;
             }
 
@@ -124,9 +123,12 @@ impl TokenStream {
     fn read_keyword(&mut self, string: &str, token: Token) -> Option<Token> {
         let len = string.len();
 
-        if self.pos + len <= self.chars.len() 
-            && self.chars[self.pos..self.pos + len].iter().copied().eq(string.chars())
-        {   
+        if self.pos + len <= self.chars.len()
+            && self.chars[self.pos..self.pos + len]
+                .iter()
+                .copied()
+                .eq(string.chars())
+        {
             self.pos += len;
             return Some(token);
         }
@@ -146,10 +148,7 @@ impl Iterator for TokenStream {
             }
 
             let ch = self.chars[self.pos];
-            if self.pos + 1 < self.chars.len()
-                && ch == '/'
-                && self.chars[self.pos + 1] == '/'
-            {
+            if self.pos + 1 < self.chars.len() && ch == '/' && self.chars[self.pos + 1] == '/' {
                 self.skip_comment();
                 continue;
             }
@@ -287,6 +286,9 @@ mod tests {
         "#;
         let mut stream = TokenStream::new(source);
 
-        assert_eq!(stream.next(), Some(Token::String("Cow says: \"Hello World!\"".to_owned())));
+        assert_eq!(
+            stream.next(),
+            Some(Token::String("Cow says: \"Hello World!\"".to_owned()))
+        );
     }
 }

@@ -13,5 +13,5 @@ cfg_if! {
 #[derive(Default)]
 pub struct MemoryInfo {
     pub total: MemorySize,
-    pub in_use: MemorySize
+    pub in_use: MemorySize,
 }

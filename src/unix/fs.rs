@@ -1,24 +1,24 @@
 use core::{
-    ffi::{CStr, c_int, c_char},
-    ptr
+    ffi::{CStr, c_char, c_int},
+    ptr,
 };
 
 use alloc::{
     string::{FromUtf8Error, String},
+    vec,
     vec::Vec,
-    vec
 };
 
 use crate::{
-    unix::libc::{
-        FileHandle, fopen, fread, fclose, fwrite, rewind, mkdir,
-        Dir, opendir, readdir, readlink, ferror
-    },
     unix::error::{self, ErrorCode},
-    unix::path::Path
+    unix::libc::{
+        Dir, FileHandle, fclose, ferror, fopen, fread, fwrite, mkdir, opendir, readdir, readlink,
+        rewind,
+    },
+    unix::path::Path,
 };
 
-use crate::unix::libc::{open, close, getdents64, LinuxDirent64};
+use crate::unix::libc::{LinuxDirent64, close, getdents64, open};
 const O_RDONLY: c_int = 0;
 
 #[cfg(target_arch = "aarch64")]
@@ -27,12 +27,12 @@ const O_DIRECTORY: c_int = 0x4000;
 const O_DIRECTORY: c_int = 0x10000;
 
 const AT_FDCWD: c_int = -100;
-const BUF_SIZE: usize = 4096 * 16; 
+const BUF_SIZE: usize = 4096 * 16;
 
-const SEEK_END  : c_int = 2;
-const DT_REG    : u8    = 8;
-const DT_DIR    : u8    = 4;
-const DT_LNK    : u8    = 10;
+const SEEK_END: c_int = 2;
+const DT_REG: u8 = 8;
+const DT_DIR: u8 = 4;
+const DT_LNK: u8 = 10;
 
 #[repr(u32)]
 #[derive(Clone, Copy)]
@@ -42,7 +42,7 @@ pub enum Access {
     Append,
     ReadWrite,
     ReadWriteNewFile,
-    ReadAppendNewFile
+    ReadAppendNewFile,
 }
 
 impl Access {
@@ -106,7 +106,7 @@ impl File {
         let new_access = match access {
             Access::Read | Access::Write | Access::ReadWrite => Access::ReadWriteNewFile,
             Access::Append => Access::ReadAppendNewFile,
-            _ => access
+            _ => access,
         };
         Self::open(path, new_access)
     }
@@ -156,7 +156,10 @@ impl Drop for File {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemType {
-    File, Dir, Link, Unknown
+    File,
+    Dir,
+    Link,
+    Unknown,
 }
 
 impl From<u8> for ItemType {
@@ -173,7 +176,7 @@ impl From<u8> for ItemType {
 #[derive(Debug, Clone)]
 pub struct Item {
     typ: ItemType,
-    name: String
+    name: String,
 }
 
 impl Item {
@@ -184,14 +187,14 @@ impl Item {
     pub const fn name(&self) -> &String {
         &self.name
     }
-    
+
     pub fn into_name(self) -> String {
         self.name
     }
 }
 
 pub struct ReadDirIter {
-    dir: Dir
+    dir: Dir,
 }
 
 impl Iterator for ReadDirIter {
@@ -202,7 +205,7 @@ impl Iterator for ReadDirIter {
             crate::println!("Called libc readdir");
             let raw_item = readdir(&raw mut self.dir);
             if raw_item.is_null() {
-                return None
+                return None;
             }
 
             // SAFETY: We check if the pointer is null, safe
@@ -262,9 +265,8 @@ pub fn read_dir_all(path: impl Into<Path>) -> error::Result<Vec<Item>> {
         let mut pos = 0;
         while pos < n as usize {
             // SAFETY: Libc always returns a valid pointer
-            let entry = unsafe {
-                ptr::read_unaligned(buf.as_ptr().add(pos).cast::<LinuxDirent64>()) 
-            };
+            let entry =
+                unsafe { ptr::read_unaligned(buf.as_ptr().add(pos).cast::<LinuxDirent64>()) };
             let reclen = entry.d_reclen as usize;
             if reclen == 0 {
                 break;

@@ -1,13 +1,15 @@
+#![allow(clippy::cargo_common_metadata)]
+
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Expr, Lit, Field, Fields, parse_macro_input};
+use syn::{Data, DeriveInput, Expr, Field, Fields, Lit, parse_macro_input};
 
 fn get_doc_comment(field: &syn::Field) -> Option<String> {
     for attr in &field.attrs {
         if attr.path().is_ident("doc")
             && let Ok(meta) = attr.meta.require_name_value()
-                && let Expr::Lit(expr_lit) = &meta.value
-                    && let Lit::Str(lit) = &expr_lit.lit 
+            && let Expr::Lit(expr_lit) = &meta.value
+            && let Lit::Str(lit) = &expr_lit.lit
         {
             return Some(lit.value());
         }
@@ -16,24 +18,24 @@ fn get_doc_comment(field: &syn::Field) -> Option<String> {
 }
 
 fn field_to_config_name(field: &Field) -> String {
-    field.ident.clone().unwrap().to_string().trim_start_matches("r#").replace('_', "-")
+    field
+        .ident
+        .clone()
+        .unwrap()
+        .to_string()
+        .trim_start_matches("r#")
+        .replace('_', "-")
 }
 
 fn get_fields(data: &Data) -> Vec<&Field> {
     match data {
-        Data::Struct(data_struct) => {
-            match &data_struct.fields {
-                Fields::Named(fields_named) => {
-                    fields_named.named.iter().collect::<Vec<&Field>>()
-                }
-                Fields::Unnamed(fields_unnamed) => {
-                    fields_unnamed.unnamed.iter().collect::<Vec<&Field>>()
-                }
-                Fields::Unit => {
-                    Vec::new()
-                }
+        Data::Struct(data_struct) => match &data_struct.fields {
+            Fields::Named(fields_named) => fields_named.named.iter().collect::<Vec<&Field>>(),
+            Fields::Unnamed(fields_unnamed) => {
+                fields_unnamed.unnamed.iter().collect::<Vec<&Field>>()
             }
-        }
+            Fields::Unit => Vec::new(),
+        },
         _ => {
             panic!("Docs derive only works for structs");
         }
@@ -61,7 +63,7 @@ fn get_fields(data: &Data) -> Vec<&Field> {
 //             transition = false;
 //             continue;
 //         }
-        
+
 //         ret.push(ch);
 //     }
 
@@ -87,11 +89,8 @@ pub fn docs_derive(input: TokenStream) -> TokenStream {
         let strings = fields.iter().map(|field| {
             let name = field_to_config_name(field);
             let typ = format!("{{{idx}}}");
-            let desc = if let Some(s) = get_doc_comment(field) { 
-                quote! { Some(#s) } 
-            } else { 
-                quote! { None } 
-            };
+            let desc =
+                get_doc_comment(field).map_or_else(|| quote! { None }, |s| quote! { Some(#s) });
             idx += 1;
 
             quote! {
@@ -119,11 +118,8 @@ pub fn docs_derive(input: TokenStream) -> TokenStream {
         let strings = fields.iter().map(|field| {
             let name = field_to_config_name(field);
             let field_ty = &field.ty;
-            let desc = if let Some(s) = get_doc_comment(field) { 
-                quote! { Some(#s) } 
-            } else { 
-                quote! { None } 
-            };
+            let desc = get_doc_comment(field)
+                .map_or_else(|| quote! { None }, |s| quote! { Some(#s) });
 
             quote! {
                 crate::modules::DocString { name: #name, second: <#field_ty as crate::lua::AsLua>::LUA_TYPE, desc: #desc }

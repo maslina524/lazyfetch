@@ -3,17 +3,13 @@ use alloc::borrow::Cow;
 use doc::Docs;
 
 use crate::{
-    impl_display_for_module,
-    impl_module,
     detect::initsystem::{InitSystemInfo, pid},
+    field::{cached::SessionCached, lazy::LazyField},
+    imp::path::Path,
+    impl_display_for_module, impl_module,
     modules::Module,
     str::SmolStr,
-    field::{
-        lazy::LazyField,
-        cached::SessionCached
-    },
     sync::OnceLock,
-    imp::path::Path
 };
 
 static INITSYSTEM: OnceLock<Initsystem> = OnceLock::new();
@@ -27,7 +23,7 @@ pub struct Initsystem {
     #[doc = "Version path"]
     pub version: SmolStr,
     #[doc = "Pid"]
-    pub pid: LazyField<SessionCached<u32>>
+    pub pid: LazyField<SessionCached<u32>>,
 }
 
 impl Module for Initsystem {
@@ -37,14 +33,12 @@ impl Module for Initsystem {
             name: info.name,
             exe: info.exe,
             version: info.version,
-            pid: LazyField::new(|| SessionCached::new("initsystem.pid", pid))
+            pid: LazyField::new(|| SessionCached::new("initsystem.pid", pid)),
         }
     }
 
     fn get() -> &'static Self {
-        INITSYSTEM.get_or_init(|| {
-            Self::new()
-        })
+        INITSYSTEM.get_or_init(|| Self::new())
     }
 
     fn key(&self) -> &'static str {
@@ -59,9 +53,7 @@ impl Module for Initsystem {
         "initsystem"
     }
 
-    impl_module!(
-        name, exe, version, pid
-    );
+    impl_module!(name, exe, version, pid);
 }
 
 impl_display_for_module!(Initsystem);

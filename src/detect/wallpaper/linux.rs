@@ -1,16 +1,13 @@
 use core::ffi::{CStr, c_char};
 
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
-    detect::wallpaper::WallpaperInfo, 
+    detect::wallpaper::WallpaperInfo,
     unix::{
-        libc::{fgets, getenv, pclose, popen}, 
-        path::Path
-    }
+        libc::{fgets, getenv, pclose, popen},
+        path::Path,
+    },
 };
 
 impl WallpaperInfo {
@@ -18,13 +15,9 @@ impl WallpaperInfo {
     pub fn new() -> Self {
         let full_path = Self::xdg()
             .and_then(|s| Self::call(&s.trim().to_lowercase()))
-            .map_or_default(|s| {
-                Path::from(s.trim().trim_start_matches("file://"))
-            });
+            .map_or_default(|s| Path::from(s.trim().trim_start_matches("file://")));
 
-        Self {
-            full_path,
-        }
+        Self { full_path }
     }
 
     fn cmd(xdg: &str) -> Option<&'static CStr> {
@@ -72,7 +65,7 @@ impl WallpaperInfo {
         // SAFETY: Libc is guaranteed to return a valid string
         let c_str = unsafe { CStr::from_ptr(ptr) };
         let string = c_str.to_string_lossy().trim().to_owned();
-        
+
         if string.is_empty() {
             None
         } else {

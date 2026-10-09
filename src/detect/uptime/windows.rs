@@ -1,12 +1,11 @@
 use alloc::string::String;
 
 use crate::{
-    detect::uptime::{UptimeInfo, UPTIME_INFO}, 
-    format, 
+    detect::uptime::{UPTIME_INFO, UptimeInfo},
+    format,
     windows::link::{
-        FILETIME, FileTimeToSystemTime, 
-        GetSystemTimeAsFileTime, GetTickCount64, SYSTEMTIME
-    }
+        FILETIME, FileTimeToSystemTime, GetSystemTimeAsFileTime, GetTickCount64, SYSTEMTIME,
+    },
 };
 
 const DAY_MS: u64 = 1000 * 60 * 60 * 24;
@@ -36,7 +35,10 @@ impl UptimeInfo {
 
         let years = (days / 365) as u16;
 
-        #[allow(clippy::cast_precision_loss, reason = "16_777_216 years is more than enough")]
+        #[allow(
+            clippy::cast_precision_loss,
+            reason = "16_777_216 years is more than enough"
+        )]
         let years_fraction = (days as f32) / 365.0;
 
         let (boot_time, boot_timestamp) = Self::boot_time(ms);
@@ -84,8 +86,7 @@ impl UptimeInfo {
         (
             format!(
                 "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
-                st.wYear, st.wMonth, st.wDay,
-                st.wHour, st.wMinute, st.wSecond
+                st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond
             ),
             boot_timestamp,
         )

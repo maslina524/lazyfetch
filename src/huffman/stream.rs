@@ -7,7 +7,11 @@ pub struct Stream<'zlib> {
 
 impl<'zlib> Stream<'zlib> {
     pub const fn new(memory: &'zlib [u8]) -> Self {
-        Self { memory, byte_idx: 0, bit_idx: 0 }
+        Self {
+            memory,
+            byte_idx: 0,
+            bit_idx: 0,
+        }
     }
 
     pub const fn align_to_byte(&mut self) {

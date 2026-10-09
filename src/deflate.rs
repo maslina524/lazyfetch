@@ -1,38 +1,72 @@
-use core::{
-    cmp::Ordering,
-    error::Error,
-    iter::repeat_n
-};
+use core::{cmp::Ordering, error::Error, iter::repeat_n};
 
 use alloc::vec::Vec;
 
-use crate::huffman::{HuffmanTree, decode_symb, Stream};
+use crate::huffman::{HuffmanTree, Stream, decode_symb};
 
 const LENGTH_BASE: [(usize, u8); 29] = [
-    (3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),
-    (11,1),(13,1),(15,1),(17,1),
-    (19,2),(23,2),(27,2),(31,2),
-    (35,3),(43,3),(51,3),(59,3),
-    (67,4),(83,4),(99,4),(115,4),
-    (131,5),(163,5),(195,5),(227,5),
-    (258,0),
+    (3, 0),
+    (4, 0),
+    (5, 0),
+    (6, 0),
+    (7, 0),
+    (8, 0),
+    (9, 0),
+    (10, 0),
+    (11, 1),
+    (13, 1),
+    (15, 1),
+    (17, 1),
+    (19, 2),
+    (23, 2),
+    (27, 2),
+    (31, 2),
+    (35, 3),
+    (43, 3),
+    (51, 3),
+    (59, 3),
+    (67, 4),
+    (83, 4),
+    (99, 4),
+    (115, 4),
+    (131, 5),
+    (163, 5),
+    (195, 5),
+    (227, 5),
+    (258, 0),
 ];
 
 const DIST_BASE: [(usize, u8); 30] = [
-    (1,0),(2,0),(3,0),(4,0),
-    (5,1),(7,1),
-    (9,2),(13,2),
-    (17,3),(25,3),
-    (33,4),(49,4),
-    (65,5),(97,5),
-    (129,6),(193,6),
-    (257,7),(385,7),
-    (513,8),(769,8),
-    (1025,9),(1537,9),
-    (2049,10),(3073,10),
-    (4097,11),(6145,11),
-    (8193,12),(12289,12),
-    (16385,13),(24577,13),
+    (1, 0),
+    (2, 0),
+    (3, 0),
+    (4, 0),
+    (5, 1),
+    (7, 1),
+    (9, 2),
+    (13, 2),
+    (17, 3),
+    (25, 3),
+    (33, 4),
+    (49, 4),
+    (65, 5),
+    (97, 5),
+    (129, 6),
+    (193, 6),
+    (257, 7),
+    (385, 7),
+    (513, 8),
+    (769, 8),
+    (1025, 9),
+    (1537, 9),
+    (2049, 10),
+    (3073, 10),
+    (4097, 11),
+    (6145, 11),
+    (8193, 12),
+    (12289, 12),
+    (16385, 13),
+    (24577, 13),
 ];
 
 fn extend_at<T: Clone>(dst: &mut [T], offset: usize, src: impl IntoIterator<Item = T>) {
@@ -47,7 +81,7 @@ fn build_fixed_trees() -> (HuffmanTree, HuffmanTree) {
         *item = match i {
             i if (144..256).contains(&i) => 7,
             i if (256..280).contains(&i) => 9,
-            _ => 8
+            _ => 8,
         }
     }
 
@@ -63,13 +97,15 @@ fn build_fixed_trees() -> (HuffmanTree, HuffmanTree) {
     (litlen_tree, dist_tree)
 }
 
-const CLEN_ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+const CLEN_ORDER: [usize; 19] = [
+    16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15,
+];
 
 #[derive(Debug)]
 pub enum DeflateError {
     InvalidBtype,
     InvalidNlen,
-    DecodeError, 
+    DecodeError,
     InvalidSymbol,
     InvalidDistanceSymbol,
     DistanceTooFar,
@@ -80,14 +116,14 @@ pub enum DeflateError {
 impl core::fmt::Display for DeflateError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::InvalidBtype          => write!(f, "Deflate: Invalid byte"),
-            Self::InvalidNlen           => write!(f, "Deflate: Invalid nlen"),
-            Self::DecodeError           => write!(f, "Deflate: Decode error"),
-            Self::InvalidSymbol         => write!(f, "Deflate: Invalid symbol"),
+            Self::InvalidBtype => write!(f, "Deflate: Invalid byte"),
+            Self::InvalidNlen => write!(f, "Deflate: Invalid nlen"),
+            Self::DecodeError => write!(f, "Deflate: Decode error"),
+            Self::InvalidSymbol => write!(f, "Deflate: Invalid symbol"),
             Self::InvalidDistanceSymbol => write!(f, "Deflate: Invalid distance symbol"),
-            Self::DistanceTooFar        => write!(f, "Deflate: Distance too far"),
-            Self::DynamicTreeError      => write!(f, "Deflate: Dynamic tree error"),
-            Self::EndOfStream           => write!(f, "Deflate: End of stream")
+            Self::DistanceTooFar => write!(f, "Deflate: Distance too far"),
+            Self::DynamicTreeError => write!(f, "Deflate: Dynamic tree error"),
+            Self::EndOfStream => write!(f, "Deflate: End of stream"),
         }
     }
 }
@@ -117,15 +153,15 @@ fn build_dynamic_trees(stream: &mut Stream) -> Result<(HuffmanTree, HuffmanTree)
                 let repeat = stream.read_bits(2) as usize + 3;
                 let last = *lens.last().ok_or(DeflateError::DecodeError)?;
                 lens.extend(repeat_n(last, repeat));
-            },
+            }
             17 => {
                 let repeat = stream.read_bits(3) as usize + 3;
                 lens.extend(repeat_n(0, repeat));
-            },
+            }
             18 => {
                 let repeat = stream.read_bits(7) as usize + 11;
                 lens.extend(repeat_n(0, repeat));
-            },
+            }
             _ => return Err(DeflateError::DynamicTreeError),
         }
     }
@@ -161,15 +197,15 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, DeflateError> {
                 for _ in 0..len {
                     output.push(stream.read_byte());
                 }
-            },
+            }
             1 => {
                 let (litlen_tree, dist_tree) = build_fixed_trees();
                 decode_block(&mut stream, &mut output, &litlen_tree, &dist_tree)?;
-            },
+            }
             2 => {
                 let (litlen_tree, dist_tree) = build_dynamic_trees(&mut stream)?;
                 decode_block(&mut stream, &mut output, &litlen_tree, &dist_tree)?;
-            },
+            }
             _ => {
                 return Err(DeflateError::InvalidBtype);
             }
@@ -187,7 +223,7 @@ fn decode_block(
     stream: &mut Stream,
     output: &mut Vec<u8>,
     litlen_tree: &HuffmanTree,
-    dist_tree: &HuffmanTree
+    dist_tree: &HuffmanTree,
 ) -> Result<(), DeflateError> {
     loop {
         let sym = decode_symb(stream, litlen_tree).ok_or(DeflateError::DecodeError)?;
@@ -218,9 +254,8 @@ fn decode_block(
                     output.push(output[start + i]);
                 }
             }
-            Ordering::Equal => break
-            
-        } 
+            Ordering::Equal => break,
+        }
     }
     Ok(())
 }

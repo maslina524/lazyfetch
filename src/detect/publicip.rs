@@ -3,12 +3,16 @@ use core::str::SplitN;
 use alloc::string::String;
 
 use crate::{
-    format, imp::{
+    format,
+    imp::{
         env,
+        fs::{self, Access, File},
         http::Request,
         path::Path,
-        fs::{self, File, Access}
-    }, json::{Json, Map}, modules::publicip::PublicIP, warning
+    },
+    json::{Json, Map},
+    modules::publicip::PublicIP,
+    warning,
 };
 
 const PUBLICIP_URL: &str = "http://ip-api.com/json/";
@@ -44,7 +48,10 @@ pub fn get() -> PublicIP {
         String::new()
     });
 
-    PublicIP { ip, location: format!("{city}, {country_code}") }
+    PublicIP {
+        ip,
+        location: format!("{city}, {country_code}"),
+    }
 }
 
 fn request() -> Option<Map> {
@@ -52,7 +59,7 @@ fn request() -> Option<Map> {
         Ok(r) => r,
         Err(e) => {
             warning!("Failed to connect to server (publicip): {}", e.code());
-            return None
+            return None;
         }
     };
     if response.is_success() {
@@ -72,10 +79,13 @@ fn request() -> Option<Map> {
 
 fn read_cache() -> Option<(u64, Map)> {
     fn next_item<'iter>(parts: &mut SplitN<'iter, char>) -> Option<&'iter str> {
-        parts.next().map_or_else(|| {
-            warning!("Strange response from ip-api.com");
-            None
-        }, Some)
+        parts.next().map_or_else(
+            || {
+                warning!("Strange response from ip-api.com");
+                None
+            },
+            Some,
+        )
     }
 
     let path = Path::cache().join("publicip");

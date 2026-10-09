@@ -1,39 +1,31 @@
-use core::{
-    ptr,
-    mem,
-    ffi::c_void,
-    sync::atomic::AtomicPtr
-};
+use core::{ffi::c_void, mem, ptr, sync::atomic::AtomicPtr};
 
-use alloc::{
-    string::String,
-    borrow::ToOwned
-};
+use alloc::{borrow::ToOwned, string::String};
 
 use crate::{
+    abort,
+    detect::gpu::{GpuInfo, GpuType},
+    formats::MemorySize,
+    warning,
     windows::link::{
-        CreateDXGIFactory, IID_IDXGIFactory, IDXGIFactory_Vtbl, DXGI_ADAPTER_DESC,
-        IDXGIAdapter_Vtbl, DXGI_ERROR_NOT_FOUND, SetupDiEnumDeviceInfo, SetupDiGetClassDevsW,
-        DIGCF_PRESENT, GUID_DEVCLASS_DISPLAY, SP_DEVINFO_DATA, SetupDiOpenDevRegKey,
+        CreateDXGIFactory, DIGCF_PRESENT, DXGI_ADAPTER_DESC, DXGI_ERROR_NOT_FOUND,
+        GUID_DEVCLASS_DISPLAY, IDXGIAdapter_Vtbl, IDXGIFactory_Vtbl, IID_IDXGIFactory,
+        SP_DEVINFO_DATA, SetupDiEnumDeviceInfo, SetupDiGetClassDevsW, SetupDiOpenDevRegKey,
     },
     windows::regedit::Regedit,
-    formats::MemorySize,
-    detect::gpu::{GpuInfo, GpuType},
-    abort,
-    warning
 };
 
 const INVALID_HANDLE: *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
 
 impl GpuInfo {
     pub fn new() -> Self {
-        let desc = Self::dxgi_adapter_desc().unwrap_or_else(
-            |e| abort!("CreateDXGIFactory error: {e}")
-        );
+        let desc =
+            Self::dxgi_adapter_desc().unwrap_or_else(|e| abort!("CreateDXGIFactory error: {e}"));
 
-        let driver = Self::driver_version().unwrap_or_else(
-            || { warning!("Failed to get driver version"); String::from("Unknown") }
-        );
+        let driver = Self::driver_version().unwrap_or_else(|| {
+            warning!("Failed to get driver version");
+            String::from("Unknown")
+        });
 
         let memory_total = MemorySize::from_bytes(desc.DedicatedVideoMemory as u64);
 
@@ -43,18 +35,16 @@ impl GpuInfo {
             device_id: desc.DeviceId,
             driver,
             typ: GpuType::get_old(desc.VendorId, memory_total),
-            memory_total
+            memory_total,
         }
     }
-    
+
     fn dxgi_adapter_desc() -> Result<DXGI_ADAPTER_DESC, i32> {
         let mut factory_void = ptr::null_mut();
-        
+
         // SAFETY: Completely safe
-        let hr = unsafe {
-            CreateDXGIFactory(&IID_IDXGIFactory, &raw mut factory_void)
-        };
-        
+        let hr = unsafe { CreateDXGIFactory(&IID_IDXGIFactory, &raw mut factory_void) };
+
         if hr < 0 || factory_void.is_null() {
             return Err(hr);
         }
@@ -65,21 +55,22 @@ impl GpuInfo {
         let mut i = 0;
         loop {
             let mut adapter_void = ptr::null_mut();
-            
+
             // SAFETY: A virtual table is guaranteed to be located at the raw pointer
-            let hr = unsafe { ((*factory_vtbl).EnumAdapters)(factory_void, i, &raw mut adapter_void) };
+            let hr =
+                unsafe { ((*factory_vtbl).EnumAdapters)(factory_void, i, &raw mut adapter_void) };
             if hr == DXGI_ERROR_NOT_FOUND {
                 return Err(hr);
             }
 
             if !adapter_void.is_null() {
                 let mut desc = DXGI_ADAPTER_DESC::default();
-                
+
                 // SAFETY: We check that the raw pointer is not null
                 let adapter_vtbl = unsafe { *adapter_void.cast::<*mut IDXGIAdapter_Vtbl>() };
                 // SAFETY: A virtual table is guaranteed to be located at the raw pointer
                 let hr = unsafe { ((*adapter_vtbl).GetDesc)(adapter_void, &raw mut desc) };
-                
+
                 if hr >= 0 {
                     return Ok(desc);
                 }
@@ -93,44 +84,29 @@ impl GpuInfo {
         // SAFETY: Completely safe
         let handle = unsafe {
             SetupDiGetClassDevsW(
-                &GUID_DEVCLASS_DISPLAY, 
-                ptr::null(), 
-                ptr::null_mut(), 
-                DIGCF_PRESENT
+                &GUID_DEVCLASS_DISPLAY,
+                ptr::null(),
+                ptr::null_mut(),
+                DIGCF_PRESENT,
             )
         };
         if handle == -1 {
-            return None
+            return None;
         }
 
         let mut info = SP_DEVINFO_DATA {
             cbSize: mem::size_of::<SP_DEVINFO_DATA>() as u32,
-            .. SP_DEVINFO_DATA::default()
+            ..SP_DEVINFO_DATA::default()
         };
 
         // SAFETY: Completely safe
-        let ret = unsafe {
-            SetupDiEnumDeviceInfo(
-                handle, 
-                0, 
-                &raw mut info
-            )
-        };
+        let ret = unsafe { SetupDiEnumDeviceInfo(handle, 0, &raw mut info) };
         if ret == 0 {
-            return None
+            return None;
         }
 
         // SAFETY: Completely safe
-        let hkey = unsafe {
-            SetupDiOpenDevRegKey(
-                handle, 
-                &raw mut info, 
-                1, 
-                0,
-                2, 
-                0x20019
-            )
-        };
+        let hkey = unsafe { SetupDiOpenDevRegKey(handle, &raw mut info, 1, 0, 2, 0x20019) };
         if hkey == INVALID_HANDLE {
             return None;
         }

@@ -6,9 +6,7 @@ use core::{
 use alloc::{borrow::Cow, collections::BTreeMap, ffi::CString, string::String};
 
 use crate::{
-    abort,
-    cfg_if,
-    format,
+    abort, cfg_if, format,
     formats::{expand_rust_unicode, snake_to_camel_ascii},
     imp::fs::{self, ReadError},
     sync::OnceLock,
@@ -155,9 +153,7 @@ impl_as_lua_debug_string!(
     crate::str::SmolStr,
     alloc::borrow::Cow<'static, str>
 );
-impl_as_lua_to_string!(
-    crate::detect::datetime::AmPm
-);
+impl_as_lua_to_string!(crate::detect::datetime::AmPm);
 impl_as_lua_into_f64!(
     crate::formats::Temperature,
     crate::formats::Percent,

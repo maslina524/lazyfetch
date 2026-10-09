@@ -1,9 +1,4 @@
-use core::fmt::{
-    self, 
-    Debug, 
-    Display, 
-    Formatter
-};
+use core::fmt::{self, Debug, Display, Formatter};
 
 use crate::lua::{AsLua, LuaType};
 
@@ -18,13 +13,11 @@ macro_rules! impl_numtrait {
 }
 
 impl_numtrait!(
-    i8, i16, i32, i64, i128,
-    u8, u16, u32, u64, u128,
-    isize, usize
+    i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, isize, usize
 );
 
 pub struct ZeroPadded<N: NumTrait, const W: usize> {
-    value: N
+    value: N,
 }
 
 impl<N: NumTrait, const W: usize> ZeroPadded<N, W> {

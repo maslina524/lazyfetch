@@ -21,5 +21,5 @@ pub struct TitleInfo {
     pub full_user_name: String,
     pub user_id: String,
     pub pid: u32,
-    pub cwd: Path
+    pub cwd: Path,
 }

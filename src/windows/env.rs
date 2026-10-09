@@ -1,58 +1,54 @@
 use core::{
-    ffi::{c_void, CStr},
-    ptr,
-    mem,
-    slice,
-    fmt::Write
+    ffi::{CStr, c_void},
+    fmt::Write,
+    mem, ptr, slice,
 };
 
 use alloc::{
-    string::{String, ToString},
-    collections::BTreeMap,
-    borrow::{ToOwned, Cow},
+    borrow::{Cow, ToOwned},
     boxed::Box,
+    collections::BTreeMap,
+    string::{String, ToString},
+    vec,
     vec::Vec,
-    vec
 };
 
 use crate::{
-    ARGS, 
-    abort, 
-    format, 
+    ARGS, abort, format,
     str::SmolStr,
-    sync::OnceLock, 
-    w, 
-    warning, 
+    sync::OnceLock,
+    w, warning,
     windows::{
-        encoding::{self, Utf16Len, utf16le_to_utf8, wide, wide_without_alloc, EncodeError, Utf16ToUtf8}, 
-        error::{self, ErrorCode}, 
-        fs::{Access, File}, 
+        encoding::{
+            self, EncodeError, Utf16Len, Utf16ToUtf8, utf16le_to_utf8, wide, wide_without_alloc,
+        },
+        error::{self, ErrorCode},
+        fs::{Access, File},
         link::{
-            CONSOLE_SCREEN_BUFFER_INFO, CloseHandle, CommandLineToArgvW, 
-            CreateToolhelp32Snapshot, EnumProcesses, FILETIME, FileTimeToLocalFileTime, 
-            FileTimeToSystemTime, GetCommandLineW, GetConsoleScreenBufferInfo, 
-            GetEnvironmentVariableW, GetFileVersionInfoSizeW, GetFileVersionInfoW, 
-            GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, 
-            Process32Next, RtlGetVersion, SYSTEMTIME, VerQueryValueW, GetCurrentProcessId,
-            ExpandEnvironmentStringsW
-        }, 
-        path::Path, 
-        regedit::{self, Hkey, Regedit}
-    }
+            CONSOLE_SCREEN_BUFFER_INFO, CloseHandle, CommandLineToArgvW, CreateToolhelp32Snapshot,
+            EnumProcesses, ExpandEnvironmentStringsW, FILETIME, FileTimeToLocalFileTime,
+            FileTimeToSystemTime, GetCommandLineW, GetConsoleScreenBufferInfo, GetCurrentProcessId,
+            GetEnvironmentVariableW, GetFileVersionInfoSizeW, GetFileVersionInfoW,
+            GetSystemTimeAsFileTime, OSVERSIONINFOW, PROCESSENTRY32, Process32First, Process32Next,
+            RtlGetVersion, SYSTEMTIME, VerQueryValueW,
+        },
+        path::Path,
+        regedit::{self, Hkey, Regedit},
+    },
 };
 
-const EPOCH_DIFF              : u64         = 116_444_736_000_000_000;
-const EPOCH_DIFF_SECS         : u64         = 11_644_473_600;
-const INVALID_HANDLE          : *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
+const EPOCH_DIFF: u64 = 116_444_736_000_000_000;
+const EPOCH_DIFF_SECS: u64 = 11_644_473_600;
+const INVALID_HANDLE: *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
 
-const TICKS_PER_SEC           : u64         = 10_000_000;
-const LOCALE_NAME_USER_DEFAULT: *const u16  = ptr::null();
-const DEFAULT_DATE_FMT        : [u16; 11]   = w!("dd.MM.yyyy");
-const TIME_FMT                : [u16; 9]    = w!("HH:mm:ss");
-const INITSYSTEM_NAME         : &CStr       = c"smss.exe";
+const TICKS_PER_SEC: u64 = 10_000_000;
+const LOCALE_NAME_USER_DEFAULT: *const u16 = ptr::null();
+const DEFAULT_DATE_FMT: [u16; 11] = w!("dd.MM.yyyy");
+const TIME_FMT: [u16; 9] = w!("HH:mm:ss");
+const INITSYSTEM_NAME: &CStr = c"smss.exe";
 
-static TERMINAL_HANDLE: OnceLock<isize>         = OnceLock::new();
-static CURRENT_VERSION: OnceLock<Regedit>       = OnceLock::new();
+static TERMINAL_HANDLE: OnceLock<isize> = OnceLock::new();
+static CURRENT_VERSION: OnceLock<Regedit> = OnceLock::new();
 
 static SHARED_PROCESS: OnceLock<SharedProcess> = OnceLock::new();
 
@@ -65,7 +61,7 @@ struct SharedProcess {
     map: PPidMap,
     name_map: NamePidMap,
     init_pid: Pid,
-    my_pid: Pid
+    my_pid: Pid,
 }
 
 fn get_shared_process() -> &'static SharedProcess {
@@ -82,7 +78,7 @@ fn get_shared_process() -> &'static SharedProcess {
 
         let mut pe = PROCESSENTRY32 {
             dwSize: size_of::<PROCESSENTRY32>() as u32,
-            .. PROCESSENTRY32::default()
+            ..PROCESSENTRY32::default()
         };
 
         // SAFETY: Completely safe
@@ -91,9 +87,8 @@ fn get_shared_process() -> &'static SharedProcess {
             loop {
                 // SAFETY: Libc is guaranteed to return a valid c string
                 let proc_name_cstr = unsafe { CStr::from_ptr(pe.szExeFile.as_ptr()) };
-                let proc_name: &'static CStr = Box::leak(
-                    proc_name_cstr.to_owned().into_boxed_c_str()
-                );
+                let proc_name: &'static CStr =
+                    Box::leak(proc_name_cstr.to_owned().into_boxed_c_str());
 
                 if proc_name == INITSYSTEM_NAME {
                     init_pid = pe.th32ProcessID;
@@ -118,7 +113,7 @@ fn get_shared_process() -> &'static SharedProcess {
             map,
             name_map,
             init_pid,
-            my_pid
+            my_pid,
         }
     })
 }
@@ -156,16 +151,17 @@ struct VS_FIXEDFILEINFO {
     pub dwFileType: u32,
     pub dwFileSubtype: u32,
     pub dwFileDateMS: u32,
-    pub dwFileDateLS: u32
+    pub dwFileDateLS: u32,
 }
 
 pub fn current_version() -> &'static Regedit {
     CURRENT_VERSION.get_or_init(|| {
         Regedit::open(
-            Hkey::LocalMachine, 
-            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 
-            regedit::Access::Read
-        ).unwrap()
+            Hkey::LocalMachine,
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+            regedit::Access::Read,
+        )
+        .unwrap()
     })
 }
 
@@ -174,11 +170,7 @@ pub fn get_version() -> (u32, u32, u32) {
     // SAFETY: Completely safe
     unsafe { RtlGetVersion(&raw mut osvi) };
 
-    (
-        osvi.dwMajorVersion,
-        osvi.dwMinorVersion,
-        osvi.dwBuildNumber
-    )
+    (osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber)
 }
 
 pub fn terminal_handle() -> isize {
@@ -195,12 +187,7 @@ pub fn terminal_size() -> (usize, usize) {
     let mut buf = CONSOLE_SCREEN_BUFFER_INFO::default();
 
     // SAFETY: Comletely safe
-    let ret = unsafe {
-        GetConsoleScreenBufferInfo(
-            terminal_handle() as *mut c_void, 
-            &raw mut buf
-        )
-    };
+    let ret = unsafe { GetConsoleScreenBufferInfo(terminal_handle() as *mut c_void, &raw mut buf) };
     if ret == 0 {
         ErrorCode::last().panic();
     }
@@ -212,9 +199,7 @@ pub fn terminal_size() -> (usize, usize) {
 
 pub fn close_terminal_handle() -> error::Result<()> {
     // SAFETY: Completely safe
-    let ret = unsafe {
-        CloseHandle(terminal_handle() as *mut c_void)
-    };
+    let ret = unsafe { CloseHandle(terminal_handle() as *mut c_void) };
     if ret == 0 {
         return Err(ErrorCode::last());
     }
@@ -226,13 +211,7 @@ pub fn processes_count() -> usize {
     let mut needed = 0;
 
     // SAFETY: Completely safe
-    let ret = unsafe {
-        EnumProcesses(
-            pids.as_mut_ptr(), 
-            (pids.len() * 4) as u32, 
-            &raw mut needed
-        )
-    };
+    let ret = unsafe { EnumProcesses(pids.as_mut_ptr(), (pids.len() * 4) as u32, &raw mut needed) };
     if ret == 0 {
         ErrorCode::last().panic();
     }
@@ -266,12 +245,7 @@ pub fn args_init() -> Vec<String> {
 
     // SAFETY: Just a WinAPI function,
     // I don't know what to write, it's safe
-    let argv_ptrs = unsafe {
-        CommandLineToArgvW(
-            ptr, 
-            &raw mut argv_count
-        )
-    };
+    let argv_ptrs = unsafe { CommandLineToArgvW(ptr, &raw mut argv_count) };
 
     let mut ret = Vec::with_capacity(argv_count as usize);
     for i in 0..argv_count {
@@ -302,26 +276,15 @@ pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<SmolStr>
     let path_wide = wide(&path_str);
 
     // SAFETY: Completely safe
-    let buf_size = unsafe { 
-        GetFileVersionInfoSizeW(
-            path_wide.as_ptr(), 
-            ptr::null_mut()
-        ) 
-    };
+    let buf_size = unsafe { GetFileVersionInfoSizeW(path_wide.as_ptr(), ptr::null_mut()) };
     if buf_size == 0 {
         return Err(ErrorCode::last());
     }
 
     let mut buf = vec![0u8; buf_size as usize];
     // SAFETY: Completely safe
-    let ret = unsafe {
-        GetFileVersionInfoW(
-            path_wide.as_ptr(),
-            0,
-            buf_size,
-            buf.as_mut_ptr().cast(),
-        )
-    };
+    let ret =
+        unsafe { GetFileVersionInfoW(path_wide.as_ptr(), 0, buf_size, buf.as_mut_ptr().cast()) };
     if ret == 0 {
         return Err(ErrorCode::last());
     }
@@ -352,21 +315,20 @@ pub fn get_file_product_version(path: impl Into<Path>) -> error::Result<SmolStr>
     let build = (info.dwProductVersionLS >> 16) & 0xFFFF;
     let rev = info.dwProductVersionLS & 0xFFFF;
 
-    Ok(
-        SmolStr::from(format!("{major}.{minor}.{build}.{rev}"))
-    )
+    Ok(SmolStr::from(format!("{major}.{minor}.{build}.{rev}")))
 }
 
 pub fn format_timestamp(time: u64, format: Option<&str>) -> String {
     let Some(ticks) = time
         .checked_add(EPOCH_DIFF_SECS)
-        .and_then(|s| s.checked_mul(TICKS_PER_SEC)) else {
-            warning!("timestamp overflow: {}", time);
-            return time.to_string();
-        };
+        .and_then(|s| s.checked_mul(TICKS_PER_SEC))
+    else {
+        warning!("timestamp overflow: {}", time);
+        return time.to_string();
+    };
 
     let ft_utc = FILETIME {
-        dwLowDateTime:  (ticks & 0xFFFF_FFFF) as u32,
+        dwLowDateTime: (ticks & 0xFFFF_FFFF) as u32,
         dwHighDateTime: (ticks >> 32) as u32,
     };
 
@@ -374,18 +336,17 @@ pub fn format_timestamp(time: u64, format: Option<&str>) -> String {
     let mut st = SYSTEMTIME::default();
 
     // SAFETY: Completely safe
-    let ret = unsafe { 
-        FileTimeToLocalFileTime(&raw const ft_utc, &raw mut ft_local) 
-    };
+    let ret = unsafe { FileTimeToLocalFileTime(&raw const ft_utc, &raw mut ft_local) };
     if ret == 0 {
-        warning!("Failed to call FileTimeToLocalFileTime: {}", ErrorCode::last());
+        warning!(
+            "Failed to call FileTimeToLocalFileTime: {}",
+            ErrorCode::last()
+        );
         return time.to_string();
     }
 
     // SAFETY: Completely safe
-    let ret = unsafe { 
-        FileTimeToSystemTime(&raw const ft_local, &raw mut st) 
-    };
+    let ret = unsafe { FileTimeToSystemTime(&raw const ft_local, &raw mut st) };
     if ret == 0 {
         warning!("Failed to call FileTimeToSystemTime: {}", ErrorCode::last());
         return time.to_string();
@@ -410,22 +371,42 @@ fn format_system_time(st: &SYSTEMTIME, fmt: &str) -> String {
         };
 
         match spec {
-            'Y' => { let _ = write!(out, "{:04}", st.wYear); }
-            'y' => { let _ = write!(out, "{:02}", st.wYear % 100); }
-            'm' => { let _ = write!(out, "{:02}", st.wMonth); }
-            'd' => { let _ = write!(out, "{:02}", st.wDay); }
-            'e' => { let _ = write!(out, "{:2}",  st.wDay); }
-            'j' => { let _ = write!(out, "{:03}", day_of_year(st)); }
+            'Y' => {
+                let _ = write!(out, "{:04}", st.wYear);
+            }
+            'y' => {
+                let _ = write!(out, "{:02}", st.wYear % 100);
+            }
+            'm' => {
+                let _ = write!(out, "{:02}", st.wMonth);
+            }
+            'd' => {
+                let _ = write!(out, "{:02}", st.wDay);
+            }
+            'e' => {
+                let _ = write!(out, "{:2}", st.wDay);
+            }
+            'j' => {
+                let _ = write!(out, "{:03}", day_of_year(st));
+            }
 
-            'H' => { let _ = write!(out, "{:02}", st.wHour); }
+            'H' => {
+                let _ = write!(out, "{:02}", st.wHour);
+            }
             'I' => {
                 let h = st.wHour % 12;
                 let h = if h == 0 { 12 } else { h };
                 let _ = write!(out, "{h:02}");
             }
-            'M' => { let _ = write!(out, "{:02}", st.wMinute); }
-            'S' => { let _ = write!(out, "{:02}", st.wSecond); }
-            'f' => { let _ = write!(out, "{:03}", st.wMilliseconds); }
+            'M' => {
+                let _ = write!(out, "{:02}", st.wMinute);
+            }
+            'S' => {
+                let _ = write!(out, "{:02}", st.wSecond);
+            }
+            'f' => {
+                let _ = write!(out, "{:03}", st.wMilliseconds);
+            }
 
             '%' => out.push('%'),
             other => {
@@ -463,50 +444,31 @@ pub fn get_var(name: &str, size: Option<usize>) -> encoding::Result<String> {
 
     // SAFETY: Buffer overflow will not occur,
     //  1 byte remains for the null byte, safe
-    let len = unsafe {
-        GetEnvironmentVariableW(
-            name_wide.as_ptr(),
-            buf.as_mut_ptr(),
-            size as u32
-        )
-    };
+    let len = unsafe { GetEnvironmentVariableW(name_wide.as_ptr(), buf.as_mut_ptr(), size as u32) };
     if len == 0 {
         return Err(ErrorCode::last().into());
     }
 
-    utf16le_to_utf8(&buf, Utf16Len::Len(len as usize))
-        .map_err(EncodeError::from)
+    utf16le_to_utf8(&buf, Utf16Len::Len(len as usize)).map_err(EncodeError::from)
 }
 
 pub fn expand_env(s: &str) -> Result<Cow<'_, str>, Utf16ToUtf8> {
     if s.is_empty() {
-        return Ok(Cow::Borrowed(s))
+        return Ok(Cow::Borrowed(s));
     }
 
     let count = s.chars().filter(|c| *c == '%').count();
     if count >= 2 {
         let wide = wide(s);
         // SAFETY: Completely safe
-        let size = unsafe {
-            ExpandEnvironmentStringsW(
-                wide.as_ptr(),
-                ptr::null_mut(),
-                0
-            )
-        };
+        let size = unsafe { ExpandEnvironmentStringsW(wide.as_ptr(), ptr::null_mut(), 0) };
         if size == 0 {
             return Ok(Cow::Owned(String::new()));
         }
 
         let mut buf = vec![0u16; size as usize];
         // SAFETY: Completely safe
-        let written = unsafe {
-            ExpandEnvironmentStringsW(
-                wide.as_ptr(),
-                buf.as_mut_ptr(),
-                size
-            )
-        };
+        let written = unsafe { ExpandEnvironmentStringsW(wide.as_ptr(), buf.as_mut_ptr(), size) };
         if written == 0 {
             return Ok(Cow::Owned(String::new()));
         }
@@ -520,7 +482,7 @@ pub fn expand_env(s: &str) -> Result<Cow<'_, str>, Utf16ToUtf8> {
 #[cfg(test)]
 mod tests {
     use crate::windows::env;
-  
+
     extern crate std;
 
     #[test]

@@ -1,59 +1,50 @@
-use core::ffi::{c_void, CStr};
+use core::ffi::{CStr, c_void};
 
 use crate::{
-    modules::Shell, 
-    str::SmolStr, 
-    warning, 
+    modules::Shell,
+    str::SmolStr,
+    warning,
     windows::{
-        encoding::{Utf16Len, utf16le_to_utf8}, 
-        env, 
-        error::ErrorCode, 
-        link::{OpenProcess, QueryFullProcessImageNameW}, 
-        path::Path
-    }
+        encoding::{Utf16Len, utf16le_to_utf8},
+        env,
+        error::ErrorCode,
+        link::{OpenProcess, QueryFullProcessImageNameW},
+        path::Path,
+    },
 };
 
-const PROCESS_QUERY_LIMITED_INFORMATION: u32         = 0x1000;
-const INVALID_HANDLE                   : *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
+const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
+const INVALID_HANDLE: *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
 
 static BLACKLIST: [&CStr; 6] = [
-    c"python.exe", c"python3.exe", c"lazyfetch.exe",
-    c"fastfetch.exe", c"neofetch.exe", c"cargo.exe"
+    c"python.exe",
+    c"python3.exe",
+    c"lazyfetch.exe",
+    c"fastfetch.exe",
+    c"neofetch.exe",
+    c"cargo.exe",
 ];
 
 #[derive(Default)]
 struct Process {
     pid: u32,
-    exe_path: Path
+    exe_path: Path,
 }
 
 impl Process {
     pub fn new(pid: u32) -> Self {
         // SAFETY: Completely safe
-        let handle = unsafe { 
-            OpenProcess(
-                PROCESS_QUERY_LIMITED_INFORMATION, 
-                0, 
-                pid
-            ) 
-        };
-        
+        let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
+
         if handle == INVALID_HANDLE {
             warning!("Failed to get shell process handle: {}", ErrorCode::last());
-            return Self::default()
+            return Self::default();
         }
         let mut size = 260;
         let mut buf = [0u16; 260];
         // SAFETY: Completely safe
-        let ret = unsafe {
-            QueryFullProcessImageNameW(
-                handle, 
-                0, 
-                buf.as_mut_ptr(), 
-                &raw mut size
-            )
-        };
-    
+        let ret = unsafe { QueryFullProcessImageNameW(handle, 0, buf.as_mut_ptr(), &raw mut size) };
+
         let exe_path = if ret == 1 {
             // SAFETY: WinAPI returns a valid C string and always leaves 261 bytes zeroed
             match utf16le_to_utf8(&buf, Utf16Len::Len(size as usize)) {
@@ -79,7 +70,7 @@ fn compute_shell_info() -> Process {
             p
         } else {
             warning!("Process ppid not foind (pid: {pid})");
-            return Process::default()
+            return Process::default();
         };
         let name = env::get_name_by_pid(pid).expect("Unreachable");
 
@@ -95,9 +86,7 @@ pub fn get() -> Shell {
     let info = compute_shell_info();
 
     let exe_path = info.exe_path.clone();
-    let process_name = info.exe_path
-        .last()
-        .map_or_default(SmolStr::from);
+    let process_name = info.exe_path.last().map_or_default(SmolStr::from);
 
     let version = match env::get_file_product_version(&exe_path) {
         Ok(v) => v,
@@ -112,7 +101,7 @@ pub fn get() -> Shell {
     let exe = exe_path.clone();
     let pretty_name = SmolStr::from(exe_name.trim_end_matches(".exe"));
 
-    Shell { 
+    Shell {
         process_name,
         exe,
         exe_name,
@@ -120,6 +109,6 @@ pub fn get() -> Shell {
         pid,
         pretty_name,
         exe_path,
-        tty: -1
+        tty: -1,
     }
 }

@@ -1,8 +1,8 @@
 use core::{error::Error, fmt::Display};
 
 use alloc::{
-    string::{FromUtf16Error, String}, 
-    vec::Vec
+    string::{FromUtf16Error, String},
+    vec::Vec,
 };
 
 use crate::windows::error::ErrorCode;
@@ -12,20 +12,20 @@ const CP_UTF8: u32 = 65001;
 #[derive(Clone, Copy)]
 pub enum Utf16Len {
     NullTerminated,
-    Len(usize)
+    Len(usize),
 }
 
 #[derive(Debug)]
 pub enum Utf16ToUtf8 {
     FromUtf16Error(FromUtf16Error),
-    NullNotFound
+    NullNotFound,
 }
 
 impl Display for Utf16ToUtf8 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::FromUtf16Error(e) => write!(f, "FromUtf16Error: {e}"),
-            Self::NullNotFound => write!(f, "Null byte in string not found")
+            Self::NullNotFound => write!(f, "Null byte in string not found"),
         }
     }
 }
@@ -41,14 +41,14 @@ impl Error for Utf16ToUtf8 {}
 #[derive(Debug)]
 pub enum EncodeError {
     Utf16ToUtf8(Utf16ToUtf8),
-    ErrorCode(ErrorCode)
+    ErrorCode(ErrorCode),
 }
 
 impl Display for EncodeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Utf16ToUtf8(e) => write!(f, "{e}"),
-            Self::ErrorCode(e) => write!(f, "Error Code: {e}")
+            Self::ErrorCode(e) => write!(f, "Error Code: {e}"),
         }
     }
 }
@@ -89,10 +89,9 @@ pub fn utf16le_to_utf8(buf: &[u16], len: Utf16Len) -> core::result::Result<Strin
 
     let len = match len {
         Utf16Len::Len(l) => l,
-        Utf16Len::NullTerminated => find_null(buf)
-            .ok_or(Utf16ToUtf8::NullNotFound)?
+        Utf16Len::NullTerminated => find_null(buf).ok_or(Utf16ToUtf8::NullNotFound)?,
     };
-    
+
     let string = String::from_utf16(&buf[..len])?;
     Ok(string)
 }
@@ -110,7 +109,7 @@ pub fn wide_without_alloc(s: &str, buf: &mut [u16]) -> usize {
     let mut i = 0;
     for u in s.encode_utf16() {
         if i >= buf.len().saturating_sub(1) {
-            break
+            break;
         }
         buf[i] = u;
         i += 1;

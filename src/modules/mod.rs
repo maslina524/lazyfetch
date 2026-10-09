@@ -1,29 +1,29 @@
 #![doc = include_str!("README.md")]
 
-pub mod break_;     // 7)  Break         : Print an empty line
-pub mod colors;     // 14) Colors        : Display the terminal's 16-color palette
-pub mod commit;     // LF) Commit        : Display last commit
-pub mod cpu;        // 15) CPU           : Print CPU name, frequency, etc.
-pub mod custom;     // 19) Custom        : Print a custom string, with or without key
-pub mod datetime;   // 20) DateTime      : Print the current date and time
-pub mod disk;       // 22) Disk          : Print partitions, space usage, file system, etc
-pub mod gpu;        // 29) GPU           : Print GPU names, memory sizes, types, etc
+pub mod break_; // 7)  Break         : Print an empty line
+pub mod colors; // 14) Colors        : Display the terminal's 16-color palette
+pub mod commit; // LF) Commit        : Display last commit
+pub mod cpu; // 15) CPU           : Print CPU name, frequency, etc.
+pub mod custom; // 19) Custom        : Print a custom string, with or without key
+pub mod datetime; // 20) DateTime      : Print the current date and time
+pub mod disk; // 22) Disk          : Print partitions, space usage, file system, etc
+pub mod gpu; // 29) GPU           : Print GPU names, memory sizes, types, etc
 pub mod initsystem; // 32) InitSystem    : Print init system (pid 1) name and version
-pub mod kernel;     // 33) Kernel        : Print system kernel version
-pub mod locale;     // 37) Locale        : Print system locale name
-pub mod memory;     // 41) Memory        : Print system memory usage information
-pub mod os;         // 47) OS            : Print the OS or Linux distribution name and version
-pub mod publicip;   // 52) PublicIp      : Print your public IP address, etc
-pub mod processes;  // 53) Processes     : Print number of running processes
-pub mod separator;  // 55) Separator     : Print a separator line
-pub mod shell;      // 56) Shell         : Print the current shell name and version
+pub mod kernel; // 33) Kernel        : Print system kernel version
+pub mod locale; // 37) Locale        : Print system locale name
+pub mod memory; // 41) Memory        : Print system memory usage information
+pub mod os; // 47) OS            : Print the OS or Linux distribution name and version
+pub mod processes; // 53) Processes     : Print number of running processes
+pub mod publicip; // 52) PublicIp      : Print your public IP address, etc
+pub mod separator; // 55) Separator     : Print a separator line
+pub mod shell; // 56) Shell         : Print the current shell name and version
 // pub mod swap;    // 58) Swap          : Print swap (paging file) space usage
-pub mod title;      // 63) Title         : Print the title, including your username and hostname
-pub mod theme;      // 65) Theme         : Print the current desktop environment theme
-pub mod uptime;     // 66) Uptime        : Print how long the system has been running
-pub mod version;    // 68) Version       : Print the Fastfetch version and build information
-pub mod wallpaper;  // 70) Wallpaper     : Print the file path of the current wallpaper
-pub mod weather;    // 71) Weather       : Print weather information
+pub mod theme; // 65) Theme         : Print the current desktop environment theme
+pub mod title; // 63) Title         : Print the title, including your username and hostname
+pub mod uptime; // 66) Uptime        : Print how long the system has been running
+pub mod version; // 68) Version       : Print the Fastfetch version and build information
+pub mod wallpaper; // 70) Wallpaper     : Print the file path of the current wallpaper
+pub mod weather; // 71) Weather       : Print weather information
 
 pub use break_::Break;
 pub use colors::Colors;
@@ -31,30 +31,25 @@ pub use commit::Commit;
 pub use cpu::Cpu;
 pub use custom::Custom;
 pub use datetime::Datetime;
-pub use disk::{DiskList, Disk};
+pub use disk::{Disk, DiskList};
 pub use gpu::Gpu;
 pub use initsystem::Initsystem;
 pub use kernel::Kernel;
 pub use locale::Locale;
 pub use memory::Memory;
 pub use os::Os;
-pub use publicip::PublicIP;
 pub use processes::Processes;
+pub use publicip::PublicIP;
 pub use separator::Separator;
 pub use shell::Shell;
-pub use title::Title;
 pub use theme::Theme;
+pub use title::Title;
 pub use uptime::Uptime;
 pub use version::Version;
 pub use wallpaper::Wallpaper;
 pub use weather::Weather;
 
-use alloc::{
-    string::String,
-    collections::BTreeMap,
-    borrow::Cow,
-    vec::Vec
-};
+use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 
 use crate::json::Value;
 
@@ -100,8 +95,8 @@ macro_rules! module_registry {
 }
 
 type ModulePtr = &'static dyn Module;
-type Registry  = (&'static str, fn() -> ModulePtr);
-type Example   = (&'static str, String);
+type Registry = (&'static str, fn() -> ModulePtr);
+type Example = (&'static str, String);
 
 static UNSUPPORTED_FIELDS: [&str; 1] = ["{cmake-built-type}"];
 
@@ -134,14 +129,14 @@ module_registry! {
 #[derive(Default, Clone, Copy)]
 pub struct FormatValue<'a> {
     pub format: Option<&'a str>,
-    pub color: Option<&'a str>
+    pub color: Option<&'a str>,
 }
 
 #[derive(Debug)]
 pub struct DocString {
     pub name: &'static str,
     pub second: &'static str,
-    pub desc: Option<&'static str>
+    pub desc: Option<&'static str>,
 }
 
 // 473kb -> 428kb
@@ -154,16 +149,25 @@ pub trait Docs {
 pub struct DocsVtable {
     pub format: fn() -> Option<&'static [DocString]>,
     pub lua: fn() -> Option<&'static [DocString]>,
-    pub example: fn() -> Option<alloc::vec::Vec<Example>>
+    pub example: fn() -> Option<alloc::vec::Vec<Example>>,
 }
 
 pub trait Module {
-    fn new() -> Self where Self: Sized;
-    fn get() -> &'static Self where Self: Sized;
+    fn new() -> Self
+    where
+        Self: Sized;
+    fn get() -> &'static Self
+    where
+        Self: Sized;
     fn key(&self) -> &'static str;
     fn title(&self) -> &'static str;
     fn string_name(&self) -> &'static str;
-    fn format(&self, key: FormatValue, format: FormatValue, map: Option<&BTreeMap<String, Value>>) -> Option<Cow<'_, str>>;
+    fn format(
+        &self,
+        key: FormatValue,
+        format: FormatValue,
+        map: Option<&BTreeMap<String, Value>>,
+    ) -> Option<Cow<'_, str>>;
     fn resolve_field(&self, name: &str) -> Option<&dyn core::fmt::Display>;
 }
 
@@ -186,7 +190,7 @@ pub fn __field_name(raw: &'static str) -> &'static str {
 // Name is the string we get from the config
 // Field is the raw field name from the structure
 //
-// We need to compare these two strings 
+// We need to compare these two strings
 // ignoring `r#` at the beginning of field and interpreting `_` as `-`
 pub fn __eq_name_and_field(name: &str, field: &str) -> bool {
     field
@@ -263,9 +267,9 @@ macro_rules! impl_module {
         }
 
         fn format(
-            &self, 
-            key: super::FormatValue, 
-            format: super::FormatValue, 
+            &self,
+            key: super::FormatValue,
+            format: super::FormatValue,
             _map: Option<&alloc::collections::BTreeMap<alloc::string::String, super::Value>>
         ) -> Option<alloc::borrow::Cow<'_, str>> {
             use core::fmt::Write;
