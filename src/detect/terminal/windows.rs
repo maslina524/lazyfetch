@@ -1,11 +1,8 @@
-use core::{
-    ffi::{CStr, c_void},
-    sync::atomic::Ordering::Relaxed,
-};
+use core::ffi::c_void;
 
 use crate::{
-    detect::shell::SHELL_PID,
-    modules::Shell,
+    detect::shell::get_shell_pid,
+    modules::Terminal,
     str::SmolStr,
     warning,
     windows::{
@@ -20,15 +17,6 @@ use crate::{
 const PROCESS_QUERY_LIMITED_INFORMATION: u32 = 0x1000;
 const INVALID_HANDLE: *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
 
-static BLACKLIST: [&CStr; 6] = [
-    c"python.exe",
-    c"python3.exe",
-    c"lazyfetch.exe",
-    c"fastfetch.exe",
-    c"neofetch.exe",
-    c"cargo.exe",
-];
-
 #[derive(Default)]
 struct Process {
     pid: u32,
@@ -37,15 +25,14 @@ struct Process {
 
 impl Process {
     pub fn new(pid: u32) -> Self {
-        if pid == 0 {
-            return Self::default();
-        }
-
         // SAFETY: Completely safe
         let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
 
         if handle == INVALID_HANDLE {
-            warning!("Failed to get shell process handle: {}", ErrorCode::last());
+            warning!(
+                "Failed to get terminal process handle: {}",
+                ErrorCode::last()
+            );
             return Self::default();
         }
         let mut size = 260;
@@ -58,12 +45,12 @@ impl Process {
             match utf16le_to_utf8(&buf, Utf16Len::Len(size as usize)) {
                 Ok(s) => Path::from(s),
                 Err(e) => {
-                    warning!("Failed to convert Utf16 to Utf8 in shell exe path: {e}");
+                    warning!("Failed to convert Utf16 to Utf8 in terminal exe path: {e}");
                     Path::default()
                 }
             }
         } else {
-            warning!("Failed to get shell exe path: {}", ErrorCode::last());
+            warning!("Failed to get terminal exe path: {}", ErrorCode::last());
             Path::default()
         };
 
@@ -71,33 +58,11 @@ impl Process {
     }
 }
 
-pub fn get_shell_pid() -> u32 {
-    let loaded = SHELL_PID.load(Relaxed);
-    if loaded != 0 {
-        return loaded;
-    }
-
-    let mut pid = env::get_my_pid();
-    loop {
-        pid = if let Some(p) = env::get_ppid_by_pid(pid) {
-            p
-        } else {
-            warning!("Process ppid not foind (pid: {pid})");
-            return 0;
-        };
-        let name = env::get_name_by_pid(pid).expect("Unreachable");
-
-        if !BLACKLIST.contains(&name) {
-            break;
-        }
-    }
-
-    SHELL_PID.store(pid, Relaxed);
-    pid
-}
-
-pub fn get() -> Shell {
-    let info = Process::new(get_shell_pid());
+pub fn get() -> Terminal {
+    let Some(pid) = env::get_ppid_by_pid(get_shell_pid()) else {
+        return Terminal::default();
+    };
+    let info = Process::new(pid);
 
     let exe_path = info.exe_path.clone();
     let process_name = info.exe_path.last().map_or_default(SmolStr::from);
@@ -115,7 +80,7 @@ pub fn get() -> Shell {
     let exe = exe_path.clone();
     let pretty_name = SmolStr::from(exe_name.trim_end_matches(".exe"));
 
-    Shell {
+    Terminal {
         process_name,
         exe,
         exe_name,

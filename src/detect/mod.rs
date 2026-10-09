@@ -11,6 +11,7 @@ pub mod memory;
 pub mod os;
 pub mod publicip;
 pub mod shell;
+pub mod terminal;
 pub mod theme;
 pub mod title;
 pub mod uptime;

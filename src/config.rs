@@ -272,6 +272,7 @@ impl Default for ConfigModuleArray {
             ConfigModule::from_str("os"),
             ConfigModule::from_str("theme"),
             ConfigModule::from_str("shell"),
+            ConfigModule::from_str("terminal"),
             ConfigModule::from_str("initsystem"),
             ConfigModule::from_str("kernel"),
             ConfigModule::from_str("uptime"),
