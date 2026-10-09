@@ -1,10 +1,13 @@
+use core::sync::atomic::Ordering::Relaxed;
+
 use crate::{
+    detect::shell::SHELL_PID,
     format,
     modules::Shell,
     str::SmolStr,
+    sync::OnceLock,
     unix::{
-        error::{self, ErrorCode},
-        fs::{self, ReadError},
+        error, fs,
         libc::{c_pid, getppid},
         path::Path,
     },
@@ -19,6 +22,8 @@ static BLACKLIST: [&str; 6] = [
     "neofetch",
     "cargo",
 ];
+
+static NAME: OnceLock<SmolStr> = OnceLock::new();
 
 #[derive(Default)]
 struct Process {
@@ -64,10 +69,22 @@ impl Process {
     }
 }
 
-fn get_terminal_process() -> Result<Process, ReadError> {
+pub fn get_shell_pid() -> u32 {
+    let loaded = SHELL_PID.load(Relaxed);
+    crate::println!("SHELL: `{loaded}`");
+    if loaded != 0 {
+        return loaded;
+    }
+
     let mut pid = getppid();
     loop {
-        let state = fs::read_to_string(format!("/proc/{pid}/stat"))?;
+        let state = match fs::read_to_string(format!("/proc/{pid}/stat")) {
+            Ok(s) => s,
+            Err(e) => {
+                warning!("Failed to read /proc/pid/stat: {e}");
+                return 0;
+            }
+        };
         let item_iter = state.split(' ');
 
         let mut item_iter = item_iter.skip(1); // pid
@@ -79,13 +96,16 @@ fn get_terminal_process() -> Result<Process, ReadError> {
         } else {
             raw
         };
+        let _ = NAME.set(SmolStr::from(name));
 
         if (0..=1).contains(&pid) || name.eq_ignore_ascii_case("MainThread") {
-            return Process::new(pid, name).map_err(ErrorCode::into);
+            SHELL_PID.store(pid as u32, Relaxed);
+            return pid as u32;
         }
 
         if !BLACKLIST.contains(&name) {
-            return Process::new(pid, name).map_err(ErrorCode::into);
+            SHELL_PID.store(pid as u32, Relaxed);
+            return pid as u32;
         }
 
         let mut item_iter = item_iter.skip(1); // state
@@ -97,27 +117,23 @@ fn get_terminal_process() -> Result<Process, ReadError> {
 }
 
 pub fn get() -> Shell {
-    let terminal = get_terminal_process().unwrap_or_else(|e| {
+    let pid = get_shell_pid();
+    let info = Process::new(pid as i32, NAME.get_or_abort("Unreachable")).unwrap_or_else(|e| {
         warning!("Failed to read /proc/pid/stat: {e}");
         Process::default()
     });
 
-    let exe_name = terminal.arg.last().map(SmolStr::from).unwrap_or_default();
-
-    let pretty_name = terminal
-        .exe_path
-        .last()
-        .map(SmolStr::from)
-        .unwrap_or_default();
+    let exe_name = info.arg.last().map(SmolStr::from).unwrap_or_default();
+    let pretty_name = info.name.clone();
 
     Shell {
-        process_name: terminal.name,
-        exe: terminal.arg,
+        process_name: info.name,
+        exe: info.arg,
         exe_name,
         version: SmolStr::default(),
-        pid: terminal.pid as u32,
+        pid: info.pid as u32,
         pretty_name,
-        exe_path: terminal.exe_path,
-        tty: terminal.tty,
+        exe_path: info.exe_path,
+        tty: info.tty,
     }
 }

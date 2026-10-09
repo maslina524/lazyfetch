@@ -10,6 +10,6 @@ cfg_if! {
         pub use windows::{get, get_shell_pid};
     } else if #[cfg(target_family = "unix")] {
         mod unix;
-        pub use unix::get;
+        pub use unix::{get, get_shell_pid};
     }
 }
