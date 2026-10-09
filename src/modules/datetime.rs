@@ -95,7 +95,7 @@ impl Module for Datetime {
     }
 
     fn get() -> &'static Self {
-        DATETIME.get_or_init(|| Self::new())
+        DATETIME.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

@@ -49,7 +49,7 @@ impl Module for Uptime {
     }
 
     fn get() -> &'static Self {
-        UPTIME.get_or_init(|| Self::new())
+        UPTIME.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

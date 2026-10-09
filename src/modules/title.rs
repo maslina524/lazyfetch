@@ -56,7 +56,7 @@ impl Module for Title {
     }
 
     fn get() -> &'static Self {
-        TITLE.get_or_init(|| Self::new())
+        TITLE.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

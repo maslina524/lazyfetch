@@ -21,7 +21,7 @@ impl Module for Theme {
     }
 
     fn get() -> &'static Self {
-        THEME.get_or_init(|| Self::new())
+        THEME.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

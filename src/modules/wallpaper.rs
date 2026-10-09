@@ -28,7 +28,7 @@ impl Module for Wallpaper {
     }
 
     fn get() -> &'static Self {
-        WALLPAPER.get_or_init(|| Self::new())
+        WALLPAPER.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

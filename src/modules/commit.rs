@@ -50,7 +50,7 @@ impl Module for Commit {
     }
 
     fn get() -> &'static Self {
-        COMMIT.get_or_init(|| Self::new())
+        COMMIT.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

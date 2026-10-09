@@ -21,7 +21,7 @@ impl Module for Colors {
     }
 
     fn get() -> &'static Self {
-        COLORS.get_or_init(|| Self::new())
+        COLORS.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

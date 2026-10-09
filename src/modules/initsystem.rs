@@ -38,7 +38,7 @@ impl Module for Initsystem {
     }
 
     fn get() -> &'static Self {
-        INITSYSTEM.get_or_init(|| Self::new())
+        INITSYSTEM.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

@@ -39,7 +39,7 @@ impl Module for Kernel {
     }
 
     fn get() -> &'static Self {
-        KERNEL.get_or_init(|| Self::new())
+        KERNEL.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

@@ -49,7 +49,7 @@ impl Module for Cpu {
     }
 
     fn get() -> &'static Self {
-        CPU.get_or_init(|| Self::new())
+        CPU.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

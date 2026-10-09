@@ -87,7 +87,7 @@ impl Module for Weather {
     }
 
     fn get() -> &'static Self {
-        WEATHER.get_or_init(|| Self::new())
+        WEATHER.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

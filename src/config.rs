@@ -178,12 +178,11 @@ impl Config {
     }
 
     pub fn module_by_typ(&self, string: &str) -> Option<&ConfigModule> {
-        for m in self.modules.as_inner() {
-            if m.typ == string {
-                return Some(m);
-            }
-        }
-        None
+        self.modules
+            .as_inner()
+            .iter()
+            .find(|&m| m.typ == string)
+            .map(|v| v as _)
     }
 
     pub const fn modules(&self) -> &[ConfigModule] {

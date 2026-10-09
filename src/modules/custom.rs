@@ -13,7 +13,7 @@ impl Module for Custom {
     }
 
     fn get() -> &'static Self {
-        CUSTOM.get_or_init(|| Self::new())
+        CUSTOM.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

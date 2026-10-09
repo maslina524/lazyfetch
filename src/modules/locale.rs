@@ -21,7 +21,7 @@ impl Module for Locale {
     }
 
     fn get() -> &'static Self {
-        LOCALE.get_or_init(|| Self::new())
+        LOCALE.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

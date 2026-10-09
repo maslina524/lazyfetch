@@ -29,7 +29,7 @@ impl Module for DiskList {
     }
 
     fn get() -> &'static Self {
-        DISK_LIST.get_or_init(|| Self::new())
+        DISK_LIST.get_or_init(Self::new)
     }
 
     fn title(&self) -> &'static str {

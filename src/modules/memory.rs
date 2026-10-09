@@ -39,7 +39,7 @@ impl Module for Memory {
     }
 
     fn get() -> &'static Self {
-        MEMORY.get_or_init(|| Self::new())
+        MEMORY.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

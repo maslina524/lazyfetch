@@ -78,7 +78,7 @@ impl Module for Os {
     }
 
     fn get() -> &'static Self {
-        OS.get_or_init(|| Self::new())
+        OS.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

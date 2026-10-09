@@ -24,7 +24,7 @@ impl Module for Break {
     }
 
     fn get() -> &'static Self {
-        BREAK.get_or_init(|| Self::new())
+        BREAK.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

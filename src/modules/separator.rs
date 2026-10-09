@@ -19,7 +19,7 @@ impl Module for Separator {
     }
 
     fn get() -> &'static Self {
-        SEPARATOR.get_or_init(|| Self::new())
+        SEPARATOR.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

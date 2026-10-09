@@ -94,7 +94,7 @@ impl Module for Gpu {
     }
 
     fn get() -> &'static Self {
-        GPU.get_or_init(|| Self::new())
+        GPU.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

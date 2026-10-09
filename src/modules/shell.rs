@@ -25,7 +25,7 @@ impl Module for Shell {
     }
 
     fn get() -> &'static Self {
-        SHELL.get_or_init(|| Self::new())
+        SHELL.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

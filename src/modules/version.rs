@@ -61,7 +61,7 @@ impl Module for Version {
     }
 
     fn get() -> &'static Self {
-        VERSION.get_or_init(|| Self::new())
+        VERSION.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {

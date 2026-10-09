@@ -22,7 +22,7 @@ impl Module for PublicIP {
     }
 
     fn get() -> &'static Self {
-        PUBLICIP.get_or_init(|| Self::new())
+        PUBLICIP.get_or_init(Self::new)
     }
 
     fn key(&self) -> &'static str {
