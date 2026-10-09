@@ -1,5 +1,6 @@
 #![doc = include_str!("README.md")]
 
+pub mod board;
 pub mod cpu;
 pub mod datetime;
 pub mod disk;

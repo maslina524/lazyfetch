@@ -36,9 +36,7 @@ impl Module for Board {
         "board"
     }
 
-    impl_module!(
-        name, vendor, version, serial
-    );
+    impl_module!(name, vendor, version, serial);
 }
 
 impl_display_for_module!(Board);

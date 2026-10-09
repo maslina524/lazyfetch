@@ -77,8 +77,6 @@ fn get_terminal_process(shell_pid: u32) -> Result<Process, ReadError> {
         .and_then(|s| s.parse::<i32>().ok())
         .expect("Strange unix /proc/pid/state");
 
-    crate::println!("Terminal pid: {terminal_pid}");
-
     // Terminal process
     let state = fs::read_to_string(format!("/proc/{terminal_pid}/stat"))?;
     let mut item_iter = state.split(' ').skip(1); // pid

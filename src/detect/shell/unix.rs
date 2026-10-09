@@ -71,7 +71,6 @@ impl Process {
 
 pub fn get_shell_pid() -> u32 {
     let loaded = SHELL_PID.load(Relaxed);
-    crate::println!("SHELL: `{loaded}`");
     if loaded != 0 {
         return loaded;
     }
