@@ -1,5 +1,6 @@
 #![doc = include_str!("README.md")]
 
+pub mod board; // 5)  Board         : Print motherboard name and other info
 pub mod break_; // 7)  Break         : Print an empty line
 pub mod colors; // 14) Colors        : Display the terminal's 16-color palette
 pub mod commit; // LF) Commit        : Display last commit
@@ -26,6 +27,7 @@ pub mod version; // 68) Version       : Print the Fastfetch version and build in
 pub mod wallpaper; // 70) Wallpaper     : Print the file path of the current wallpaper
 pub mod weather; // 71) Weather       : Print weather information
 
+pub use board::Board;
 pub use break_::Break;
 pub use colors::Colors;
 pub use commit::Commit;
@@ -103,6 +105,7 @@ type Example = (&'static str, String);
 static UNSUPPORTED_FIELDS: [&str; 1] = ["{cmake-built-type}"];
 
 module_registry! {
+    "board"      => Board;
     "break"      => Break;
     "colors"     => Colors;
     "commit"     => Commit;

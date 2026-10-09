@@ -104,6 +104,8 @@ impl Module for Gpu {
     fn title(&self) -> &'static str {
         if matches!(self.r#type, GpuType::Unknown) {
             "{name}"
+        } else if self.dedicated_total.as_bytes() == 0 {
+            "{name} [{type}]"
         } else {
             "{name} @ {frequency} ({dedicated-total}) [{type}]"
         }
