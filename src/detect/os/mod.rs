@@ -29,7 +29,7 @@ pub struct OsInfo {
 }
 
 #[cfg(target_os = "android")]
-pub fn get_id() -> ConcatStr<2> {
+pub const fn get_id() -> ConcatStr<2> {
     ConcatStr::new(["android", ""])
 }
 

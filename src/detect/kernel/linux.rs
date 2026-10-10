@@ -20,13 +20,12 @@ impl KernelInfo {
             .unwrap_or_else(|e| abort!("Failed to open /proc/version: {e}"));
 
         let mut splited = content.split(' ');
-        splited.next();
-        let release = splited.next().unwrap_or("Unknown").to_owned();
-        
-        let version = content
-            .find("#1 SMP")
-            .map_or("Unknown", |index| &content[index..])
-            .to_owned();
+        let (release, version) = splited.nth(2).map_or_else(|| ("Unknown".to_owned(), "Unknown".to_owned()), |raw| {
+            let version = raw.find('+')
+                .map_or_else(|| raw.to_owned(), |idx| raw[..idx].to_owned());
+
+            (raw.to_owned(), version)
+        });
 
         Self { 
             sysname: SYSNAME, 

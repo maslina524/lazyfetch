@@ -182,7 +182,7 @@ pub fn name(vendor_id: u32, device_id: u32) -> String {
 #[cfg(target_os = "android")]
 pub fn name(_: u32, _: u32) -> String {
     crate::imp::fs::read_to_string("/sys/class/kgsl/kgsl-3d0/gpu_model")
-        .unwrap_or("Unknown".to_owned())
+        .unwrap_or_else(|_| "Unknown".to_owned())
 }
 
 pub fn frequency(vendor_id: u32) -> Frequency {

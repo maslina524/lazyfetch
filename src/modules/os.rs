@@ -106,7 +106,8 @@ impl Module for Os {
         codename,
         build_id,
         arch,
-        nerd_emoji
+        nerd_emoji,
+        colored_nerd_emoji
     );
 }
 

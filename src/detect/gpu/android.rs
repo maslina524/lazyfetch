@@ -15,6 +15,7 @@ impl GpuInfo {
     pub fn new() -> Self {
         let mut c_egl = [0u8; PROP_VALUE_MAX + 1];
         __system_property_get(c"ro.hardware.egl".as_ptr(), c_egl.as_mut_ptr());
+        // SAFETY: Returns valid ptr
         let egl = unsafe { CStr::from_ptr(c_egl.as_ptr().cast()) }
             .to_string_lossy()
             .into_owned();

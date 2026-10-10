@@ -27,6 +27,10 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Add Android target
+        if: matrix.os == 'ubuntu-latest'
+        run: rustup target add aarch64-linux-android
+
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
@@ -35,3 +39,7 @@ jobs:
 
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Clippy (aarch64-linux-android)
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo clippy --target aarch64-linux-android --all-targets --all-features -- -D warnings

@@ -258,7 +258,7 @@ macro_rules! impl_display_for_module {
 
 #[macro_export]
 macro_rules! impl_module {
-    ($($field:ident),*) => {
+    ($($field:ident),* $(,)?) => {
         #[allow(unused_variables)]
         fn resolve_field(&self, name: &str) -> Option<&dyn core::fmt::Display> {
             $(

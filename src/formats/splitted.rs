@@ -53,11 +53,12 @@ impl SplittedAnsiIter {
                     buf.push_str("\x1b[0m");
                 }
 
-                if build_len > 0 {
-                    ranges.push(chunk_start..buf.len());
-                } else {
-                    buf.truncate(chunk_start);
-                }
+                // if build_len > 0 {
+                //     ranges.push(chunk_start..buf.len());
+                // } else {
+                //     buf.truncate(chunk_start);
+                // }
+                ranges.push(chunk_start..buf.len());
                 build_len = 0;
                 chunk_start = buf.len();
 
@@ -88,7 +89,9 @@ impl SplittedAnsiIter {
         if current_ansi != "\x1b[0m" {
             buf.push_str("\x1b[0m");
         }
-        ranges.push(chunk_start..buf.len());
+        if chunk_start != buf.len() {
+            ranges.push(chunk_start..buf.len());
+        }
 
         Self {
             buf: String::leak(buf),
@@ -122,3 +125,17 @@ impl Iterator for SplittedAnsiIter {
 }
 
 impl ExactSizeIterator for SplittedAnsiIter {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn newline_test() {
+        let string = "\n\nnewline\nstring\n";
+        let splitted_iter = SplittedAnsiIter::new(string, usize::MAX);
+        let splitted = splitted_iter.collect::<Vec<&str>>();
+
+        assert_eq!(vec!["", "", "newline", "string", ""], splitted);
+    }
+}

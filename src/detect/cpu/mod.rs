@@ -68,10 +68,12 @@ fn get_family_and_model() -> (u32, u32) {
     };
     (family, model)
 }
+
 #[cfg(not(target_arch = "x86_64"))]
-fn get_family_and_model() -> (u32, u32) {
+const fn get_family_and_model() -> (u32, u32) {
     (0, 0)
 }
+
 fn code_name(vendor: &str, family: u32, model: u32) -> &'static str {
     if cfg!(not(any(target_arch = "x86_64", target_arch = "x86"))) {
         return "";
@@ -145,10 +147,12 @@ fn technology() -> &'static str {
         _ => "",
     }
 }
+
 #[cfg(not(target_arch = "x86_64"))]
-fn technology() -> &'static str {
+const fn technology() -> &'static str {
     ""
 }
+
 #[cfg(target_arch = "x86_64")]
 fn level_x86_64() -> u8 {
     if !cpuid_has_feature(1, 0, 2, 0) {
@@ -223,10 +227,12 @@ fn level_x86_64() -> u8 {
     }
     4
 }
+
 #[cfg(not(target_arch = "x86_64"))]
-fn level_x86_64() -> u8 {
+const fn level_x86_64() -> u8 {
     0
 }
+
 fn micro_arch() -> MicroArch {
     if cfg!(any(target_arch = "x86_64", target_arch = "x86")) {
         let level = level_x86_64();

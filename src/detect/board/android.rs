@@ -31,6 +31,7 @@ const PROP_VALUE_MAX: usize = 92;
 fn get_prop(name: &CStr) -> SmolStr {
     let mut buf = [0u8; PROP_VALUE_MAX + 1];
     __system_property_get(name.as_ptr(), buf.as_mut_ptr());
+    // SAFETY: Returns valid ptr
     let c_str = unsafe { CStr::from_ptr(buf.as_ptr().cast()) };
     SmolStr::try_from(c_str).unwrap_or_else(|e| {
         warning!("Failed to parse CStr: {e}");
@@ -46,11 +47,12 @@ fn get_version() -> SmolStr {
             continue;
         }
 
+        // SAFETY: Returns valid ptr
         let c_str = unsafe { CStr::from_ptr(buf.as_ptr().cast()) };
         match SmolStr::try_from(c_str) {
             Ok(s) => return s,
             Err(e) => {
-                warning!("Failed to parse CStr: {e}")
+                warning!("Failed to parse CStr: {e}");
             }
         }
     }

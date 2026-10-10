@@ -17,7 +17,7 @@ impl Module for Custom {
     }
 
     fn key(&self) -> &'static str {
-        "Custom"
+        ""
     }
 
     fn title(&self) -> &'static str {

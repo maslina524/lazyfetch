@@ -10,7 +10,7 @@ impl MemoryInfo {
             }
         };
 
-        let total_kb_raw = if let Some(v) = info.get("MemTotal") {
+        let total_kb_raw = info.get("MemTotal").map_or(0.0, |v| {
             let value_str = v.trim_end_matches(" kB");
             match value_str.parse::<f64>() {
                 Ok(v) => v,
@@ -19,11 +19,9 @@ impl MemoryInfo {
                     0.0
                 }
             }
-        } else {
-            0.0
-        };
+        });
 
-        let available_kb_raw = if let Some(v) = info.get("MemAvailable") {
+        let available_kb_raw = info.get("MemAvailable").map_or(0.0, |v| {
             let value_str = v.trim_end_matches(" kB");
             match value_str.parse::<f64>() {
                 Ok(v) => v,
@@ -32,9 +30,7 @@ impl MemoryInfo {
                     0.0
                 }
             }
-        } else {
-            0.0
-        };
+        });
 
         let total = MemorySize::from_kilobytes(total_kb_raw);
         let in_use = MemorySize::from_kilobytes(total_kb_raw - available_kb_raw);

@@ -338,7 +338,22 @@ mod tests {
 
         let mut parser = Parser::new(stream);
         let obj = parser.parse_object();
+        assert!(obj.is_ok());
+    }
 
-        println!("{obj:#?}");
+    #[test]
+    fn escape_test() {
+        let source = r#"{ "key": "\n\nescape\tvalue\n" }"#;
+        let stream = TokenStream::new(source);
+
+        let mut parser = Parser::new(stream);
+        let ret = parser.parse_object();
+
+        let Ok(map) = ret else {
+            panic!("Ret is Err()");
+        };
+
+        let value = map.get_string("key").unwrap();
+        assert_eq!(value, "\n\nescape\tvalue\n");
     }
 }

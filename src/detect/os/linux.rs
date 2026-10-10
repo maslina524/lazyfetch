@@ -16,8 +16,8 @@ impl OsInfo {
     pub fn new() -> Self {
         let os_release = LineBased::parse_os_release().unwrap();
 
-        let name_raw = os_release.get_default("NAME", "Unknown").to_owned();
-        let name = Cow::Owned(name_raw);
+        let name_raw = os_release.get_default("NAME", "Unknown");
+        let name = Cow::Borrowed(name_raw);
 
         let codename = os_release.get_default("VERSION_CODENAME", "");
         let variant = os_release.get_default("VARIANT", "");

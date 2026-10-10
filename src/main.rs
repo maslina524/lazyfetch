@@ -61,7 +61,7 @@ cfg_if! {
 
 extern crate alloc;
 
-use core::{ffi::c_int, slice::Iter};
+use core::slice::Iter;
 
 use alloc::{boxed::Box, string::String, vec::Vec};
 
@@ -97,7 +97,7 @@ static HELP: &str = concat!(
     "  -c, --config              \tCustom preset (http url or file)",
 );
 
-const MIN_OFFSET: usize = 24;
+const MIN_OFFSET: usize = 36;
 const IMAGE_SIZE: usize = 40;
 const CELL_ASPECT: f64 = 2.0;
 const ALLOC_REP_BAR_SIZE: u128 = 64;
@@ -572,29 +572,29 @@ fn just_print_logo_and_info(logo_lines: &[(String, usize)]) {
 
 static ARGS: OnceLock<Vec<String>> = OnceLock::new();
 
-#[cfg(target_family = "unix")]
-use core::ffi::c_char;
+#[cfg(not(test))]
+use core::ffi;
 
-// #[cfg(not(test))]
+#[cfg(not(test))]
 #[allow(
     clippy::similar_names,
     reason = "that's what they're called in C, i don't give a fuck about clippy"
 )]
 #[cfg(target_family = "unix")]
 #[unsafe(no_mangle)]
-extern "C" fn main(argc: c_int, argv: *const *const c_char) -> c_int {
+extern "C" fn main(argc: ffi::c_int, argv: *const *const ffi::c_char) -> ffi::c_int {
     let _ = ARGS.set(imp::env::args_init(argc as usize, argv.cast()));
-    let ret = lazyfetch_main() as c_int;
+    let ret = lazyfetch_main() as ffi::c_int;
     let _ = flush();
     ret
 }
 
-// #[cfg(not(test))]
+#[cfg(not(test))]
 #[cfg(target_os = "windows")]
 #[unsafe(no_mangle)]
-extern "C" fn main() -> c_int {
+extern "C" fn main() -> ffi::c_int {
     let _ = ARGS.set(imp::env::args_init());
-    let ret = lazyfetch_main() as c_int;
+    let ret = lazyfetch_main() as ffi::c_int;
     let _ = flush();
     ret
 }
@@ -655,13 +655,6 @@ fn lazyfetch_main() -> i32 {
     let _ = env::close_terminal_handle();
     NvidiaLib::drop_nvidia();
     cached::flush_to_file();
-
-    if args.iter().any(|a| a == "--wait" || a == "-w") {
-        loop {
-            // SAFETY: Just a nop
-            unsafe { core::arch::asm!("nop") };
-        }
-    }
 
     0
 }

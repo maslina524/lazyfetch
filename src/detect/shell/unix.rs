@@ -129,7 +129,7 @@ pub fn get() -> Shell {
         process_name: info.name,
         exe: info.arg,
         exe_name,
-        version: SmolStr::default(),
+        version: SmolStr::from_static("0.0.0.0"),
         pid: info.pid as u32,
         pretty_name,
         exe_path: info.exe_path,

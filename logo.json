@@ -267,7 +267,8 @@
       "color_keys": "color::FG_GREEN",
       "color_title": "color::FG_GREEN",
       "colors": [
-        "color::FG_GREEN"
+        "color::FG_GREEN",
+        "color::FG_WHITE"
       ],
       "lines": "/temp/a/android_small.txt",
       "names": [

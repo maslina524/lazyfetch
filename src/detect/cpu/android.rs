@@ -18,6 +18,7 @@ const PROP_VALUE_MAX: usize = 92;
 pub fn get() -> Cpu {
     let mut c_tech = [0u8; PROP_VALUE_MAX + 1];
     __system_property_get(c"ro.soc.model".as_ptr(), c_tech.as_mut_ptr());
+    // SAFETY: Returns valid ptr
     let tech = unsafe { CStr::from_ptr(c_tech.as_ptr().cast()) };
     let name = tech_to_name(tech.to_bytes());
     let logical = logical_cores_count();
@@ -69,7 +70,7 @@ fn base_freq_android() -> Frequency {
     }
 }
 
-fn tech_to_name(tech: &[u8]) -> &'static str {
+const fn tech_to_name(tech: &[u8]) -> &'static str {
     match tech {
         b"SM6225" => "Snapdragon 680 4G",
         b"SM6225-AD" => "Snapdragon 685",

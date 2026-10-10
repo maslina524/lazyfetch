@@ -264,33 +264,36 @@ impl ConfigModuleArray {
     }
 }
 
+macro_rules! module_array {
+    [$($name:literal),* $(,)?] => {
+        vec![
+            $( ConfigModule::from_str($name) ),*
+        ]
+    };
+}
+
 impl Default for ConfigModuleArray {
     fn default() -> Self {
-        let inner = vec![
-            ConfigModule::from_str("title"),
-            ConfigModule::from_str("separator"),
-            ConfigModule::from_str("os"),
-            ConfigModule::from_str("theme"),
-            ConfigModule::from_str("board"),
-            ConfigModule::from_str("shell"),
-            ConfigModule::from_str("terminal"),
-            ConfigModule::from_str("initsystem"),
-            ConfigModule::from_str("kernel"),
-            ConfigModule::from_str("uptime"),
-            ConfigModule::from_str("datetime"),
-            ConfigModule::from_str("processes"),
-            ConfigModule::from_str("cpu"),
-            ConfigModule::from_str("gpu"),
-            ConfigModule::from_str("memory"),
-            ConfigModule::from_str("disk"),
-            ConfigModule::from_str("weather"),
-            ConfigModule::from_str("publicip"),
-            ConfigModule::from_str("locale"),
-            ConfigModule::from_str("wallpaper"),
-            ConfigModule::from_str("commit"),
-            ConfigModule::from_str("version"),
-            ConfigModule::from_str("break"),
-            ConfigModule::from_str("colors"),
+        let inner = module_array![
+            "title",
+            "separator",
+            "os",
+            "initsystem",
+            "board",
+            "kernel",
+            "datetime",
+            "uptime",
+            "shell",
+            "terminal",
+            "processes",
+            "cpu",
+            "gpu",
+            "memory",
+            "disk",
+            "locale",
+            "version",
+            "break",
+            "colors"
         ];
         Self { inner }
     }

@@ -1,6 +1,6 @@
 [package]
 name = "lazyfetch"
-version = "0.4.3"
+version = "0.5.0"
 edition = "2024"
 description = "fastfetch-based program written in rust with #![no_std]"
 license = "MIT"
@@ -28,8 +28,8 @@ incremental = false
 overflow-checks = false
 
 [profile.dev]
-opt-level = 0
-lto = false
+opt-level = "z"
+lto = true
 debug = true
 codegen-units = 1
 panic = "abort"
