@@ -150,6 +150,10 @@ impl Image {
         }
     }
 
+    pub const fn from_data(w: usize, h: usize, data: Vec<Rgba>) -> Self {
+        Self { w, h, data }
+    }
+
     pub const fn size(&self) -> (usize, usize) {
         (self.w, self.h)
     }

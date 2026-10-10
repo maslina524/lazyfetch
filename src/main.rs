@@ -33,12 +33,12 @@ mod lz77;
 mod macros;
 mod nvidia;
 mod parser;
-mod png;
 mod print;
 mod sync;
 mod url;
 mod zlib;
 
+mod codecs;
 mod detect;
 mod field;
 mod formats;
@@ -67,6 +67,7 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 
 use crate::{
     allocator::{AllocationReport, Allocator},
+    codecs::Png,
     config::{Config, ConfigModule},
     detect::os,
     field::cached,
@@ -77,7 +78,6 @@ use crate::{
     logo::{LogoInfo, UILogo},
     modules::{Commit, DocsVtable, FormatValue, Module, Version},
     nvidia::NvidiaLib,
-    png::Png,
     print::flush,
     sync::OnceLock,
     url::Url,
@@ -278,7 +278,7 @@ fn get_logo_name_and_custom(val: &str) -> (Box<str>, UILogo) {
     let id = os::get_id().as_boxed_str();
     match fs::read(val) {
         Ok(b) => {
-            if png::is_png(&b) {
+            if codecs::png::is_png(&b) {
                 match Png::decode(&b) {
                     Ok(p) => (id, UILogo::Image(p.into_image())),
                     Err(e) => {

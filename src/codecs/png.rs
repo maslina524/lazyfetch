@@ -8,8 +8,8 @@ use crate::{
     image::{ColorType, ColorTypeError, Image, Rgba, RgbaConvertError},
 };
 
-const PNG_SIG: &[u8] = b"\x89PNG\x0D\x0A\x1A\x0A";
-const IHDR_NAME: &[u8] = b"IHDR";
+static PNG_SIG: &[u8] = b"\x89PNG\x0D\x0A\x1A\x0A";
+static IHDR_NAME: &[u8] = b"IHDR";
 
 #[derive(Debug)]
 pub enum PngError {
@@ -242,8 +242,11 @@ fn extract_pixel_bytes(row: &[u8], x: usize, color_type: ColorType, depth: u8) -
     }
 }
 
-pub fn is_png(content: &[u8]) -> bool {
-    &content[..PNG_SIG.len()] == PNG_SIG
+pub fn is_png(bytes: &[u8]) -> bool {
+    if bytes.len() < PNG_SIG.len() {
+        return false;
+    }
+    &bytes[..PNG_SIG.len()] == PNG_SIG
 }
 
 #[derive(Debug)]
@@ -257,14 +260,15 @@ impl Png {
     pub fn decode(bytes: &[u8]) -> Result<Self, PngError> {
         let mut iter = bytes.iter().copied();
 
-        if safe_take(&mut iter, PNG_SIG.len())? != PNG_SIG {
+        let sig = safe_take(&mut iter, PNG_SIG.len())?;
+        if !is_png(&sig) {
             return Err(PngError::InvalidSignature);
         }
 
         let ihdr = Ihdr::new(&mut iter)?;
         // crate::println!("IHDR: {:?}", ihdr);
 
-        let mut idat_data: Vec<u8> = Vec::with_capacity(8 * 1024);
+        let mut idat_data = Vec::with_capacity(8 * 1024);
         loop {
             let chunk = Chunk::new(&mut iter)?;
             // crate::println!("{}: {:?}", str::from_utf8(&chunk.name).unwrap(), chunk.data);
@@ -289,7 +293,7 @@ impl Png {
         let row_bytes = (ihdr.width * channels * ihdr.depth as usize).div_ceil(8);
 
         let mut image = Image::new(ihdr.width, ihdr.height);
-        let mut prev_row: Option<Vec<u8>> = None;
+        let mut prev_row = None;
 
         for y in 0..ihdr.height {
             let filter = iter.next().ok_or(PngError::UnexpectedEof)?;
@@ -326,7 +330,7 @@ impl Png {
 mod tests {
     use std::fs;
 
-    use crate::{image::ColorType, png::Png};
+    use crate::{codecs::Png, image::ColorType};
 
     #[test]
     fn rgba8_test() {
@@ -342,7 +346,7 @@ mod tests {
 
     #[test]
     fn graya16_test() {
-        let data = fs::read("test/png/graya16.png").unwrap();
+        let data = fs::read("test/png/gray16.png").unwrap();
         let png = Png::decode(&data).unwrap();
         let size = png.as_image().size();
 
