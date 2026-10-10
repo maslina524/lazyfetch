@@ -112,7 +112,9 @@ Lazyfetch доступен для `x86_64-pc-windows-msvc`, `x86_64-unknown-linu
 Сборка из исходников, если у вас установлен cargo:
 
 ```bash
-$ cargo install --git https://github.com/maslina524/lazyfetch lazyfetch
+$ git clone https://github.com/maslina524/lazyfetch
+$ cd lazyfetch
+$ cargo install --path . --config .cargo/native.toml
 ```
 
 <img src="images/jarvis.gif" width="50%" />

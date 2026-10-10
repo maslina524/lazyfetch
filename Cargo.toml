@@ -15,13 +15,17 @@ keywords = [
 name = "lazyfetch"
 path = "src/main.rs"
 
+# There's no speed difference between "z" and `3`.
+# It's better to use "z" for a smaller size
 [profile.release]
 opt-level = "z"
-lto = true
+lto = "fat"
 codegen-units = 1
-# debug = true
 panic = "abort"
 strip = "symbols"
+debug = false
+incremental = false
+overflow-checks = false
 
 [profile.dev]
 opt-level = 0

@@ -1,0 +1,2 @@
+[alias]
+build-native = "build --release --config .cargo/native.toml"

@@ -114,7 +114,9 @@ Go to Releases and download the ready-made binary for your OS and architecture, 
 Building from source if you have `cargo` installed:
 
 ```bash
-$ cargo install --git https://github.com/maslina524/lazyfetch lazyfetch
+$ git clone https://github.com/maslina524/lazyfetch
+$ cd lazyfetch
+$ cargo install --path . --config .cargo/native.toml
 ```
 
 <img src="images/jarvis.gif" width="50%" />
