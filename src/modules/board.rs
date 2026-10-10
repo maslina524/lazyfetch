@@ -7,7 +7,7 @@ use crate::{
 
 static BOARD: OnceLock<Board> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Default, Debug, Docs)]
 pub struct Board {
     pub name: SmolStr,
     pub vendor: SmolStr,

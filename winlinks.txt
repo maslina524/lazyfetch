@@ -90,3 +90,4 @@ IDXGIFactory
 IDXGIAdapter
 DIGCF_PRESENT
 ExpandEnvironmentStringsW
+GetSystemFirmwareTable

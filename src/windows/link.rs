@@ -59,6 +59,7 @@ link!("kernel32" "system" fn GetProcessHeap() -> HANDLE);
 link!("user32" "system" fn GetRawInputDeviceInfoW(hdevice : HANDLE, uicommand : RAW_INPUT_DEVICE_INFO_COMMAND, pdata : *mut core::ffi::c_void, pcbsize : *mut u32) -> u32);
 link!("user32" "system" fn GetRawInputDeviceList(prawinputdevicelist : *mut RAWINPUTDEVICELIST, puinumdevices : *mut u32, cbsize : u32) -> u32);
 link!("kernel32" "system" fn GetStdHandle(nstdhandle : STD_HANDLE) -> HANDLE);
+link!("kernel32" "system" fn GetSystemFirmwareTable(firmwaretableprovidersignature : FIRMWARE_TABLE_PROVIDER, firmwaretableid : u32, pfirmwaretablebuffer : *mut u8, buffersize : u32) -> u32);
 link!("kernel32" "system" fn GetSystemInfo(lpsysteminfo : *mut SYSTEM_INFO));
 link!("kernel32" "system" fn GetSystemTimeAsFileTime(lpsystemtimeasfiletime : *mut FILETIME));
 link!("kernel32" "system" fn GetTickCount64() -> u64);
@@ -183,6 +184,7 @@ pub struct FILETIME {
 pub type FILE_CREATION_DISPOSITION = u32;
 pub type FILE_FLAGS_AND_ATTRIBUTES = u32;
 pub type FILE_SHARE_MODE = u32;
+pub type FIRMWARE_TABLE_PROVIDER = u32;
 pub type FORMAT_MESSAGE_OPTIONS = u32;
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
