@@ -1,6 +1,8 @@
 #![allow(clippy::cargo_common_metadata)]
 
-use std::{collections::HashMap, fs, path::Path, process::Command, sync::OnceLock};
+use std::{
+    collections::HashMap, env, ffi::OsString, fs, path::Path, process::Command, sync::OnceLock,
+};
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
@@ -10,6 +12,8 @@ pub static TARGET_OS: OnceLock<String> = OnceLock::new();
 pub static TARGET_FAMILY: OnceLock<String> = OnceLock::new();
 pub static TARGET_ENV: OnceLock<String> = OnceLock::new();
 pub static TARGET_ARCH: OnceLock<String> = OnceLock::new();
+
+pub static VERSION_MAP: OnceLock<HashMap<String, String>> = OnceLock::new();
 
 #[allow(clippy::missing_panics_doc)]
 pub fn target_os() -> &'static str {
@@ -29,6 +33,46 @@ pub fn target_env() -> &'static str {
 #[allow(clippy::missing_panics_doc)]
 pub fn target_arch() -> &'static str {
     TARGET_ARCH.get_or_init(|| std::env::var("CARGO_CFG_TARGET_ARCH").unwrap())
+}
+
+#[allow(clippy::missing_panics_doc)]
+pub fn version_map() -> &'static HashMap<String, String> {
+    VERSION_MAP.get_or_init(|| {
+        // Build command
+        let rustc = env::var_os("RUSTC").unwrap_or_else(|| OsString::from("rustc"));
+        let mut cmd = if let Some(wrapper) = env::var_os("RUSTC_WRAPPER").filter(|w| !w.is_empty())
+        {
+            let mut cmd = Command::new(wrapper);
+            cmd.arg(rustc);
+            cmd
+        } else {
+            Command::new(rustc)
+        };
+
+        // Call rustc
+        let out = cmd.arg("-vV").output().unwrap();
+
+        assert!(
+            out.status.success(),
+            "Failed to get version via rustc: {} -vV",
+            cmd.get_program().display()
+        );
+        let stdout = String::from_utf8_lossy_owned(out.stdout);
+
+        let mut ret = HashMap::with_capacity(7);
+        for line in stdout.lines() {
+            let Some(idx) = line.find(':') else {
+                // panic!("Strange response from rustc");
+                continue;
+            };
+            let key = line[..idx].trim().to_owned();
+            let val = line[idx + 1..].trim().to_owned();
+
+            ret.insert(key, val);
+        }
+
+        ret
+    })
 }
 
 pub struct Commit {
@@ -328,35 +372,17 @@ mod setup {
         }
 
         pub fn rustc_version() {
-            use std::process::Command;
-
-            let mut rustc_version = Command::new("rustc")
-                .arg("--version")
-                .output()
-                .ok()
-                .and_then(|output| String::from_utf8(output.stdout).ok())
-                .unwrap_or_else(|| "unknown".to_string());
-
-            if let Some(idx) = rustc_version.find('(') {
-                rustc_version = rustc_version[..idx - 1].trim().to_string();
-            }
-            println!("cargo:rustc-env=RUSTC_VERSION={}", rustc_version.trim());
+            let ver = crate::version_map()
+                .get("release")
+                .expect("Failed to get `release` in version");
+            println!("cargo:rustc-env=RUSTC_VERSION={ver}");
         }
 
-        pub fn cargo_version() {
-            use std::process::Command;
-
-            let mut cargo_version = Command::new("cargo")
-                .arg("--version")
-                .output()
-                .ok()
-                .and_then(|output| String::from_utf8(output.stdout).ok())
-                .unwrap_or_else(|| "Unknown".to_string());
-
-            if let Some(idx) = cargo_version.find('(') {
-                cargo_version = cargo_version[..idx - 1].trim().to_string();
-            }
-            println!("cargo:rustc-env=CARGO_VERSION={}", cargo_version.trim());
+        pub fn llvm_version() {
+            let ver = crate::version_map()
+                .get("LLVM version")
+                .expect("Failed to get `LLVM version` in version");
+            println!("cargo:rustc-env=LLVM_VERSION={ver}");
         }
 
         pub fn commit() {
@@ -519,7 +545,7 @@ fn main() {
     setup::env::target_arch();
     setup::env::build_time();
     setup::env::rustc_version();
-    setup::env::cargo_version();
+    setup::env::llvm_version();
     setup::env::commit();
     setup::env::libc_version();
 

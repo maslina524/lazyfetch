@@ -26,10 +26,11 @@ pub struct Version {
     pub compile_time: &'static str,
     #[doc = "Rustc version, like `rustc 1.97.1`"]
     pub compiler: &'static str,
-    #[doc = "Glibc version, always empty on windows"]
+    #[cfg_attr(glibc, doc = "Glibc version, always empty on windows")]
+    #[cfg_attr(bionic, doc = "Bionic version, always empty on windows")]
     pub libc: &'static str,
-    #[doc = "Cargo version, like `cargo 1.97.1`"]
-    pub package_manager: &'static str,
+    #[doc = "LLVM version"]
+    pub llvm: &'static str,
     #[doc = "Link to the release of this version of lazyfetch"]
     pub release_link: &'static str,
 }
@@ -52,7 +53,7 @@ impl Module for Version {
             compile_time: env!("COMPILE_TIME"),
             compiler: env!("RUSTC_VERSION"),
             libc: env!("LIBC_VERSION"),
-            package_manager: env!("CARGO_VERSION"),
+            llvm: env!("LLVM_VERSION"),
             release_link: concat!(
                 "https://github.com/maslina524/lazyfetch/releases/tag/v",
                 env!("CARGO_PKG_VERSION")
@@ -87,7 +88,7 @@ impl Module for Version {
         compile_time,
         compiler,
         libc,
-        package_manager,
+        llvm,
         release_link
     );
 }

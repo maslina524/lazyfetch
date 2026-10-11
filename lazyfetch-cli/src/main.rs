@@ -401,7 +401,13 @@ fn print_version(method: Option<&str>) -> ! {
                 "\x1b[1m{} {} ({}) {typ} [\x1b]8;;{}\x1b\\link\x1b]8;;\x1b\\]",
                 ver.project_name, ver.version, ver.arch, ver.release_link
             );
-            println!("    {}, {}", ver.compiler, ver.package_manager);
+
+            if ver.libc.is_empty() {
+                println!("    {}", ver.compiler);
+            } else {
+                println!("    {} (libc {})", ver.compiler, ver.libc);
+            }
+
             println!(
                 "    {} <{}> ({})",
                 com.message, com.date_small, com.sha_short

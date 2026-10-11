@@ -1,5 +1,4 @@
 #![allow(clippy::cargo_common_metadata)]
-
 #![cfg_attr(unstable, feature(proc_macro_diagnostic))]
 #![cfg_attr(unstable, feature(proc_macro_value))]
 
