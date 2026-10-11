@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::theme, impl_display_for_module, impl_module, modules::Module, str::SmolStr,
+    detect::theme, impl_display_for_module, modules::Module, str::SmolStr,
     sync::OnceLock,
 };
 
 static THEME: OnceLock<Theme> = OnceLock::new();
 
-#[derive(Debug, Default, Docs)]
+#[derive(Debug, Default, Docs, Module)]
 pub struct Theme {
     #[doc = "Theme part 1"]
     pub theme1: SmolStr,
@@ -35,8 +35,6 @@ impl Module for Theme {
     fn string_name(&self) -> &'static str {
         "theme"
     }
-
-    impl_module!(theme1, theme2);
 }
 
 impl_display_for_module!(Theme);

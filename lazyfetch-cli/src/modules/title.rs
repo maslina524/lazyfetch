@@ -1,14 +1,14 @@
 use alloc::string::String;
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::title::TitleInfo, imp::path::Path, impl_display_for_module, impl_module,
+    detect::title::TitleInfo, imp::path::Path, impl_display_for_module,
     modules::Module, sync::OnceLock,
 };
 
 static TITLE: OnceLock<Title> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Title {
     #[doc = "User name"]
     pub user_name: String,
@@ -70,21 +70,6 @@ impl Module for Title {
     fn string_name(&self) -> &'static str {
         "title"
     }
-
-    impl_module!(
-        user_name,
-        host_name,
-        home_dir,
-        exe_path,
-        user_shell,
-        user_name_colored,
-        at_symbol_colored,
-        host_name_colored,
-        full_user_name,
-        user_id,
-        pid,
-        cwd
-    );
 }
 
 impl_display_for_module!(Title);

@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::uptime::UptimeInfo, impl_display_for_module, impl_module, modules::Module,
+    detect::uptime::UptimeInfo, impl_display_for_module, modules::Module,
     sync::OnceLock,
 };
 
 static UPTIME: OnceLock<Uptime> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Uptime {
     #[doc = "Days after boot"]
     pub days: u32,
@@ -63,19 +63,6 @@ impl Module for Uptime {
     fn string_name(&self) -> &'static str {
         "uptime"
     }
-
-    impl_module!(
-        days,
-        hours,
-        minutes,
-        seconds,
-        milliseconds,
-        boot_time,
-        years,
-        days_of_year,
-        years_fraction,
-        formatted
-    );
 }
 
 impl_display_for_module!(Uptime);

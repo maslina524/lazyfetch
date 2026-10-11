@@ -1,10 +1,10 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
-use crate::{impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
+use crate::{impl_display_for_module, modules::Module, sync::OnceLock};
 
 static COMMIT: OnceLock<Commit> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Commit {
     #[doc = "Author"]
     pub author: &'static str,
@@ -64,10 +64,6 @@ impl Module for Commit {
     fn string_name(&self) -> &'static str {
         "commit"
     }
-
-    impl_module!(
-        author, email, date, date_small, sha, sha_short, message, files, added, deleted, total
-    );
 }
 
 impl_display_for_module!(Commit);

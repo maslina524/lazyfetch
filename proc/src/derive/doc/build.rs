@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Field;
 
-use crate::module_doc::parser;
+use crate::derive::doc::parser;
 
 pub fn format(fields: &[&Field]) -> TokenStream {
     if fields.is_empty() {

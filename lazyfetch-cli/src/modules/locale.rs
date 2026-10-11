@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::locale, impl_display_for_module, impl_module, modules::Module, str::SmolStr,
+    detect::locale, impl_display_for_module, modules::Module, str::SmolStr,
     sync::OnceLock,
 };
 
 static LOCALE: OnceLock<Locale> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Locale {
     #[doc = "Locale code"]
     pub result: SmolStr,
@@ -35,8 +35,6 @@ impl Module for Locale {
     fn string_name(&self) -> &'static str {
         "locale"
     }
-
-    impl_module!(result);
 }
 
 impl_display_for_module!(Locale);

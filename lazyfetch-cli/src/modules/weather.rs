@@ -1,9 +1,9 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
     detect::weather,
     formats::{Percent, Temperature},
-    impl_display_for_module, impl_module,
+    impl_display_for_module,
     modules::Module,
     str::ConcatStr,
     sync::OnceLock,
@@ -35,7 +35,7 @@ static WEATHER: OnceLock<Weather> = OnceLock::new();
 // Format string:
 // %c;%C;%x;%h;%t;%f;%w;%l;%m;%M;%p;%P;%u;%D;%S;%z;%s;%d;%T;%Z
 
-#[derive(Debug, Default, Docs)]
+#[derive(Debug, Default, Docs, Module)]
 pub struct Weather {
     #[doc = "Pretty string, like `+14°C — Overcast (Tver, Tver Oblast, RU)`"]
     pub result: ConcatStr<6>,
@@ -101,30 +101,6 @@ impl Module for Weather {
     fn string_name(&self) -> &'static str {
         "weather"
     }
-
-    impl_module!(
-        result,
-        condition_emoji,
-        condition,
-        condition_symbol,
-        humidity,
-        temperature_actual,
-        temperature_feels,
-        wind,
-        location,
-        moon_emoji,
-        moon_day,
-        precipitation,
-        pressure,
-        uv_index,
-        dawn,
-        sunrise,
-        zenith,
-        sunset,
-        dusk,
-        time,
-        timezone
-    );
 }
 
 impl_display_for_module!(Weather);

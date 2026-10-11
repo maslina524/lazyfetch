@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::wallpaper::WallpaperInfo, imp::path::Path, impl_display_for_module, impl_module,
+    detect::wallpaper::WallpaperInfo, imp::path::Path, impl_display_for_module,
     modules::Module, str::SmolStr, sync::OnceLock,
 };
 
 static WALLPAPER: OnceLock<Wallpaper> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Wallpaper {
     #[doc = "File name"]
     pub file_name: SmolStr,
@@ -42,8 +42,6 @@ impl Module for Wallpaper {
     fn string_name(&self) -> &'static str {
         "wallpaper"
     }
-
-    impl_module!(file_name, full_path);
 }
 
 impl_display_for_module!(Wallpaper);

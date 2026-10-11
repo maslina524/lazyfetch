@@ -1,17 +1,17 @@
 use alloc::string::String;
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
     detect::datetime::{AmPm, DatetimeInfo},
     formats::ZeroPaddedTwo,
-    impl_display_for_module, impl_module,
+    impl_display_for_module,
     modules::Module,
     sync::OnceLock,
 };
 
 static DATETIME: OnceLock<Datetime> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Datetime {
     #[doc = "Year"]
     pub year: u16,
@@ -109,33 +109,6 @@ impl Module for Datetime {
     fn string_name(&self) -> &'static str {
         "datetime"
     }
-
-    impl_module!(
-        year,
-        year_short,
-        month,
-        month_pretty,
-        month_name,
-        month_name_short,
-        week,
-        weekday,
-        weekday_short,
-        day_in_year,
-        day_in_month,
-        day_in_week,
-        hour,
-        hour_pretty,
-        hour_12,
-        hour_12_pretty,
-        minute,
-        minute_pretty,
-        second,
-        second_pretty,
-        offset_from_utc,
-        timezone_name,
-        day_pretty,
-        am_pm
-    );
 }
 
 impl_display_for_module!(Datetime);

@@ -2,10 +2,7 @@ use alloc::{borrow::Cow, collections::BTreeMap, string::String};
 use proc::Docs;
 
 use crate::{
-    format, impl_display_for_module,
-    json::Value,
-    modules::{self, Module},
-    sync::OnceLock,
+    format, impl_display_for_module, json::Value, modules::{self, Module, ModuleFormat}, sync::OnceLock,
 };
 
 static COLORS: OnceLock<Colors> = OnceLock::new();
@@ -35,7 +32,9 @@ impl Module for Colors {
     fn string_name(&self) -> &'static str {
         "colors"
     }
+}
 
+impl ModuleFormat for Colors {
     fn format(
         &self,
         _key: super::FormatValue,
@@ -82,10 +81,6 @@ impl Module for Colors {
         }
 
         Some(modules::expand_env_in_module(ret))
-    }
-
-    fn resolve_field(&self, _name: &str) -> Option<&dyn core::fmt::Display> {
-        unreachable!()
     }
 }
 

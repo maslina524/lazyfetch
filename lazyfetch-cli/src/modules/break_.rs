@@ -7,10 +7,7 @@ use alloc::{
 use proc::Docs;
 
 use crate::{
-    impl_display_for_module,
-    json::Value,
-    modules::{self, Module},
-    sync::OnceLock,
+    impl_display_for_module, json::Value, modules::{self, Module, ModuleFormat}, sync::OnceLock,
 };
 
 static BREAK: OnceLock<Break> = OnceLock::new();
@@ -38,7 +35,9 @@ impl Module for Break {
     fn string_name(&self) -> &'static str {
         "break"
     }
+}
 
+impl ModuleFormat for Break {
     fn format(
         &self,
         _key: super::FormatValue,
@@ -47,10 +46,6 @@ impl Module for Break {
     ) -> Option<Cow<'_, str>> {
         let title_str = format.format.unwrap_or_else(|| self.title());
         Some(modules::expand_env_in_module(title_str.to_owned()))
-    }
-
-    fn resolve_field(&self, _name: &str) -> Option<&dyn core::fmt::Display> {
-        unreachable!()
     }
 }
 

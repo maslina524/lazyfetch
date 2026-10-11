@@ -1,10 +1,10 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
-use crate::{impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
+use crate::{impl_display_for_module, modules::Module, sync::OnceLock};
 
 static VERSION: OnceLock<Version> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Version {
     #[doc = "Project name"]
     pub project_name: &'static str,
@@ -76,21 +76,6 @@ impl Module for Version {
     fn string_name(&self) -> &'static str {
         "version"
     }
-
-    impl_module!(
-        project_name,
-        version,
-        version_tweak,
-        build_type,
-        sysname,
-        arch,
-        cmake_built_type,
-        compile_time,
-        compiler,
-        libc,
-        llvm,
-        release_link
-    );
 }
 
 impl_display_for_module!(Version);

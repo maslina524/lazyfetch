@@ -1,14 +1,14 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use alloc::string::String;
 
 use crate::{
-    detect::publicip, impl_display_for_module, impl_module, modules::Module, sync::OnceLock,
+    detect::publicip, impl_display_for_module, modules::Module, sync::OnceLock,
 };
 
 static PUBLICIP: OnceLock<PublicIP> = OnceLock::new();
 
-#[derive(Debug, Docs, Default)]
+#[derive(Debug, Default, Docs, Module)]
 pub struct PublicIP {
     #[doc = "Public IP address"]
     pub ip: String,
@@ -36,8 +36,6 @@ impl Module for PublicIP {
     fn string_name(&self) -> &'static str {
         "publicip"
     }
-
-    impl_module!(ip, location);
 }
 
 impl_display_for_module!(PublicIP);

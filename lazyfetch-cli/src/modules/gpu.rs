@@ -1,18 +1,18 @@
 use alloc::string::String;
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
     detect::gpu::{GpuInfo, GpuType, frequency, name, temperature},
     field::{cached::SessionCached, lazy::LazyField},
     formats::{Frequency, MemorySize, Percent, Temperature},
-    impl_display_for_module, impl_module,
+    impl_display_for_module,
     modules::Module,
     sync::OnceLock,
 };
 
 static GPU: OnceLock<Gpu> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Gpu {
     #[doc = "Vendor"]
     pub vendor: &'static str,
@@ -114,31 +114,6 @@ impl Module for Gpu {
     fn string_name(&self) -> &'static str {
         "gpu"
     }
-
-    impl_module!(
-        vendor,
-        name,
-        driver,
-        temperature,
-        core_count,
-        r#type,
-        dedicated_total,
-        dedicated_used,
-        shared_total,
-        shared_used,
-        platform_api,
-        frequency,
-        index,
-        dedicated_percentage_num,
-        dedicated_percentage_bar,
-        shared_percentage_num,
-        shared_percentage_bar,
-        core_usage_num,
-        core_usage_bar,
-        memory_type,
-        pcie_max_speed,
-        pcie_curr_speed
-    );
 }
 
 impl_display_for_module!(Gpu);

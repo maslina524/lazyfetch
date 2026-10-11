@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::board, impl_display_for_module, impl_module, modules::Module, str::SmolStr,
+    detect::board, impl_display_for_module, modules::Module, str::SmolStr,
     sync::OnceLock,
 };
 
 static BOARD: OnceLock<Board> = OnceLock::new();
 
-#[derive(Default, Debug, Docs)]
+#[derive(Default, Debug, Docs, Module)]
 pub struct Board {
     pub name: SmolStr,
     pub vendor: SmolStr,
@@ -35,8 +35,6 @@ impl Module for Board {
     fn string_name(&self) -> &'static str {
         "board"
     }
-
-    impl_module!(name, vendor, version, serial);
 }
 
 impl_display_for_module!(Board);

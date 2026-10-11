@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::terminal, imp::path::Path, impl_display_for_module, impl_module, modules::Module,
+    detect::terminal, imp::path::Path, impl_display_for_module, modules::Module,
     str::SmolStr, sync::OnceLock,
 };
 
 static TERMINAL: OnceLock<Terminal> = OnceLock::new();
 
-#[derive(Debug, Default, Docs)]
+#[derive(Debug, Default, Docs, Module)]
 pub struct Terminal {
     pub process_name: SmolStr,
     pub exe: Path,
@@ -39,17 +39,6 @@ impl Module for Terminal {
     fn string_name(&self) -> &'static str {
         "terminal"
     }
-
-    impl_module!(
-        process_name,
-        exe,
-        exe_name,
-        version,
-        pid,
-        pretty_name,
-        exe_path,
-        tty
-    );
 }
 
 impl_display_for_module!(Terminal);

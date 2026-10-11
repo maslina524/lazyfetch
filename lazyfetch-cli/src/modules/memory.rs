@@ -1,17 +1,17 @@
 use alloc::string::String;
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
     detect::memory::MemoryInfo,
     formats::{MemorySize, Percent},
-    impl_display_for_module, impl_module,
+    impl_display_for_module,
     modules::Module,
     sync::OnceLock,
 };
 
 static MEMORY: OnceLock<Memory> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Memory {
     #[doc = "Used size"]
     pub used: MemorySize,
@@ -53,8 +53,6 @@ impl Module for Memory {
     fn string_name(&self) -> &'static str {
         "cpu"
     }
-
-    impl_module!(used, total, percentage, percentage_bar);
 }
 
 impl_display_for_module!(Memory);

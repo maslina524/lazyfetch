@@ -1,14 +1,9 @@
 use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::disk::get_disks,
-    formats::{MemorySize, Percent, Time},
-    impl_display_for_module, impl_module,
-    json::Value,
-    modules::{self, Module},
-    sync::OnceLock,
+    detect::disk::get_disks, formats::{MemorySize, Percent, Time}, impl_display_for_module, json::Value, modules::{self, Module, ModuleFormat}, sync::OnceLock,
 };
 
 static DISK_LIST: OnceLock<DiskList> = OnceLock::new();
@@ -43,7 +38,9 @@ impl Module for DiskList {
     fn string_name(&self) -> &'static str {
         "disk"
     }
+}
 
+impl ModuleFormat for DiskList {
     fn format(
         &self,
         key: super::FormatValue,
@@ -59,13 +56,9 @@ impl Module for DiskList {
 
         Some(modules::expand_env_in_module(s))
     }
-
-    fn resolve_field(&self, _name: &str) -> Option<&dyn core::fmt::Display> {
-        unreachable!()
-    }
 }
 
-#[derive(Debug, Clone, Default, Docs)]
+#[derive(Debug, Clone, Default, Docs, Module)]
 pub struct Disk {
     pub size_used: MemorySize,
     pub size_total: MemorySize,
@@ -99,30 +92,6 @@ impl Disk {
     const fn key(&self) -> &'static str {
         "Disk ({mountpoint})"
     }
-
-    impl_module!(
-        size_used,
-        size_total,
-        size_percentage,
-        files_used,
-        files_total,
-        files_percentage,
-        is_external,
-        is_hidden,
-        filesystem,
-        name,
-        is_readonly,
-        create_time,
-        size_percentage_bar,
-        files_percentage_bar,
-        days,
-        hours,
-        minutes,
-        seconds,
-        milliseconds,
-        mountpoint,
-        mount_from
-    );
 }
 
 impl_display_for_module!(DiskList);

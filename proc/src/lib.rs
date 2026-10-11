@@ -3,8 +3,10 @@
 #![cfg_attr(unstable, feature(proc_macro_value))]
 
 use proc_macro::TokenStream;
+use syn::{DeriveInput, parse_macro_input};
 
-mod module_doc;
+mod parser;
+mod derive;
 mod todo;
 
 // TODO MACRO
@@ -18,5 +20,14 @@ pub fn todo(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[allow(clippy::missing_panics_doc)]
 #[proc_macro_derive(Docs)]
 pub fn docs_derive(input: TokenStream) -> TokenStream {
-    module_doc::derive_imp(input)
+    derive::doc::imp(input)
+}
+
+// DOC MACRO
+#[allow(clippy::missing_panics_doc)]
+#[proc_macro_derive(Module)]
+pub fn module_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let fields = parser::get_fields(&input.data);
+    derive::module::imp(&input.ident, &fields).into()
 }

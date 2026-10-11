@@ -1,13 +1,13 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::shell, imp::path::Path, impl_display_for_module, impl_module, modules::Module,
+    detect::shell, imp::path::Path, impl_display_for_module, modules::Module,
     str::SmolStr, sync::OnceLock,
 };
 
 static SHELL: OnceLock<Shell> = OnceLock::new();
 
-#[derive(Debug, Default, Docs)]
+#[derive(Debug, Default, Docs, Module)]
 pub struct Shell {
     pub process_name: SmolStr,
     pub exe: Path,
@@ -39,17 +39,6 @@ impl Module for Shell {
     fn string_name(&self) -> &'static str {
         "shell"
     }
-
-    impl_module!(
-        process_name,
-        exe,
-        exe_name,
-        version,
-        pid,
-        pretty_name,
-        exe_path,
-        tty
-    );
 }
 
 impl_display_for_module!(Shell);

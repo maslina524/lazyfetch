@@ -158,23 +158,21 @@ pub struct DocsVtable {
     pub example: fn() -> Option<alloc::vec::Vec<Example>>,
 }
 
-pub trait Module {
-    fn new() -> Self
-    where
-        Self: Sized;
-    fn get() -> &'static Self
-    where
-        Self: Sized;
+pub trait Module: ModuleFormat {
+    fn new() -> Self where Self: Sized;
+    fn get() -> &'static Self where Self: Sized;
     fn key(&self) -> &'static str;
     fn title(&self) -> &'static str;
     fn string_name(&self) -> &'static str;
+}
+
+pub trait ModuleFormat {
     fn format(
         &self,
-        key: FormatValue,
-        title: FormatValue,
+        key: FormatValue<'_>,
+        title: FormatValue<'_>,
         map: Option<&BTreeMap<String, Value>>,
     ) -> Option<Cow<'_, str>>;
-    fn resolve_field(&self, name: &str) -> Option<&dyn core::fmt::Display>;
 }
 
 pub fn from_preset_module(s: &str) -> Option<&'static dyn Module> {
@@ -229,6 +227,8 @@ macro_rules! impl_display_for_module {
     ($name:ident) => {
         impl core::fmt::Display for $name {
             fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                use $crate::modules::ModuleFormat;
+
                 match self.format(
                     $crate::modules::FormatValue::default(),
                     $crate::modules::FormatValue::default(),

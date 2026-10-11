@@ -1,10 +1,10 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
-use crate::{impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
+use crate::{impl_display_for_module, modules::Module, sync::OnceLock};
 
 static CUSTOM: OnceLock<Custom> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Custom;
 
 impl Module for Custom {
@@ -27,8 +27,6 @@ impl Module for Custom {
     fn string_name(&self) -> &'static str {
         "custom"
     }
-
-    impl_module!();
 }
 
 impl_display_for_module!(Custom);

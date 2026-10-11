@@ -1,11 +1,13 @@
-use alloc::string::String;
-use proc::Docs;
+use proc::{Docs, Module};
 
-use alloc::borrow::Cow;
+use alloc::{
+    borrow::Cow,
+    string::String
+};
 
 use crate::{
     detect::os::OsInfo,
-    format, impl_display_for_module, impl_module,
+    format, impl_display_for_module,
     logo::LogoInfo,
     modules::Module,
     str::{ConcatStr, SmolStr},
@@ -14,7 +16,7 @@ use crate::{
 
 static OS: OnceLock<Os> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Os {
     #[doc = "Name of the kernel"]
     pub sysname: &'static str,
@@ -92,23 +94,6 @@ impl Module for Os {
     fn string_name(&self) -> &'static str {
         "os"
     }
-
-    impl_module!(
-        sysname,
-        name,
-        pretty_name,
-        id,
-        id_like,
-        variant,
-        variant_id,
-        version,
-        version_id,
-        codename,
-        build_id,
-        arch,
-        nerd_emoji,
-        colored_nerd_emoji
-    );
 }
 
 impl_display_for_module!(Os);

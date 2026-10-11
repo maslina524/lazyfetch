@@ -3,9 +3,9 @@ use quote::quote;
 use syn::{DeriveInput, parse_macro_input};
 
 pub mod build;
-pub mod parser;
+use crate::parser;
 
-pub fn derive_imp(input: TokenStream) -> TokenStream {
+pub fn imp(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_name = &input.ident;
     let fields = parser::get_fields(&input.data);

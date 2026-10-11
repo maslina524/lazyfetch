@@ -1,12 +1,12 @@
 use alloc::borrow::Cow;
 
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
     detect::initsystem::{InitSystemInfo, pid},
     field::{cached::SessionCached, lazy::LazyField},
     imp::path::Path,
-    impl_display_for_module, impl_module,
+    impl_display_for_module,
     modules::Module,
     str::SmolStr,
     sync::OnceLock,
@@ -14,7 +14,7 @@ use crate::{
 
 static INITSYSTEM: OnceLock<Initsystem> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Initsystem {
     #[doc = "Name"]
     pub name: Cow<'static, str>,
@@ -52,8 +52,6 @@ impl Module for Initsystem {
     fn string_name(&self) -> &'static str {
         "initsystem"
     }
-
-    impl_module!(name, exe, version, pid);
 }
 
 impl_display_for_module!(Initsystem);

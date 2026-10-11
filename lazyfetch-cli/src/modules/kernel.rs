@@ -1,14 +1,14 @@
 use alloc::string::String;
-use proc::Docs;
+use proc::{Docs, Module};
 
 use crate::{
-    detect::kernel::KernelInfo, formats::MemorySize, impl_display_for_module, impl_module,
+    detect::kernel::KernelInfo, formats::MemorySize, impl_display_for_module,
     modules::Module, sync::OnceLock,
 };
 
 static KERNEL: OnceLock<Kernel> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Kernel {
     #[doc = "Sysname"]
     pub sysname: &'static str,
@@ -53,8 +53,6 @@ impl Module for Kernel {
     fn string_name(&self) -> &'static str {
         "kernel"
     }
-
-    impl_module!(sysname, release, version, arch, display_version, page_size);
 }
 
 impl_display_for_module!(Kernel);

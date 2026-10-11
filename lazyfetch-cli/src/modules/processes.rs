@@ -1,10 +1,10 @@
-use proc::Docs;
+use proc::{Docs, Module};
 
-use crate::{imp::env, impl_display_for_module, impl_module, modules::Module, sync::OnceLock};
+use crate::{imp::env, impl_display_for_module, modules::Module, sync::OnceLock};
 
 static PROCESSES: OnceLock<Processes> = OnceLock::new();
 
-#[derive(Debug, Docs)]
+#[derive(Debug, Docs, Module)]
 pub struct Processes {
     #[doc = "Process count"]
     pub result: usize,
@@ -32,8 +32,6 @@ impl Module for Processes {
     fn string_name(&self) -> &'static str {
         "processes"
     }
-
-    impl_module!(result);
 }
 
 impl_display_for_module!(Processes);
