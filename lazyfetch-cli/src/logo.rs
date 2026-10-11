@@ -1,5 +1,3 @@
-#![doc = include_str!("README.md")]
-
 use core::fmt::Write;
 
 use alloc::{string::String, vec::Vec};

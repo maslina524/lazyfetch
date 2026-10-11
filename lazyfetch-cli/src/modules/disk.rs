@@ -3,7 +3,12 @@ use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 use proc::{Docs, Module};
 
 use crate::{
-    detect::disk::get_disks, formats::{MemorySize, Percent, Time}, impl_display_for_module, json::Value, modules::{self, Module, ModuleFormat}, sync::OnceLock,
+    detect::disk::get_disks,
+    formats::{MemorySize, Percent, Time},
+    impl_display_for_module,
+    json::Value,
+    modules::{self, Module, ModuleFormat},
+    sync::OnceLock,
 };
 
 static DISK_LIST: OnceLock<DiskList> = OnceLock::new();

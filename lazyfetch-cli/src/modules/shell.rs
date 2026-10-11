@@ -1,8 +1,8 @@
 use proc::{Docs, Module};
 
 use crate::{
-    detect::shell, imp::path::Path, impl_display_for_module, modules::Module,
-    str::SmolStr, sync::OnceLock,
+    detect::shell, imp::path::Path, impl_display_for_module, modules::Module, str::SmolStr,
+    sync::OnceLock,
 };
 
 static SHELL: OnceLock<Shell> = OnceLock::new();

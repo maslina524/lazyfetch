@@ -2,8 +2,8 @@ use alloc::string::String;
 use proc::{Docs, Module};
 
 use crate::{
-    detect::kernel::KernelInfo, formats::MemorySize, impl_display_for_module,
-    modules::Module, sync::OnceLock,
+    detect::kernel::KernelInfo, formats::MemorySize, impl_display_for_module, modules::Module,
+    sync::OnceLock,
 };
 
 static KERNEL: OnceLock<Kernel> = OnceLock::new();

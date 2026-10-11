@@ -1,8 +1,7 @@
 use proc::{Docs, Module};
 
 use crate::{
-    detect::theme, impl_display_for_module, modules::Module, str::SmolStr,
-    sync::OnceLock,
+    detect::theme, impl_display_for_module, modules::Module, str::SmolStr, sync::OnceLock,
 };
 
 static THEME: OnceLock<Theme> = OnceLock::new();

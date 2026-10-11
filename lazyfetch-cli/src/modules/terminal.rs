@@ -1,8 +1,8 @@
 use proc::{Docs, Module};
 
 use crate::{
-    detect::terminal, imp::path::Path, impl_display_for_module, modules::Module,
-    str::SmolStr, sync::OnceLock,
+    detect::terminal, imp::path::Path, impl_display_for_module, modules::Module, str::SmolStr,
+    sync::OnceLock,
 };
 
 static TERMINAL: OnceLock<Terminal> = OnceLock::new();

@@ -73,10 +73,10 @@ Lua code runs at runtime, the library is linked at compile time
 | Language     | C         | Rust                |
 | Dependencies | Yes       | No                  |
 | Binary size  | ~10Mb     | ~800Kb (inline lua) |
-| Android      | Hard      | Ready binary        |
 | Modules      | 70+       | 20+                 |
-| Cache        | No        | Yes (~1Kb)          |
-| macOS/BSD    | Yes       | Not supported       |
+| Cache        | No        | Yes (~1Kb size)     |
+| macOS/BSD    | Yes       | In the future       |
+| AI Code      | Yes       | No                  |
 
 Lazyfetch is also compatible with Fastfetch configs.
 

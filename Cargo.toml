@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "lazyfetch-cli",
-    "proc",
+    "proc", 
+    "winapi",
 ]
 
 default-members = ["lazyfetch-cli"]

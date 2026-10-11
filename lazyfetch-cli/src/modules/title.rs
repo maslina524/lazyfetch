@@ -2,8 +2,8 @@ use alloc::string::String;
 use proc::{Docs, Module};
 
 use crate::{
-    detect::title::TitleInfo, imp::path::Path, impl_display_for_module,
-    modules::Module, sync::OnceLock,
+    detect::title::TitleInfo, imp::path::Path, impl_display_for_module, modules::Module,
+    sync::OnceLock,
 };
 
 static TITLE: OnceLock<Title> = OnceLock::new();

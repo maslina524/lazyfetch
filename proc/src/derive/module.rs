@@ -125,9 +125,9 @@ pub fn imp(type_name: &Ident, fields: &[&Field]) -> TokenStream {
                         },
                         crate::field::parser::Part::Var(v) => {
                             if let Some(display) = resolve_field(self, v) {
-                                let _ = write!(body_ret, "{}", display);
+                                let _ = write!(key_ret, "{}", display);
                             } else {
-                                let _ = write!(body_ret, "{{{v}}}");
+                                let _ = write!(key_ret, "{{{v}}}");
                             }
                         }
                     }

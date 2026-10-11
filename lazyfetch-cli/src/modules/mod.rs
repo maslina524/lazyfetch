@@ -159,8 +159,12 @@ pub struct DocsVtable {
 }
 
 pub trait Module: ModuleFormat {
-    fn new() -> Self where Self: Sized;
-    fn get() -> &'static Self where Self: Sized;
+    fn new() -> Self
+    where
+        Self: Sized;
+    fn get() -> &'static Self
+    where
+        Self: Sized;
     fn key(&self) -> &'static str;
     fn title(&self) -> &'static str;
     fn string_name(&self) -> &'static str;

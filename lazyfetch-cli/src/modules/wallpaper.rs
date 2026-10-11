@@ -1,8 +1,8 @@
 use proc::{Docs, Module};
 
 use crate::{
-    detect::wallpaper::WallpaperInfo, imp::path::Path, impl_display_for_module,
-    modules::Module, str::SmolStr, sync::OnceLock,
+    detect::wallpaper::WallpaperInfo, imp::path::Path, impl_display_for_module, modules::Module,
+    str::SmolStr, sync::OnceLock,
 };
 
 static WALLPAPER: OnceLock<Wallpaper> = OnceLock::new();

@@ -2,9 +2,7 @@ use proc::{Docs, Module};
 
 use alloc::string::String;
 
-use crate::{
-    detect::publicip, impl_display_for_module, modules::Module, sync::OnceLock,
-};
+use crate::{detect::publicip, impl_display_for_module, modules::Module, sync::OnceLock};
 
 static PUBLICIP: OnceLock<PublicIP> = OnceLock::new();
 

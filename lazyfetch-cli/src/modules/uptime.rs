@@ -1,9 +1,6 @@
 use proc::{Docs, Module};
 
-use crate::{
-    detect::uptime::UptimeInfo, impl_display_for_module, modules::Module,
-    sync::OnceLock,
-};
+use crate::{detect::uptime::UptimeInfo, impl_display_for_module, modules::Module, sync::OnceLock};
 
 static UPTIME: OnceLock<Uptime> = OnceLock::new();
 

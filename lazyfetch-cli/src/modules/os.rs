@@ -1,9 +1,6 @@
 use proc::{Docs, Module};
 
-use alloc::{
-    borrow::Cow,
-    string::String
-};
+use alloc::{borrow::Cow, string::String};
 
 use crate::{
     detect::os::OsInfo,

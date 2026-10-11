@@ -298,7 +298,7 @@ mod setup {
         let mut raw_bytes_len = 0;
         let mut encoded_bytes_len = 0;
 
-        let base_path = PathBuf::from("src/logo");
+        let base_path = PathBuf::from("logo");
         let mut all_paths = Vec::new();
         for letter in VALID_CHARS {
             let letter_path = base_path.join(letter.to_string());
@@ -345,7 +345,7 @@ mod setup {
 
         println!("cargo:rerun-if-changed={}", json_path.display());
 
-        std::fs::create_dir_all(&out_dir).expect("create OUT_DIR/logo");
+        std::fs::create_dir_all(&out_dir).expect("Create OUT_DIR/logo");
         crate::generate(&json_path, &out_dir).expect("Generate logo modules");
     }
 

@@ -1,8 +1,7 @@
 use proc::{Docs, Module};
 
 use crate::{
-    detect::locale, impl_display_for_module, modules::Module, str::SmolStr,
-    sync::OnceLock,
+    detect::locale, impl_display_for_module, modules::Module, str::SmolStr, sync::OnceLock,
 };
 
 static LOCALE: OnceLock<Locale> = OnceLock::new();

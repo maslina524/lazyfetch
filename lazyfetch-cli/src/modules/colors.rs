@@ -2,7 +2,10 @@ use alloc::{borrow::Cow, collections::BTreeMap, string::String};
 use proc::Docs;
 
 use crate::{
-    format, impl_display_for_module, json::Value, modules::{self, Module, ModuleFormat}, sync::OnceLock,
+    format, impl_display_for_module,
+    json::Value,
+    modules::{self, Module, ModuleFormat},
+    sync::OnceLock,
 };
 
 static COLORS: OnceLock<Colors> = OnceLock::new();

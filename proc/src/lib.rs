@@ -5,8 +5,8 @@
 use proc_macro::TokenStream;
 use syn::{DeriveInput, parse_macro_input};
 
-mod parser;
 mod derive;
+mod parser;
 mod todo;
 
 // TODO MACRO

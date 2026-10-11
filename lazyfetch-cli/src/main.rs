@@ -28,6 +28,7 @@ mod deflate;
 mod huffman;
 mod image;
 mod kitty;
+mod logo;
 mod lua;
 mod lz77;
 mod macros;
@@ -43,7 +44,6 @@ mod detect;
 mod field;
 mod formats;
 mod json;
-mod logo;
 mod modules;
 mod str;
 

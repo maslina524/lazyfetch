@@ -7,7 +7,10 @@ use alloc::{
 use proc::Docs;
 
 use crate::{
-    impl_display_for_module, json::Value, modules::{self, Module, ModuleFormat}, sync::OnceLock,
+    impl_display_for_module,
+    json::Value,
+    modules::{self, Module, ModuleFormat},
+    sync::OnceLock,
 };
 
 static BREAK: OnceLock<Break> = OnceLock::new();
