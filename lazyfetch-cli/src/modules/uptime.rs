@@ -1,4 +1,4 @@
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::uptime::UptimeInfo, impl_display_for_module, impl_module, modules::Module,

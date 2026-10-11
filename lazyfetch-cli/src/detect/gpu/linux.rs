@@ -34,7 +34,7 @@ impl GpuInfo {
         }
     }
 
-    #[todo::todo("Hard to implement on a VM, will be implemented later")]
+    #[proc::todo("Hard to implement on a VM, will be implemented later")]
     fn memory_total() -> MemorySize {
         MemorySize::default()
     }

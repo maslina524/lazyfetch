@@ -1,5 +1,5 @@
 use alloc::string::String;
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::kernel::KernelInfo, formats::MemorySize, impl_display_for_module, impl_module,

@@ -1,5 +1,5 @@
 [package]
-name = "doc"
+name = "proc"
 version = "0.0.0"
 edition = "2024"
 
@@ -9,3 +9,10 @@ proc-macro = true
 [dependencies]
 quote = "1.0.47"
 syn = { version = "3.0.5", features = ["full", "derive"] }
+proc-macro2 = "1"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+        'cfg(unstable)'
+    ]
+}

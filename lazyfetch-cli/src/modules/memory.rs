@@ -1,5 +1,5 @@
 use alloc::string::String;
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::memory::MemoryInfo,

@@ -1,6 +1,6 @@
 use alloc::{borrow::Cow, collections::BTreeMap, string::String, vec::Vec};
 
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::disk::get_disks,

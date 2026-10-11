@@ -2,8 +2,7 @@
 resolver = "2"
 members = [
     "lazyfetch-cli",
-    "todo",
-    "doc",
+    "proc",
 ]
 
 default-members = ["lazyfetch-cli"]
@@ -14,10 +13,6 @@ edition = "2024"
 license = "MIT"
 authors = ["maslina524 <luk.kirill2804@gmail.com>"]
 repository = "https://github.com/maslina524/lazyfetch"
-
-[workspace.dependencies]
-todo = { path = "todo", version = "0.0.0" }
-doc = { path = "doc",  version = "0.0.0" }
 
 [profile.release]
 opt-level = "z"

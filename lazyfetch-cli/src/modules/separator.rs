@@ -1,5 +1,5 @@
 use alloc::{borrow::Cow, collections::BTreeMap, string::String};
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     formats, impl_display_for_module,

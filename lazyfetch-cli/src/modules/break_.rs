@@ -4,7 +4,7 @@ use alloc::{
     string::String,
 };
 
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     impl_display_for_module,

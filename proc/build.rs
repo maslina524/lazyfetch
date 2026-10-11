@@ -3,8 +3,6 @@
 use std::process::Command;
 
 fn main() {
-    println!("cargo::rustc-check-cfg=cfg(unstable)");
-
     let rustc_version = Command::new("rustc")
         .arg("--version")
         .output()

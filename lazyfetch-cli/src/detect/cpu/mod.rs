@@ -242,7 +242,7 @@ fn micro_arch() -> MicroArch {
     }
 }
 // NOT IMPLEMENTED
-#[todo::todo("Will be implemented in the future")]
+#[proc::todo("Will be implemented in the future")]
 const fn logical_grouped() -> String {
     String::new()
 }

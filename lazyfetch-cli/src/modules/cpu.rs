@@ -1,5 +1,5 @@
 use alloc::{borrow::Cow, string::String};
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::cpu,

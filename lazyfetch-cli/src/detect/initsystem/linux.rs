@@ -5,7 +5,7 @@ use crate::{
 };
 
 impl InitSystemInfo {
-    #[todo::todo("Too time-consuming to implement for every distribution and system")]
+    #[proc::todo("Too time-consuming to implement for every distribution and system")]
     pub fn new() -> Self {
         let name = fs::read_to_string("/proc/1/comm")
             .unwrap_or_else(|_| "Unknown".to_owned())

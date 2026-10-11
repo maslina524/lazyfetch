@@ -1,4 +1,4 @@
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::terminal, imp::path::Path, impl_display_for_module, impl_module, modules::Module,

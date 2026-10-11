@@ -1,6 +1,6 @@
 use alloc::borrow::Cow;
 
-use doc::Docs;
+use proc::Docs;
 
 use crate::{
     detect::initsystem::{InitSystemInfo, pid},
