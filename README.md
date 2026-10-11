@@ -119,4 +119,4 @@ $ cd lazyfetch
 $ cargo install --path . --config .cargo/native.toml
 ```
 
-<img src="images/jarvis.gif" width="50%" />
+<img src="screenshots/jarvis.gif" width="50%" />

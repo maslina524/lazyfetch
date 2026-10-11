@@ -295,6 +295,7 @@ mod setup {
         use std::path::PathBuf;
 
         let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+        println!("Manifest: {manifest_dir:?}");
         let json_path = manifest_dir.join("logo.json");
         let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("logo");
 
