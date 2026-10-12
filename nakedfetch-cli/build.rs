@@ -57,7 +57,7 @@ pub fn version_map() -> &'static HashMap<String, String> {
             "Failed to get version via rustc: {} -vV",
             cmd.get_program().display()
         );
-        let stdout = String::from_utf8_lossy_owned(out.stdout);
+        let stdout = String::from_utf8_lossy(&out.stdout);
 
         let mut ret = HashMap::with_capacity(7);
         for line in stdout.lines() {

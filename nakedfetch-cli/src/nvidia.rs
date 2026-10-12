@@ -1,4 +1,7 @@
-use core::{ffi::{CStr, c_char, c_uint, c_void}, ptr};
+use core::{
+    ffi::{CStr, c_char, c_uint, c_void},
+    ptr,
+};
 
 use alloc::{borrow::ToOwned, string::String};
 
@@ -161,9 +164,7 @@ impl NvidiaLib {
     pub fn get_frequency_ghz(&self) -> f64 {
         fn inner(get_clock_info: nvmlDeviceGetClockInfo, device: nvmlDevice, out: *mut u32) -> i32 {
             // SAFETY: FFI call with a valid out pointer
-            unsafe { 
-                (get_clock_info)(device, NVML_CLOCK_SM, out) 
-            }
+            unsafe { (get_clock_info)(device, NVML_CLOCK_SM, out) }
         }
         let mut clock = 0;
 

@@ -7,7 +7,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
-proc = { path = "../proc", version = "0.0.0" }
+proc = { path = "../nakedfetch-proc", version = "0.0.0" }
 
 [build-dependencies]
 chrono      = "0.4.45"
