@@ -31,7 +31,7 @@ pub struct Version {
     pub libc: &'static str,
     #[doc = "LLVM version"]
     pub llvm: &'static str,
-    #[doc = "Link to the release of this version of lazyfetch"]
+    #[doc = "Link to the release of this version of nakedfetch"]
     pub release_link: &'static str,
 }
 
@@ -55,7 +55,7 @@ impl Module for Version {
             libc: env!("LIBC_VERSION"),
             llvm: env!("LLVM_VERSION"),
             release_link: concat!(
-                "https://github.com/maslina524/lazyfetch/releases/tag/v",
+                "https://github.com/maslina524/nakedfetch/releases/tag/v",
                 env!("CARGO_PKG_VERSION")
             ),
         }

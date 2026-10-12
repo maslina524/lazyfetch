@@ -208,13 +208,13 @@ mod tests {
         let buf = file.read().unwrap();
         let string = String::from_utf8(buf).unwrap();
 
-        assert!(string.starts_with("# Lazyfetch"));
+        assert!(string.starts_with("# Nakedfetch"));
     }
 
     #[test]
     fn read_to_string_test() {
         let string = fs::read_to_string("README.md").unwrap();
-        assert!(string.starts_with("# Lazyfetch"));
+        assert!(string.starts_with("# Nakedfetch"));
     }
 
     #[test]

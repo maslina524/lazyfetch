@@ -86,13 +86,13 @@ use crate::{
 #[global_allocator]
 static ALLOCATOR: Allocator = Allocator;
 static HELP: &str = concat!(
-    "lazyfetch is a neofetch-like tool for beautiful system information display with flexible output customization\n",
+    "nakedfetch is a neofetch-like tool for beautiful system information display with flexible output customization\n",
     "\n",
-    "\x1b[1mUsage: lazyfetch\x1b[22;3m <?options>\x1b[0m\n",
+    "\x1b[1mUsage: nakedfetch\x1b[22;3m <?options>\x1b[0m\n",
     "\n",
     "\x1b[1mCommands:\x1b[0m\n",
     "  -h, --help <?options>     \tPrint this message\n",
-    "  -v, --version <?options>  \tPrint lazyfetch version\n",
+    "  -v, --version <?options>  \tPrint nakedfetch version\n",
     "  -l, --logo                \tCustom logo (name or file)\n",
     "  -c, --config              \tCustom preset (http url or file)",
 );
@@ -123,7 +123,7 @@ mod panic_impl {
         }
 
         let link = format!(
-            "https://github.com/maslina524/lazyfetch/issues/new?template=panic.yaml&version={}&title={}&target={}&location={}",
+            "https://github.com/maslina524/nakedfetch/issues/new?template=panic.yaml&version={}&title={}&target={}&location={}",
             env!("CARGO_PKG_VERSION"),
             msg,
             env!("TARGET"),
@@ -590,7 +590,7 @@ use core::ffi;
 #[unsafe(no_mangle)]
 extern "C" fn main(argc: ffi::c_int, argv: *const *const ffi::c_char) -> ffi::c_int {
     let _ = ARGS.set(imp::env::args_init(argc as usize, argv.cast()));
-    let ret = lazyfetch_main() as ffi::c_int;
+    let ret = nakedfetch_main() as ffi::c_int;
     let _ = flush();
     ret
 }
@@ -600,12 +600,12 @@ extern "C" fn main(argc: ffi::c_int, argv: *const *const ffi::c_char) -> ffi::c_
 #[unsafe(no_mangle)]
 extern "C" fn main() -> ffi::c_int {
     let _ = ARGS.set(imp::env::args_init());
-    let ret = lazyfetch_main() as ffi::c_int;
+    let ret = nakedfetch_main() as ffi::c_int;
     let _ = flush();
     ret
 }
 
-fn lazyfetch_main() -> i32 {
+fn nakedfetch_main() -> i32 {
     let args = env::args();
 
     // Commands

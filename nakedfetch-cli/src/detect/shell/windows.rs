@@ -23,7 +23,7 @@ const INVALID_HANDLE: *mut c_void = (-1isize).cast_unsigned() as *mut c_void;
 static BLACKLIST: [&CStr; 6] = [
     c"python.exe",
     c"python3.exe",
-    c"lazyfetch.exe",
+    c"nakedfetch.exe",
     c"fastfetch.exe",
     c"neofetch.exe",
     c"cargo.exe",

@@ -557,7 +557,7 @@ fn main() {
     // let is_nightly = ver.contains("nightly") || ver.contains("dev");
     // assert!(
     //     is_nightly,
-    //     "\x1b[31;1mTo compile and work with the lazyfetch source code, the nightly version of the compiler is required\x1b[0m"
+    //     "\x1b[31;1mTo compile and work with the nakedfetch source code, the nightly version of the compiler is required\x1b[0m"
     // );
 
     let (raw, encoded) = setup::compress_logos();

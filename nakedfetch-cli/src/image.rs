@@ -39,7 +39,7 @@ impl core::fmt::Display for ColorTypeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
-            "ColorTypeError: Failed to get ColorType from index ({}); file is corrupted or lazyfetch does not support the type, try converting the file to another type",
+            "ColorTypeError: Failed to get ColorType from index ({}); file is corrupted or nakedfetch does not support the type, try converting the file to another type",
             self.0
         )
     }
@@ -57,7 +57,7 @@ impl core::fmt::Display for RgbaConvertError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
-            "RgbaConvertError: lazyfetch does not support {:?} with {}-bit color depth, try converting the image to another format",
+            "RgbaConvertError: nakedfetch does not support {:?} with {}-bit color depth, try converting the image to another format",
             self.typ, self.bits
         )
     }

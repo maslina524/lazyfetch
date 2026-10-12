@@ -17,7 +17,7 @@ use crate::{
 static BLACKLIST: [&str; 6] = [
     "python",
     "python3",
-    "lazyfetch",
+    "nakedfetch",
     "fastfetch",
     "neofetch",
     "cargo",

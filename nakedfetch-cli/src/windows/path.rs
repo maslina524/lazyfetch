@@ -1,11 +1,14 @@
-use core::ffi::CStr;
+use core::{ptr, slice};
 
-use alloc::{borrow::ToOwned, ffi::CString, string::String, vec::Vec};
+use alloc::{borrow::ToOwned, string::String, vec::Vec};
 
-use crate::{
-    abort,
-    unix::libc::{access, getenv},
+use crate::windows::{
+    encoding::{Utf16Len, utf16le_to_utf8, wide},
+    env,
+    link::{GUID, PathFileExistsW, SHGetKnownFolderPath},
 };
+
+const FOLDERID_LOCALAPPDATA: GUID = GUID::from_u128(0xF1B32785_6FBA_4FCF_9D55_7B8E7F157091);
 
 #[repr(transparent)]
 #[derive(Clone)]
@@ -20,29 +23,44 @@ impl Path {
         }
     }
 
-    // ONLY FOR LINUX
-    fn home() -> Self {
-        let raw_name = c"HOME";
-        let ptr = getenv(raw_name.as_ptr());
-        if ptr.is_null() {
-            abort!("Failed to get HOME");
-        }
-        // SAFETY: Libs are guaranteed to store a valid cstr
-        let c_str = unsafe { CStr::from_ptr(ptr) };
-        let string = c_str.to_string_lossy().into_owned();
-        Self::from(string)
-    }
-
     pub fn local() -> Self {
-        Self::home().join(".local/share")
+        if let Ok(s) = env::get_var("LOCALAPPDATA", None) {
+            return Self::from(s);
+        }
+
+        let mut path_ptr = ptr::null_mut();
+
+        // SAFETY: Completely safe
+        let ret = unsafe {
+            SHGetKnownFolderPath(
+                &FOLDERID_LOCALAPPDATA,
+                0,
+                ptr::null_mut(),
+                &raw mut path_ptr,
+            )
+        };
+        assert!(ret == 0, "Failed to get the path to AppData/Local");
+
+        let mut len = 0;
+        // SAFETY: The string is located at the pointer and up to the null byte,
+        // everything is safe
+        while unsafe { path_ptr.add(len).read() } != 0 {
+            len += 1;
+        }
+
+        // SAFETY: Between `path_ptr..path_ptr + len` there is a string
+        let slice = unsafe { slice::from_raw_parts(path_ptr, len) };
+        let inner = utf16le_to_utf8(slice, Utf16Len::Len(len)).expect("UNREACHABLE");
+
+        Self::from(inner)
     }
 
-    pub fn lazyfetch() -> Self {
-        Self::local().join("lazyfetch")
+    pub fn nakedfetch() -> Self {
+        Self::local().join("nakedfetch")
     }
 
     pub fn cache() -> Self {
-        Self::home().join("cache/lazyfetch")
+        Self::nakedfetch().join("cache")
     }
 
     pub fn with_capacity(cap: usize) -> Self {
@@ -51,34 +69,32 @@ impl Path {
         }
     }
 
-    fn clear(mut self) -> Self {
-        let cap = self.inner.len();
-        let is_absolute = self.inner.starts_with('/');
-        self.inner = self.inner.replace('\\', "/");
-        let parts: Vec<&str> = self.inner.split('/').filter(|x| !x.is_empty()).collect();
-        let mut new_inner = String::with_capacity(cap + 8);
+    fn clear(self) -> Self {
+        let inner = self
+            .inner
+            .replace('\\', "/")
+            .split('/')
+            .filter(|x| !x.is_empty())
+            .fold(
+                String::with_capacity(self.inner.len() + 16),
+                |mut acc, s| {
+                    if !acc.is_empty() {
+                        acc.push('/');
+                    }
+                    acc.push_str(s);
+                    acc
+                },
+            );
 
-        if is_absolute {
-            new_inner.push('/');
-        }
-
-        for (i, part) in parts.iter().enumerate() {
-            if i > 0 {
-                new_inner.push('/');
-            }
-            new_inner.push_str(part);
-        }
-        self.inner = new_inner;
-        self
+        Self { inner }
     }
 
     pub const fn as_str(&self) -> &String {
         &self.inner
     }
 
-    // ONLY FOR LINUX
-    pub fn as_c_str(&self) -> CString {
-        CString::new(self.inner.clone()).unwrap()
+    pub fn as_wide_str(&self) -> Vec<u16> {
+        wide(&self.inner)
     }
 
     pub fn parts(&self) -> Vec<&str> {
@@ -87,7 +103,7 @@ impl Path {
 
     pub fn pop(&mut self) -> Option<String> {
         let mut parts = self.parts();
-        if parts.is_empty() {
+        if parts.len() <= 1 {
             return None;
         }
         let popped = parts.pop().map(String::from);
@@ -109,9 +125,10 @@ impl Path {
     }
 
     pub fn exists(&self) -> bool {
-        let c_str = self.as_c_str();
+        let path_wide = self.as_wide_str();
         // SAFETY: Completely safe
-        access(c_str.as_ptr(), 0) == 0
+        let ret = unsafe { PathFileExistsW(path_wide.as_ptr()) };
+        ret == 1
     }
 
     pub fn parent(&self) -> Option<Self> {
@@ -196,13 +213,15 @@ impl Default for Path {
 
 #[cfg(test)]
 mod tests {
-    use crate::unix::path::Path;
+    use crate::windows::path::Path;
+
+    extern crate std;
 
     #[test]
     fn get_local_test() {
         let local = Path::local();
         let string = local.as_str();
         println!("{string}");
-        assert!(string.ends_with(".local/share"));
+        assert!(string.ends_with("/AppData/Local"));
     }
 }

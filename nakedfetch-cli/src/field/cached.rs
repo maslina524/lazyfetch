@@ -15,7 +15,7 @@ use crate::{
     format,
     formats::Frequency,
     imp::{
-        fs::{Access, File, ReadError},
+        fs::{self, Access, File, ReadError},
         path::Path,
     },
     lua::{AsLua, LuaType},
@@ -34,7 +34,9 @@ pub fn flush_to_file() {
         return;
     }
 
-    let path = Path::cache().join("session");
+    let path_dir = Path::cache();
+    let _ = fs::create_dirs(&path_dir);
+    let path = path_dir.join("session");
     let file = match File::create_always(path, Access::Write) {
         Ok(f) => f,
         Err(e) => {
