@@ -91,3 +91,5 @@ IDXGIAdapter
 DIGCF_PRESENT
 ExpandEnvironmentStringsW
 GetSystemFirmwareTable
+QueryUnbiasedInterruptTime
+QueryUnbiasedInterruptTime

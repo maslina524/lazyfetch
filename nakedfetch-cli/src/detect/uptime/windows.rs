@@ -4,7 +4,8 @@ use crate::{
     detect::uptime::{UPTIME_INFO, UptimeInfo},
     format,
     windows::link::{
-        FILETIME, FileTimeToSystemTime, GetSystemTimeAsFileTime, GetTickCount64, SYSTEMTIME,
+        FILETIME, FileTimeToSystemTime, GetSystemTimeAsFileTime, GetTickCount64,
+        QueryUnbiasedInterruptTime, SYSTEMTIME,
     },
 };
 
@@ -21,8 +22,15 @@ impl UptimeInfo {
     }
 
     pub fn get() -> Self {
+        let mut raw = 0;
         // SAFETY: Completely safe
-        let ms = unsafe { GetTickCount64() };
+        let ms = if unsafe { QueryUnbiasedInterruptTime(&raw mut raw) } != 0 {
+            crate::println!("Used QueryUnbiasedInterruptTime raw: {raw}");
+            raw / 10_000
+        } else {
+            // SAFETY: Completely safe
+            unsafe { GetTickCount64() }
+        };
 
         let days = ms / DAY_MS;
         let rem = ms % DAY_MS;
