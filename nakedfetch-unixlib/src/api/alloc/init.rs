@@ -1,8 +1,7 @@
 use core::{ptr, sync::atomic::Ordering::Relaxed};
 
 use crate::api::{
-    alloc::page::{FIRST_PAGE, PAGE_SIZE, Page},
-    mem::{flags, mmap, prot},
+    alloc::page::{FIRST_PAGE, Page, alloc_new_page}
 };
 
 /// # Panics
@@ -13,23 +12,8 @@ pub fn falloc_init() {
     let ptr = FIRST_PAGE.load(Relaxed);
     assert!(ptr.is_null(), "Attempted to initialize Falloc twice");
 
-    let ret = mmap(
-        ptr::null(),
-        PAGE_SIZE,
-        prot::READ | prot::WRITE,
-        flags::PRIVATE | flags::ANONYMOUS,
-        -1,
-        0,
-    )
-    .expect("Failed to create page for Falloc");
-
-    let page_ptr = ret.cast();
-    // SAFETY: The pointer is valid, safe
-    unsafe {
-        ptr::write(page_ptr, Page::new(ret));
-    }
-
-    FIRST_PAGE.store(page_ptr, Relaxed);
+    let page = alloc_new_page();
+    FIRST_PAGE.store(page.cast(), Relaxed);
 }
 
 /// # Panics
@@ -39,8 +23,6 @@ pub fn falloc_init() {
 pub fn falloc_destroy() {
     let page_ptr = FIRST_PAGE.load(Relaxed);
     assert!(!page_ptr.is_null(), "Attempted to destroy Falloc twice");
-
-    // SAFETY: Checked for a non-null pointer
-    let page = unsafe { &*page_ptr };
-    page.destroy();
+    Page::destroy(page_ptr);
+    FIRST_PAGE.store(ptr::null_mut(), Relaxed);
 }

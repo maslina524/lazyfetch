@@ -1,10 +1,8 @@
 use core::{
-    ffi::c_void,
-    ptr,
-    sync::atomic::{AtomicPtr, Ordering::Relaxed},
+    ffi::c_void, ptr::{self, NonNull}, sync::atomic::{AtomicPtr, Ordering::Relaxed},
 };
 
-use crate::api::mem::munmap;
+use crate::api::mem::{flags, mmap, munmap, prot};
 
 pub const PAGE_SIZE: usize = 64 * 1024;
 pub const BLOCK_SIZE: usize = 128;
@@ -35,15 +33,19 @@ impl<const BYTES: usize> BitMask<BYTES> {
     }
 
     #[inline]
-    pub const fn set(&mut self, pos: usize, value: bool) {
+    pub const fn set(&mut self, pos: usize) {
         let byte = pos >> 3;
         let bit = pos & 7;
         let mask = 1u8 << bit;
-        if value {
-            self.inner[byte] |= mask;
-        } else {
-            self.inner[byte] &= !mask;
-        }
+        self.inner[byte] |= mask;
+    }
+
+    #[inline]
+    pub const fn unset(&mut self, pos: usize) {
+        let byte = pos >> 3;
+        let bit = pos & 7;
+        let mask = 1u8 << bit;
+        self.inner[byte] &= !mask;
     }
 }
 
@@ -71,15 +73,84 @@ impl Page {
         }
     }
 
-    pub fn destroy(&self) {
-        let next_page_ptr = self.next.load(Relaxed);
+    pub fn get_first() -> NonNull<Self> {
+        let ptr = FIRST_PAGE.load(Relaxed);
+        NonNull::new(ptr)
+            .expect("Falloc not initialized")
+    }
+
+    pub fn destroy(this: *mut Self) {
+        if this.is_null() {
+            return;
+        }
+        // SAFETY: Checked for a non-null pointer
+        let this = unsafe { &*this };
+
+        let next_page_ptr = this.next.load(Relaxed);
         if !next_page_ptr.is_null() {
-            // SAFETY: Checked for a non-null pointer
-            let next_page = unsafe { &*next_page_ptr };
-            next_page.destroy();
+            Self::destroy(next_page_ptr);
         }
 
-        let mmap_addr = self.mmap_addr.load(Relaxed);
+        let mmap_addr = this.mmap_addr.load(Relaxed);
         let _ = munmap(mmap_addr, PAGE_SIZE);
     }
+
+    pub const fn bitmask(&self) -> &BitMask<NUMBER_OF_BLOCKS_BYTES> {
+        &self.blocks_mask
+    }
+
+    pub const fn bitmask_mut(&mut self) -> &mut BitMask<NUMBER_OF_BLOCKS_BYTES> {
+        &mut self.blocks_mask
+    }
+
+    pub fn mmap_addr(&self) -> *mut c_void {
+        self.mmap_addr.load(Relaxed)
+    }
+
+    pub fn data_addr(&self) -> *mut c_void {
+        // SAFETY: Moving only within allocated memory
+        unsafe { self.mmap_addr().add(DATA_OFFSET) }
+    }
+
+    pub fn block_addr(&self, n: usize) -> Option<*mut c_void> {
+        if n >= NUMBER_OF_BLOCKS {
+            return None
+        }
+
+        // SAFETY: We check the mmap boundary, safe
+        let addr = unsafe { self.data_addr().add(n * BLOCK_SIZE) };
+        Some(addr)
+    }
+
+    pub fn next(&self) -> Option<NonNull<Self>> {
+        let ptr = self.next.load(Relaxed);
+        NonNull::new(ptr)
+    }
+
+    pub fn set_next(&self, next: *mut Self) {
+        let ptr = self.next.load(Relaxed);
+        assert!(!ptr.is_null(), "Attempt to overwrite info about the next page");
+
+        self.next.store(next, Relaxed);
+    }
+}
+
+pub fn alloc_new_page() -> *mut Page {
+    let mmap = mmap(
+        ptr::null(),
+        PAGE_SIZE,
+        prot::READ | prot::WRITE,
+        flags::PRIVATE | flags::ANONYMOUS,
+        -1,
+        0,
+    )
+    .expect("Failed to create page for Falloc");
+
+    let page = Page::new(mmap);
+    // SAFETY: The pointer is valid, safe
+    unsafe {
+        ptr::write(mmap.cast(), page);
+    }
+
+    mmap.cast()
 }
