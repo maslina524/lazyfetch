@@ -1,8 +1,4 @@
-use crate::{
-    io::write,
-    syscall, 
-    table::Table
-};
+use crate::{io::write, syscall, table::Table};
 
 pub fn exit(code: u32) -> ! {
     // SAFETY: We pass a valid nr,

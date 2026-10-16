@@ -1,10 +1,10 @@
 use crate::{
-    errno::{Errno, ErrnoResult},
+    errno::{Errno, UsizeErrnoResult},
     syscall,
     table::Table,
 };
 
-pub fn write(fd: isize, buf: &[u8]) -> ErrnoResult {
+pub fn write(fd: isize, buf: &[u8]) -> UsizeErrnoResult {
     // SAFETY: We pass a valid nr,
     // all values are synchronized with https://syscalls.mebeim.net
     let ret = unsafe { syscall!(Table::Write, fd, buf.as_ptr(), buf.len()) };

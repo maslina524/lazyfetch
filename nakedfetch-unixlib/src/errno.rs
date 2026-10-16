@@ -1,4 +1,5 @@
-pub type ErrnoResult = Result<usize, Errno>;
+pub type UsizeErrnoResult = Result<usize, Errno>;
+pub type ErrnoResult<T> = Result<T, Errno>;
 
 #[repr(transparent)]
 pub struct Errno(u16);
@@ -12,7 +13,7 @@ impl Errno {
     /// # Errors
     ///
     /// Returns `Err(Errno)` if the value is such, otherwise `Ok(usize)`
-    pub fn into_result(val: isize) -> ErrnoResult {
+    pub fn into_result(val: isize) -> UsizeErrnoResult {
         if is_errno(val) {
             Err(Self::new(val as u16))
         } else {
