@@ -2,6 +2,7 @@ pub type UsizeErrnoResult = Result<usize, Errno>;
 pub type ErrnoResult<T> = Result<T, Errno>;
 
 #[repr(transparent)]
+#[derive(Debug)]
 pub struct Errno(u16);
 
 impl Errno {
