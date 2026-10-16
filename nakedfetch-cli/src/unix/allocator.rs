@@ -1,4 +1,7 @@
-use core::{alloc::{GlobalAlloc, Layout}, ptr};
+use core::{
+    alloc::{GlobalAlloc, Layout},
+    ptr,
+};
 
 use unixlib::api::alloc::{defalloc, falloc};
 

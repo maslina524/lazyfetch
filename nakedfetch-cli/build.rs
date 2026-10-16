@@ -528,6 +528,21 @@ mod setup {
                 _ => {}
             }
         }
+
+        pub fn no_alloc_in_panic() {
+            use std::env;
+
+            let env = if let Ok(e) = env::var("NO_ALLOC_IN_PANIC") {
+                e
+            } else {
+                return;
+            };
+
+            if ["yes", "true"].contains(&env.to_lowercase().as_str()) {
+                println!("cargo:warning=No alloc in panic: True");
+                println!("cargo:rustc-cfg=no_alloc_in_panic")
+            }
+        }
     }
 }
 
@@ -552,6 +567,7 @@ fn main() {
     // Setup cfg
     setup::cfg::lua();
     setup::cfg::libc();
+    setup::cfg::no_alloc_in_panic();
 
     // Check is nightly
     // let is_nightly = ver.contains("nightly") || ver.contains("dev");

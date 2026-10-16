@@ -109,6 +109,57 @@ mod panic_impl {
     use crate::exit;
 
     #[panic_handler]
+    #[cfg(no_alloc_in_panic)]
+    fn panic(info: &PanicInfo) -> ! {
+        use crate::imp::io;
+
+        fn push_to_buf(s: &str, buf: &mut [u8], pos: &mut usize) {
+            let bytes = s.as_bytes();
+            let end = *pos + bytes.len();
+            buf[*pos..end].copy_from_slice(bytes);
+            *pos += bytes.len();
+        }
+
+        fn u32_as_str(n: u32, buf: &mut [u8]) -> &str {
+            let mut i = buf.len();
+            let mut n = n;
+            loop {
+                i -= 1;
+                buf[i] = b'0' + (n % 10) as u8;
+                n /= 10;
+                if n == 0 {
+                    break;
+                }
+            }
+            core::str::from_utf8(&buf[i..]).unwrap()
+        }
+
+        let mut buf = [0u8; 4 * 1024];
+        let mut pos = 0;
+
+        if let Some(loc) = info.location() {
+            let mut u32_buf = [0u8; 10];
+
+            push_to_buf(loc.file(), &mut buf, &mut pos);
+            push_to_buf(":", &mut buf, &mut pos);
+            push_to_buf(u32_as_str(loc.line(), &mut u32_buf), &mut buf, &mut pos);
+            push_to_buf(":", &mut buf, &mut pos);
+            push_to_buf(u32_as_str(loc.column(), &mut u32_buf), &mut buf, &mut pos);
+            push_to_buf(": ", &mut buf, &mut pos);
+        }
+
+        let message = info.message().as_str().unwrap_or("No panic message!");
+
+        push_to_buf(message, &mut buf, &mut pos);
+        push_to_buf("\n", &mut buf, &mut pos);
+
+        io::write(io::stderr(), &buf[..pos]);
+
+        exit(101)
+    }
+
+    #[panic_handler]
+    #[cfg(not(no_alloc_in_panic))]
     fn panic(info: &PanicInfo) -> ! {
         use crate::{eprintln, format};
 
@@ -579,10 +630,10 @@ fn just_print_logo_and_info(logo_lines: &[(String, usize)]) {
 
 static ARGS: OnceLock<Vec<String>> = OnceLock::new();
 
-// #[cfg(not(test))]
+#[cfg(not(test))]
 use core::ffi;
 
-// #[cfg(not(test))]
+#[cfg(not(test))]
 #[allow(
     clippy::similar_names,
     reason = "that's what they're called in C, i don't give a fuck about clippy"
@@ -594,7 +645,9 @@ extern "C" fn main(argc: ffi::c_int, argv: *const *const ffi::c_char) -> ffi::c_
 
     init::falloc_init();
     let _ = ARGS.set(imp::env::args_init(argc as usize, argv.cast()));
+
     let ret = nakedfetch_main() as ffi::c_int;
+
     let _ = flush();
     init::falloc_destroy();
     ret

@@ -24,5 +24,6 @@ winresource = "0.1.31"
 unexpected_cfgs = { level = "warn", check-cfg = [
         'cfg(lua5_5)', 'cfg(lua5_4)',
         'cfg(glibc)', 'cfg(bionic)',
+        'cfg(no_alloc_in_panic)'
     ]
 }

@@ -15,8 +15,8 @@ pub unsafe fn syscall0(n: usize) -> isize {
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -35,8 +35,8 @@ pub unsafe fn syscall1(n: usize, arg1: usize) -> isize {
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -56,8 +56,8 @@ pub unsafe fn syscall2(n: usize, arg1: usize, arg2: usize) -> isize {
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -78,8 +78,8 @@ pub unsafe fn syscall3(n: usize, arg1: usize, arg2: usize, arg3: usize) -> isize
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -101,8 +101,8 @@ pub unsafe fn syscall4(n: usize, arg1: usize, arg2: usize, arg3: usize, arg4: us
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -132,8 +132,8 @@ pub unsafe fn syscall5(
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -165,7 +165,7 @@ pub unsafe fn syscall6(
             lateout("x16") _,
             lateout("x17") _,
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }

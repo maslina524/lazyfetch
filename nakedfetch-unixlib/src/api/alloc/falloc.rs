@@ -4,7 +4,11 @@ use core::{
 };
 
 use crate::{
-    api::{alloc::page::{BLOCK_SIZE, NUMBER_OF_BLOCKS, PAGE_SIZE, Page, alloc_new_page}, mem::{flags, mmap, prot}}, errno::ErrnoResult,
+    api::{
+        alloc::page::{BLOCK_SIZE, NUMBER_OF_BLOCKS, PAGE_SIZE, Page, alloc_new_page},
+        mem::{flags, mmap, prot},
+    },
+    errno::ErrnoResult,
 };
 
 #[allow(clippy::missing_panics_doc)]
@@ -87,8 +91,7 @@ mod tests {
         falloc_init();
 
         for _ in 0..THREE_PAGES {
-            let ret = falloc(BLOCK_SIZE)
-                .expect("Falloc returned Err");
+            let ret = falloc(BLOCK_SIZE).expect("Falloc returned Err");
 
             // UB check
             #[allow(clippy::undocumented_unsafe_blocks)]
