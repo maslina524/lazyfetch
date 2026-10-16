@@ -1,21 +1,38 @@
 use core::{
-    alloc::Layout,
     ffi::c_void,
     ptr::{self, NonNull},
 };
 
 use crate::{
-    api::alloc::page::{BLOCK_SIZE, NUMBER_OF_BLOCKS, Page, alloc_new_page},
-    errno::ErrnoResult,
+    api::{alloc::page::{BLOCK_SIZE, NUMBER_OF_BLOCKS, PAGE_SIZE, Page, alloc_new_page}, mem::{flags, mmap, prot}}, errno::ErrnoResult,
 };
 
 #[allow(clippy::missing_panics_doc)]
-pub fn falloc(layout: Layout) -> ErrnoResult<*mut c_void> {
-    let size = layout.size();
+pub fn falloc(size: usize) -> ErrnoResult<*mut c_void> {
     if size == 0 {
         return Ok(ptr::null_mut());
     }
     let blocks = size.div_ceil(BLOCK_SIZE);
+
+    if blocks > NUMBER_OF_BLOCKS {
+        let total = (size + 2 * PAGE_SIZE - 1) / PAGE_SIZE * PAGE_SIZE;
+        let mmap_addr = mmap(
+            ptr::null(),
+            total,
+            prot::READ | prot::WRITE,
+            flags::PRIVATE | flags::ANONYMOUS,
+            -1,
+            0,
+        )?;
+
+        // SAFETY: `mmap` returns `total` valid bytes
+        unsafe {
+            *mmap_addr.cast() = total;
+        }
+        // SAFETY: Boundaries are checked, safe
+        let user_ptr = unsafe { mmap_addr.cast::<u8>().add(PAGE_SIZE) };
+        return Ok(user_ptr.cast());
+    }
 
     let mut idx = None;
     let mut page_ptr = Page::get_first();
@@ -23,17 +40,17 @@ pub fn falloc(layout: Layout) -> ErrnoResult<*mut c_void> {
     let mut page = unsafe { page_ptr.as_mut() };
     loop {
         let bitmask = page.bitmask();
-        for i in (0..NUMBER_OF_BLOCKS).step_by(blocks) {
+        for i in 0..=NUMBER_OF_BLOCKS - blocks {
             let mut skip = false;
-            for s in i..blocks {
+            for s in i..blocks + i {
                 if bitmask.get(s) {
                     skip = true;
                     break;
                 }
             }
-
             if !skip {
                 idx = Some(i);
+                break;
             }
         }
         if idx.is_some() {
@@ -70,7 +87,7 @@ mod tests {
         falloc_init();
 
         for _ in 0..THREE_PAGES {
-            let ret = falloc(Layout::from_size_align(BLOCK_SIZE, BLOCK_SIZE).unwrap())
+            let ret = falloc(BLOCK_SIZE)
                 .expect("Falloc returned Err");
 
             // UB check

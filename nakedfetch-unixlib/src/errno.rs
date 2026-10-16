@@ -6,6 +6,8 @@ pub type ErrnoResult<T> = Result<T, Errno>;
 pub struct Errno(u16);
 
 impl Errno {
+    pub const ENOMEM: Self = Self::new(12);
+
     #[must_use]
     pub const fn new(val: u16) -> Self {
         Self(val)

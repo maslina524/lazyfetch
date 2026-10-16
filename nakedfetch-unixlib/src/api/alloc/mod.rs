@@ -1,8 +1,8 @@
 pub mod init;
 pub(crate) mod page;
 
-pub mod falloc;
+mod falloc;
 pub use falloc::falloc;
 
-pub mod defalloc;
+mod defalloc;
 pub use defalloc::defalloc;

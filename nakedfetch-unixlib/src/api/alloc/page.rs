@@ -131,7 +131,7 @@ impl Page {
     pub fn set_next(&self, next: *mut Self) {
         let ptr = self.next.load(Relaxed);
         assert!(
-            !ptr.is_null(),
+            ptr.is_null(),
             "Attempt to overwrite info about the next page"
         );
 
