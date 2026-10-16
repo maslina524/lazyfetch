@@ -4,8 +4,9 @@ use core::arch::asm;
 ///
 /// Calling a raw syscall can lead to unexpected behavior, loss of safety, etc.
 #[inline]
-pub unsafe fn syscall0(n: usize) -> usize {
-    let mut ret: usize;
+pub unsafe fn syscall0(n: usize) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -13,8 +14,8 @@ pub unsafe fn syscall0(n: usize) -> usize {
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -22,8 +23,9 @@ pub unsafe fn syscall0(n: usize) -> usize {
 ///
 /// Calling a raw syscall can lead to unexpected behavior, loss of safety, etc.
 #[inline]
-pub unsafe fn syscall1(n: usize, arg1: usize) -> usize {
-    let mut ret: usize;
+pub unsafe fn syscall1(n: usize, arg1: usize) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -32,8 +34,8 @@ pub unsafe fn syscall1(n: usize, arg1: usize) -> usize {
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -41,8 +43,9 @@ pub unsafe fn syscall1(n: usize, arg1: usize) -> usize {
 ///
 /// Calling a raw syscall can lead to unexpected behavior, loss of safety, etc.
 #[inline]
-pub unsafe fn syscall2(n: usize, arg1: usize, arg2: usize) -> usize {
-    let mut ret: usize;
+pub unsafe fn syscall2(n: usize, arg1: usize, arg2: usize) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -52,8 +55,8 @@ pub unsafe fn syscall2(n: usize, arg1: usize, arg2: usize) -> usize {
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -61,8 +64,9 @@ pub unsafe fn syscall2(n: usize, arg1: usize, arg2: usize) -> usize {
 ///
 /// Calling a raw syscall can lead to unexpected behavior, loss of safety, etc.
 #[inline]
-pub unsafe fn syscall3(n: usize, arg1: usize, arg2: usize, arg3: usize) -> usize {
-    let mut ret: usize;
+pub unsafe fn syscall3(n: usize, arg1: usize, arg2: usize, arg3: usize) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -73,8 +77,8 @@ pub unsafe fn syscall3(n: usize, arg1: usize, arg2: usize, arg3: usize) -> usize
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -82,8 +86,9 @@ pub unsafe fn syscall3(n: usize, arg1: usize, arg2: usize, arg3: usize) -> usize
 ///
 /// Calling a raw syscall can lead to unexpected behavior, loss of safety, etc.
 #[inline]
-pub unsafe fn syscall4(n: usize, arg1: usize, arg2: usize, arg3: usize, arg4: usize) -> usize {
-    let mut ret: usize;
+pub unsafe fn syscall4(n: usize, arg1: usize, arg2: usize, arg3: usize, arg4: usize) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -95,8 +100,8 @@ pub unsafe fn syscall4(n: usize, arg1: usize, arg2: usize, arg3: usize, arg4: us
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -111,8 +116,9 @@ pub unsafe fn syscall5(
     arg3: usize,
     arg4: usize,
     arg5: usize,
-) -> usize {
-    let mut ret: usize;
+) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -125,8 +131,8 @@ pub unsafe fn syscall5(
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
 
@@ -142,8 +148,9 @@ pub unsafe fn syscall6(
     arg4: usize,
     arg5: usize,
     arg6: usize,
-) -> usize {
-    let mut ret: usize;
+) -> isize {
+    let mut ret: isize;
+    // SAFETY: The function does not take responsibility!
     unsafe {
         asm!(
             "syscall",
@@ -157,7 +164,7 @@ pub unsafe fn syscall6(
             out("rcx") _, // rcx is used to store old rip
             out("r11") _, // r11 is used to store old rflags
             options(nostack, preserves_flags)
-        )
-    };
+        );
+    }
     ret
 }
