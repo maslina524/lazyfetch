@@ -221,8 +221,7 @@ pub fn exit(code: u32) -> ! {
     let _ = flush();
     cfg_if! {
         if #[cfg(target_family = "unix")] {
-            // SAFETY: Run in binary, safe
-            unsafe { crate::unix::libc::exit(code as i32) }
+            unixlib::process::exit(code)
         } else if #[cfg(target_os = "windows")] {
             // SAFETY: Run in binary, safe
             unsafe { crate::windows::link::ExitProcess(code) }
@@ -477,7 +476,7 @@ fn print_none() {
 
     let (w, _) = env::terminal_size();
     let info_lines = build_info_buf(w);
-    
+
     for line in info_lines {
         println!("{line}\x1b[0m");
     }

@@ -1,4 +1,5 @@
 #[repr(usize)]
 pub enum Table {
-    Write = 1,
+    Write = 64,
+    Exit = 93,
 }

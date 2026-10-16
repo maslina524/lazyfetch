@@ -4,7 +4,7 @@ use crate::{
     table::Table,
 };
 
-pub fn write(fd: u32, buf: &[u8]) -> ErrnoResult {
+pub fn write(fd: isize, buf: &[u8]) -> ErrnoResult {
     // SAFETY: We pass a valid nr,
     // all values are synchronized with https://syscalls.mebeim.net
     let ret = unsafe { syscall!(Table::Write, fd, buf.as_ptr(), buf.len()) };
@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn write_test() {
-        let ret = write(0, b"Hello World\n");
+        let ret = write(1, b"Hello World\n");
         assert!(ret.is_ok());
     }
 }

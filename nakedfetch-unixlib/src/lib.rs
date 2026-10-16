@@ -20,7 +20,9 @@ pub mod errno;
 pub mod raw;
 pub mod table;
 
-pub mod io;
+pub mod api;
+pub use api::io;
+pub use api::process;
 
 #[macro_export]
 macro_rules! syscall {

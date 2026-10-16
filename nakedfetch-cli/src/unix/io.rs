@@ -1,6 +1,4 @@
-use core::ffi::c_int;
-
-use crate::unix::libc;
+use unixlib::io;
 
 pub const fn stdout() -> isize {
     1
@@ -11,7 +9,7 @@ pub const fn stderr() -> isize {
 }
 
 pub fn write(handle: isize, s: &[u8]) {
-    libc::write(handle as c_int, s.as_ptr().cast(), s.len());
+    let _ = io::write(handle, s);
 }
 
 #[cfg(test)]

@@ -46,12 +46,10 @@ const SYS_STATX: c_long = 291;
 
 #[link(name = "c")]
 unsafe extern "C" {
-    pub safe fn write(fd: i32, buf: *const c_void, len: c_size) -> c_ssize;
     pub unsafe fn malloc(size: c_size) -> *mut c_void;
     pub unsafe fn free(ptr: *mut c_void);
     pub unsafe fn calloc(nmemb: c_size, size: c_size) -> *mut c_void;
     pub unsafe fn realloc(ptr: *mut c_void, size: c_size) -> *mut c_void;
-    pub unsafe fn exit(status: c_int) -> !;
     pub safe fn getenv(name: *const c_char) -> *mut c_char;
     pub safe fn access(path: *const c_char, mode: c_int) -> c_int;
     pub safe fn fopen(pathname: *const c_char, mode: *const c_char) -> FileHandle;
