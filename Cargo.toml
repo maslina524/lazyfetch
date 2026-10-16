@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "nakedfetch-cli", 
-    "nakedfetch-libc",
+    "nakedfetch-unix",
     "nakedfetch-proc",
 ]
 

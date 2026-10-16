@@ -477,7 +477,7 @@ fn print_none() {
 
     let (w, _) = env::terminal_size();
     let info_lines = build_info_buf(w);
-
+    
     for line in info_lines {
         println!("{line}\x1b[0m");
     }
