@@ -1,6 +1,13 @@
-use core::{alloc::Layout, ffi::c_void, ptr::{self, NonNull}};
+use core::{
+    alloc::Layout,
+    ffi::c_void,
+    ptr::{self, NonNull},
+};
 
-use crate::{api::alloc::page::{BLOCK_SIZE, NUMBER_OF_BLOCKS, Page, alloc_new_page}, errno::ErrnoResult};
+use crate::{
+    api::alloc::page::{BLOCK_SIZE, NUMBER_OF_BLOCKS, Page, alloc_new_page},
+    errno::ErrnoResult,
+};
 
 #[allow(clippy::missing_panics_doc)]
 pub fn falloc(layout: Layout) -> ErrnoResult<*mut c_void> {
@@ -63,11 +70,9 @@ mod tests {
         falloc_init();
 
         for _ in 0..THREE_PAGES {
-            let ret = falloc(
-                Layout::from_size_align(BLOCK_SIZE, BLOCK_SIZE).unwrap()
-            )
-            .expect("Falloc returned Err");
-            
+            let ret = falloc(Layout::from_size_align(BLOCK_SIZE, BLOCK_SIZE).unwrap())
+                .expect("Falloc returned Err");
+
             // UB check
             #[allow(clippy::undocumented_unsafe_blocks)]
             unsafe {
@@ -80,7 +85,7 @@ mod tests {
                     let moved_ptr = ret.cast::<u8>().add(i);
                     ptr::read(moved_ptr)
                 };
-                
+
                 assert_eq!(val, 42);
             }
         }

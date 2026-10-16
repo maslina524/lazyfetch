@@ -1,8 +1,6 @@
 use core::{ptr, sync::atomic::Ordering::Relaxed};
 
-use crate::api::{
-    alloc::page::{FIRST_PAGE, Page, alloc_new_page}
-};
+use crate::api::alloc::page::{FIRST_PAGE, Page, alloc_new_page};
 
 /// # Panics
 ///

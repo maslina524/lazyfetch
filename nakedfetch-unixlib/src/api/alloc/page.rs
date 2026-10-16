@@ -1,5 +1,7 @@
 use core::{
-    ffi::c_void, ptr::{self, NonNull}, sync::atomic::{AtomicPtr, Ordering::Relaxed},
+    ffi::c_void,
+    ptr::{self, NonNull},
+    sync::atomic::{AtomicPtr, Ordering::Relaxed},
 };
 
 use crate::api::mem::{flags, mmap, munmap, prot};
@@ -75,8 +77,7 @@ impl Page {
 
     pub fn get_first() -> NonNull<Self> {
         let ptr = FIRST_PAGE.load(Relaxed);
-        NonNull::new(ptr)
-            .expect("Falloc not initialized")
+        NonNull::new(ptr).expect("Falloc not initialized")
     }
 
     pub fn destroy(this: *mut Self) {
@@ -114,7 +115,7 @@ impl Page {
 
     pub fn block_addr(&self, n: usize) -> Option<*mut c_void> {
         if n >= NUMBER_OF_BLOCKS {
-            return None
+            return None;
         }
 
         // SAFETY: We check the mmap boundary, safe
@@ -129,7 +130,10 @@ impl Page {
 
     pub fn set_next(&self, next: *mut Self) {
         let ptr = self.next.load(Relaxed);
-        assert!(!ptr.is_null(), "Attempt to overwrite info about the next page");
+        assert!(
+            !ptr.is_null(),
+            "Attempt to overwrite info about the next page"
+        );
 
         self.next.store(next, Relaxed);
     }
